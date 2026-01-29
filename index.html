@@ -25,16 +25,17 @@
         .remove-btn { color: var(--danger); cursor: pointer; font-weight: bold; }
         .btn-add { background: var(--secondary); color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; }
         
-        /* Submission Styling */
-        #submission-zone { background: #eef9f0; padding: 15px; border-radius: 8px; margin-top: 15px; border: 1px solid #c3e6cb; }
-        .input-field { width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; }
-        .btn-submit { width: 100%; padding: 12px; background: var(--secondary); color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; }
+        /* Submission Area */
+        #submission-area { background: #e7f3ff; padding: 15px; border-radius: 8px; margin-top: 15px; border: 1px solid #b8daff; }
+        .form-input { width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; }
+        .btn-submit { width: 100%; padding: 12px; background: var(--secondary); color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 1em; }
+        .btn-reset { width: 100%; background: #6c757d; color: white; border: none; padding: 8px; border-radius: 4px; cursor: pointer; margin-top: 10px; font-size: 0.8em; }
     </style>
 </head>
 <body>
 
 <div class="header">
-    <div style="font-weight: bold; font-size: 1.2em;">🏆 GAA FANTASY</div>
+    <div style="font-weight: bold; font-size: 1.2em;">🏆 GAA FANTASY MANAGER</div>
     <div class="stats-container">
         <div>Budget: <span class="stat-value" id="budget">100.0</span>m</div>
         <div>Squad: <span class="stat-value" id="count">0</span>/18</div>
@@ -58,21 +59,21 @@
     </div>
 
     <div class="squad-panel">
-        <h3 style="margin-top:0;">My Roster</h3>
+        <h3 style="margin-top:0;">My Selection</h3>
         <div id="list-GK" class="slot-group"><div class="slot-title">Goalkeeper (1)</div></div>
         <div id="list-DEF" class="slot-group"><div class="slot-title">Defenders (6)</div></div>
         <div id="list-MID" class="slot-group"><div class="slot-title">Midfielders (2)</div></div>
         <div id="list-FWD" class="slot-group"><div class="slot-title">Forwards (6)</div></div>
         <div id="list-SUB" class="slot-group"><div class="slot-title">Substitutes (3)</div></div>
         
-        <div id="submission-zone" style="display:none;">
-            <p style="margin:0 0 10px 0; font-size:0.8em; font-weight:bold; color:#155724;">✅ Squad Complete!</p>
-            <input type="text" id="username" class="input-field" placeholder="Manager Name (Username)">
-            <input type="text" id="teamName" class="input-field" placeholder="Fantasy Team Name">
-            <button onclick="submitSquad()" class="btn-submit">Submit to Leaderboard</button>
+        <div id="submission-area" style="display:none;">
+            <p style="margin:0 0 10px 0; color: #004085; font-weight:bold; font-size:0.85em;">Ready to Submit!</p>
+            <input type="text" id="mgrUser" class="form-input" placeholder="Manager/Username">
+            <input type="text" id="tName" class="form-input" placeholder="Team Name">
+            <button onclick="submitFinalSquad()" class="btn-submit">Submit Squad</button>
         </div>
 
-        <button onclick="resetTeam()" style="margin-top:10px; background:#666; color:white; border:none; padding:8px; border-radius:4px; cursor:pointer;">Reset Team</button>
+        <button onclick="resetSquad()" class="btn-reset">Reset All</button>
     </div>
 </div>
 
@@ -170,8 +171,8 @@
         refresh();
     }
 
-    function resetTeam() {
-        if(confirm("Clear entire team?")) {
+    function resetSquad() {
+        if(confirm("Clear current team selection?")) {
             state = { budget: 100.0, squad: [], countyLimits: {} };
             refresh();
         }
@@ -179,11 +180,11 @@
 
     function refresh() {
         document.getElementById('budget').innerText = state.budget.toFixed(1);
-        const squadCount = state.squad.length;
-        document.getElementById('count').innerText = squadCount;
+        const currentCount = state.squad.length;
+        document.getElementById('count').innerText = currentCount;
 
-        // Show Submission Zone only if 18 players picked
-        document.getElementById('submission-zone').style.display = (squadCount === 18) ? "block" : "none";
+        // Show Submission Area only if exactly 18 players selected
+        document.getElementById('submission-area').style.display = (currentCount === 18) ? "block" : "none";
 
         ['GK','DEF','MID','FWD','SUB'].forEach(id => {
             const container = document.getElementById('list-'+id);
@@ -197,23 +198,23 @@
         });
     }
 
-    function submitSquad() {
-        const user = document.getElementById('username').value;
-        const team = document.getElementById('teamName').value;
-        if (!user || !team) return alert("Please enter a Manager Name and Team Name!");
+    function submitFinalSquad() {
+        const manager = document.getElementById('mgrUser').value;
+        const teamName = document.getElementById('tName').value;
+        if (!manager || !teamName) return alert("Please enter Manager Name and Team Name!");
 
         const squadString = state.squad.map(p => `${p.slot}: ${p.name}`).join(' | ');
 
-        // Replace with your Google Form IDs
+        // --- GOOGLE FORM CONFIG ---
         const formID = "YOUR_FORM_ID_HERE";
-        const entryUser = "entry.111111"; // Replace with Username ID
-        const entryTeam = "entry.222222"; // Replace with Team Name ID
-        const entrySquad = "entry.333333"; // Replace with Squad List ID
+        const entryManager = "entry.111111"; // ID for Manager/Username
+        const entryTeam = "entry.222222";    // ID for Team Name
+        const entrySquad = "entry.333333";   // ID for Squad Details
 
-        const url = `https://docs.google.com/forms/d/e/${formID}/formResponse?usp=pp_url&${entryUser}=${encodeURIComponent(user)}&${entryTeam}=${encodeURIComponent(team)}&${entrySquad}=${encodeURIComponent(squadString)}&submit=Submit`;
+        const url = `https://docs.google.com/forms/d/e/${formID}/formResponse?usp=pp_url&${entryManager}=${encodeURIComponent(manager)}&${entryTeam}=${encodeURIComponent(teamName)}&${entrySquad}=${encodeURIComponent(squadString)}&submit=Submit`;
         
         window.open(url, '_blank');
-        alert("Submission sent! Check the new tab to confirm.");
+        alert("Success! Check the new tab to confirm your submission.");
     }
 
     fetchData();
