@@ -1,42 +1,4 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>GAA Fantasy Hub</title>
-    <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 20px; background: #f4f7f9; color: #333; }
-        .box { max-width: 900px; margin: auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        h1 { color: #004a99; text-align: center; border-bottom: 2px solid #004a99; padding-bottom: 10px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { border: 1px solid #eee; padding: 12px; text-align: left; }
-        th { background: #004a99; color: white; text-transform: uppercase; font-size: 0.85em; }
-        tr:nth-child(even) { background: #fcfcfc; }
-        tr:hover { background: #f1f7ff; }
-        .total-cell { font-weight: bold; color: #2e7d32; }
-    </style>
-</head>
-<body>
-
-<div class="box">
-    <h1>🏆 GAA Fantasy Leaderboard</h1>
-    <table id="mainTable">
-        <thead>
-            <tr>
-                <th>Player</th>
-                <th>County</th>
-                <th>Pos</th>
-                <th>Goals</th>
-                <th>Points</th>
-                <th>Total Score</th>
-            </tr>
-        </thead>
-        <tbody id="tableBody">
-            <tr><td colspan="6" style="text-align:center;">Fetching data...</td></tr>
-        </tbody>
-    </table>
-</div>
-
 <script>
-    // Using AllOrigins proxy to ensure the "Failed to Fetch" error stays gone
     const sheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTcdzjZ4zYlGgFe5acS8xOb1vHR9b8i98UudIOe-iC9Z1d6x6AY5zATgX217cNjcNtAGDLJ56y8Jr8N/pub?gid=0&single=true&output=csv';
     const proxyUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(sheetUrl);
 
@@ -47,10 +9,10 @@
             const response = await fetch(proxyUrl);
             const data = await response.text();
             
-            // Split into rows and skip the header row
+            // Get rows and remove the header
             let rows = data.split('\n').filter(r => r.trim() !== '').slice(1);
 
-            // Sorting: First by County (Col A/Index 0), then by Position (Col H/Index 7)
+            // Sorting: First by County (Col A), then by Position (Col H)
             rows.sort((a, b) => {
                 const colA = a.split(',');
                 const colB = b.split(',');
@@ -65,7 +27,15 @@
                 if (cols.length >= 6) {
                     const tr = document.createElement('tr');
                     
-                    // MAPPING: A=0(County), B=1(First), C=2(Last), D=3(G), E=4(P), F=5(Total), H=7(Pos)
+                    // MAPPING BASED ON YOUR SPREADSHEET IMAGE:
+                    // A (0) = County
+                    // B (1) = First Name
+                    // C (2) = Last Name
+                    // D (3) = Goals
+                    // E (4) = Points
+                    // F (5) = Total Points
+                    // H (7) = Fantasy Pos
+
                     const fullName = `${cols[1].replace(/"/g, '')} ${cols[2].replace(/"/g, '')}`;
                     const county = cols[0].replace(/"/g, '');
                     const pos = (cols[7] || 'N/A').replace(/"/g, '').trim();
@@ -85,11 +55,9 @@
                 }
             });
         } catch (err) {
-            tableBody.innerHTML = '<tr><td colspan="6" style="color:red;">Error loading data. Check the sheet is published to web.</td></tr>';
+            tableBody.innerHTML = '<tr><td colspan="6" style="color:red; text-align:center;">Sync Error. Refreshing might help!</td></tr>';
         }
     }
 
     fetchData();
 </script>
-</body>
-</html>
