@@ -3,9 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GAA Fantasy - OrchardFans Style</title>
+    <title>GAA Fantasy - OrchardFans</title>
     <style>
-        /* OrchardFans Color Palette */
         :root { 
             --orchard-orange: #f37021; 
             --orchard-dark: #1a1a1a; 
@@ -16,58 +15,39 @@
         }
         
         body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--orchard-cream); margin: 0; display: flex; flex-direction: column; height: 100vh; color: var(--orchard-dark); }
-        
-        /* Themed Header */
-        .header { background: var(--orchard-orange); color: white; padding: 20px 30px; display: flex; justify-content: space-between; align-items: center; border-bottom: 4px solid var(--orchard-dark); }
-        .stats-container { display: flex; gap: 40px; }
-        .stat-label { font-size: 0.75em; text-transform: uppercase; font-weight: bold; opacity: 0.9; }
-        .stat-value { font-size: 1.4em; font-weight: bold; color: var(--orchard-dark); }
+        .header { background: var(--orchard-orange); color: white; padding: 15px 25px; display: flex; justify-content: space-between; align-items: center; border-bottom: 4px solid var(--orchard-dark); }
+        .stats-container { display: flex; gap: 30px; }
+        .stat-value { font-size: 1.2em; font-weight: bold; color: var(--orchard-dark); }
 
         .main-content { display: grid; grid-template-columns: 1fr 350px 250px; gap: 15px; padding: 15px; overflow: hidden; flex-grow: 1; }
-        
-        /* Market Panel */
-        .panel { background: var(--orchard-white); border-radius: 4px; display: flex; flex-direction: column; border: 1px solid #ccc; box-shadow: 2px 2px 5px rgba(0,0,0,0.05); }
-        .panel-header { background: #f1f1f1; padding: 10px 15px; border-bottom: 1px solid #ccc; font-weight: bold; text-transform: uppercase; font-size: 0.85em; }
+        .panel { background: var(--orchard-white); border-radius: 4px; display: flex; flex-direction: column; border: 1px solid #ccc; }
+        .panel-header { background: #f1f1f1; padding: 10px; border-bottom: 1px solid #ccc; font-weight: bold; text-transform: uppercase; font-size: 0.8em; }
 
-        .filter-bar { padding: 10px; display: flex; gap: 8px; background: #fafafa; border-bottom: 1px solid #eee; }
-        .filter-bar input, .filter-bar select { padding: 8px; border: 1px solid #ccc; border-radius: 3px; font-size: 0.9em; }
+        .filter-bar { padding: 10px; display: flex; gap: 5px; background: #fafafa; }
+        .filter-bar input, .filter-bar select { padding: 6px; border: 1px solid #ccc; border-radius: 3px; font-size: 0.85em; }
 
         .scroll-area { overflow-y: auto; flex-grow: 1; }
         table { width: 100%; border-collapse: collapse; }
-        th { position: sticky; top: 0; background: #f8f8f8; padding: 12px; text-align: left; border-bottom: 2px solid #ddd; font-size: 0.8em; }
-        td { padding: 10px; border-bottom: 1px solid #eee; font-size: 0.9em; }
+        th { position: sticky; top: 0; background: #f8f8f8; padding: 10px; text-align: left; border-bottom: 2px solid #ddd; font-size: 0.75em; }
+        td { padding: 8px; border-bottom: 1px solid #eee; font-size: 0.85em; }
 
-        /* Squad Card Styling */
-        .slot-group { margin-bottom: 8px; border: 1px solid #eee; border-radius: 3px; background: #fff; }
-        .slot-title { font-size: 0.65em; background: #f9f9f9; padding: 4px 8px; font-weight: bold; border-bottom: 1px solid #eee; display: block; }
-        .player-row { display: flex; justify-content: space-between; padding: 6px 10px; font-size: 0.85em; border-bottom: 1px solid #fcfcfc; }
+        .slot-group { margin-bottom: 8px; border: 1px solid #eee; background: #fff; }
+        .slot-title { font-size: 0.65em; background: #f9f9f9; padding: 4px 8px; font-weight: bold; display: block; border-bottom: 1px solid #eee; }
+        .player-row { display: flex; justify-content: space-between; padding: 5px 8px; font-size: 0.8em; }
         .remove-btn { color: var(--danger); cursor: pointer; font-weight: bold; }
 
-        /* Leaderboard Styling */
-        .leader-row { display: flex; justify-content: space-between; padding: 8px; border-bottom: 1px solid #eee; font-size: 0.9em; }
-        .rank { font-weight: bold; color: var(--orchard-orange); width: 25px; }
-
-        /* Buttons */
-        .btn-add { background: var(--orchard-orange); color: white; border: none; padding: 5px 10px; cursor: pointer; border-radius: 2px; font-weight: bold; }
-        .btn-submit { background: var(--secondary); color: white; border: none; padding: 12px; width: 100%; cursor: pointer; font-weight: bold; margin-top: 10px; }
-        .btn-reset { background: #999; color: white; border: none; padding: 8px; width: 100%; cursor: pointer; margin-top: 10px; font-size: 0.75em; }
-
-        #submission-zone { padding: 15px; border-top: 2px solid var(--orchard-orange); background: #fffbe6; }
+        .btn-add { background: var(--orchard-orange); color: white; border: none; padding: 4px 8px; cursor: pointer; border-radius: 2px; }
+        #submission-zone { padding: 10px; border-top: 2px solid var(--orchard-orange); background: #fffbe6; }
+        .btn-submit { background: var(--secondary); color: white; border: none; padding: 10px; width: 100%; cursor: pointer; font-weight: bold; }
     </style>
 </head>
 <body>
 
 <div class="header">
-    <div style="font-weight: bold; font-size: 1.6em; letter-spacing: -1px;">ORCHARD FANS FANTASY FOOTBALL</div>
+    <div style="font-weight: bold; font-size: 1.4em;">ORCHARD FANS FANTASY</div>
     <div class="stats-container">
-        <div class="stat-item">
-            <span class="stat-label">BUDGET</span><br>
-            <span class="stat-value"><span id="budget">100.0</span>m</span>
-        </div>
-        <div class="stat-item">
-            <span class="stat-label">SQUAD</span><br>
-            <span class="stat-value"><span id="count">0</span>/18</span>
-        </div>
+        <div>BUDGET: <span class="stat-value" id="budget">100.0</span>m</div>
+        <div>SQUAD: <span class="stat-value" id="count">0</span>/18</div>
     </div>
 </div>
 
@@ -75,8 +55,8 @@
     <div class="panel">
         <div class="panel-header">Transfer Market</div>
         <div class="filter-bar">
-            <input type="text" id="nameSearch" placeholder="Search Players..." onkeyup="runFilters()" style="flex-grow:1;">
-            <select id="countyFilter" onchange="runFilters()"><option value="">All Counties</option></select>
+            <input type="text" id="nameSearch" placeholder="Search..." onkeyup="runFilters()" style="flex-grow:1;">
+            <select id="countyFilter" onchange="runFilters()"><option value="">Counties</option></select>
         </div>
         <div class="scroll-area">
             <table>
@@ -87,33 +67,29 @@
     </div>
 
     <div class="panel">
-        <div class="panel-header">My Roster</div>
+        <div class="panel-header">My Team Management</div>
         <div class="scroll-area" style="padding: 10px;">
-            <div id="list-GK" class="slot-group"><span class="slot-title">Goalkeepers</span></div>
-            <div id="list-DEF" class="slot-group"><span class="slot-title">Defenders</span></div>
-            <div id="list-MID" class="slot-group"><span class="slot-title">Midfielders</span></div>
-            <div id="list-FWD" class="slot-group"><span class="slot-title">Forwards</span></div>
-            <div id="list-SUB" class="slot-group"><span class="slot-title">Substitutes</span></div>
+            <div id="list-GK" class="slot-group"></div>
+            <div id="list-DEF" class="slot-group"></div>
+            <div id="list-MID" class="slot-group"></div>
+            <div id="list-FWD" class="slot-group"></div>
+            <div id="list-SUB" class="slot-group"></div>
 
             <div id="submission-zone" style="display:none;">
-                <input type="text" id="username" placeholder="Manager Name" style="width:100%; margin-bottom:8px; padding:8px; border:1px solid #ccc;">
-                <input type="text" id="teamName" placeholder="Team Name" style="width:100%; margin-bottom:8px; padding:8px; border:1px solid #ccc;">
-                <button onclick="submitSquad()" class="btn-submit">SUBMIT SQUAD</button>
+                <input type="text" id="username" placeholder="Manager/Username" style="width:96%; padding:6px; margin-bottom:5px;">
+                <input type="text" id="teamName" placeholder="Team Name" style="width:96%; padding:6px; margin-bottom:10px;">
+                <button onclick="submitSquad()" class="btn-submit">SUBMIT FINAL TEAM</button>
             </div>
-            <button onclick="resetTeam()" class="btn-reset">RESET SQUAD</button>
+            <button onclick="resetTeam()" style="width:100%; margin-top:10px; border:none; background:#999; color:white; padding:5px; cursor:pointer; font-size:0.7em;">RESET SELECTION</button>
         </div>
     </div>
 
     <div class="panel">
-        <div class="panel-header">Leaderboard</div>
-        <div class="scroll-area" style="padding: 5px;">
-            <div class="leader-row" style="background:#eee; font-weight:bold;"><span>Rank</span><span>Manager</span><span>Pts</span></div>
-            <div class="leader-row"><span class="rank">1</span><span>Armagh_Paul</span><span>142</span></div>
-            <div class="leader-row"><span class="rank">2</span><span>Orchard_02</span><span>138</span></div>
-            <div class="leader-row"><span class="rank">3</span><span>BananaMan</span><span>129</span></div>
-            <div class="leader-row"><span class="rank">4</span><span>JoeH</span><span>121</span></div>
-            <div class="leader-row"><span class="rank">5</span><span>Nab14</span><span>118</span></div>
-            <p style="font-size: 0.7em; text-align: center; color: #777; margin-top: 15px;">Updated Weekly after Matches</p>
+        <div class="panel-header">Top Managers</div>
+        <div class="scroll-area" id="leaderboard" style="padding:10px; font-size:0.85em;">
+            <div style="display:flex; justify-content:space-between; border-bottom:1px solid #eee; padding:5px 0;"><b>Manager</b><b>Pts</b></div>
+            <div style="display:flex; justify-content:space-between; padding:5px 0;"><span>Armagh_Paul</span><span>142</span></div>
+            <div style="display:flex; justify-content:space-between; padding:5px 0;"><span>BananaMan</span><span>129</span></div>
         </div>
     </div>
 </div>
@@ -145,34 +121,32 @@
                 const lastWeek = parseFloat(cols[6]) || 0;
                 const pos = (cols[7] || "FWD").toUpperCase();
                 const mins = parseFloat(cols[8]) || 0;
-
                 counties.add(county);
 
                 let p = 5.0;
                 p += (Math.floor(totalPts / 3) * 0.1);
                 if (mins >= 50) p += 0.2;
                 if (lastWeek <= 0 && totalPts > 0) p -= 0.2;
-                const finalPrice = Math.max(4.0, p).toFixed(1);
+                const price = Math.max(4.0, p).toFixed(1);
 
                 const tr = document.createElement('tr');
                 tr.setAttribute('data-name', name.toLowerCase());
                 tr.setAttribute('data-county', county.toLowerCase());
                 tr.innerHTML = `
-                    <td><b>${name}</b></td>
-                    <td>${county}</td>
-                    <td>${pos}</td>
-                    <td style="font-weight:bold; color:var(--orchard-orange)">${finalPrice}m</td>
-                    <td><button class="btn-add" onclick="pickPlayer('${name.replace(/'/g, "\\'")}','${county.replace(/'/g, "\\'")}','${pos}',${finalPrice})">ADD</button></td>
+                    <td><b>${name}</b></td><td>${county}</td><td>${pos}</td>
+                    <td style="color:var(--orchard-orange); font-weight:bold;">${price}m</td>
+                    <td><button class="btn-add" onclick="pickPlayer('${name.replace(/'/g, "\\'")}','${county}','${pos}',${price})">ADD</button></td>
                 `;
                 tbody.appendChild(tr);
             });
 
             Array.from(counties).sort().forEach(c => {
                 const opt = document.createElement('option');
-                opt.value = c.toLowerCase();
-                opt.innerText = c;
+                opt.value = c.toLowerCase(); opt.innerText = c;
                 countyDropdown.appendChild(opt);
             });
+
+            loadSavedTeam(); // Initialize Local Storage check
         } catch (e) { console.error(e); }
     }
 
@@ -194,14 +168,12 @@
         let count = state.squad.filter(p => p.slot === pos).length;
         let slot = (count >= limits[pos]) ? 'SUB' : pos;
         
-        if (slot === 'SUB' && state.squad.filter(p => p.slot === 'SUB').length >= limits.SUB) {
-            return alert("Position and Subs full!");
-        }
+        if (slot === 'SUB' && state.squad.filter(p => p.slot === 'SUB').length >= limits.SUB) return alert("Slot and Subs full!");
 
         state.squad.push({name, county, slot, price});
         state.budget -= price;
         state.countyLimits[county] = (state.countyLimits[county] || 0) + 1;
-        refresh();
+        saveAndRefresh();
     }
 
     function drop(i) {
@@ -209,21 +181,34 @@
         state.budget += p.price;
         state.countyLimits[p.county]--;
         state.squad.splice(i, 1);
+        saveAndRefresh();
+    }
+
+    function saveAndRefresh() {
+        localStorage.setItem('gaa_fantasy_squad', JSON.stringify(state));
         refresh();
     }
 
+    function loadSavedTeam() {
+        const saved = localStorage.getItem('gaa_fantasy_squad');
+        if (saved) {
+            state = JSON.parse(saved);
+            refresh();
+        }
+    }
+
     function resetTeam() {
-        if(confirm("Clear selection?")) {
+        if(confirm("Start again?")) {
             state = { budget: 100.0, squad: [], countyLimits: {} };
+            localStorage.removeItem('gaa_fantasy_squad');
             refresh();
         }
     }
 
     function refresh() {
         document.getElementById('budget').innerText = state.budget.toFixed(1);
-        const currentCount = state.squad.length;
-        document.getElementById('count').innerText = currentCount;
-        document.getElementById('submission-zone').style.display = (currentCount === 18) ? "block" : "none";
+        document.getElementById('count').innerText = state.squad.length;
+        document.getElementById('submission-zone').style.display = (state.squad.length === 18) ? "block" : "none";
 
         ['GK','DEF','MID','FWD','SUB'].forEach(id => {
             const container = document.getElementById('list-'+id);
@@ -240,15 +225,14 @@
     function submitSquad() {
         const u = document.getElementById('username').value;
         const t = document.getElementById('teamName').value;
-        if (!u || !t) return alert("Please enter Manager and Team names!");
-        const squadString = state.squad.map(p => `${p.slot}: ${p.name}`).join(' | ');
-        const url = `https://docs.google.com/forms/d/e/YOUR_FORM_ID/formResponse?entry.1=u&entry.2=t&entry.3=squadString&submit=Submit`;
-        alert("Submitting: " + t + " by " + u);
-        window.open(url, '_blank');
+        if (!u || !t) return alert("Enter Manager and Team names!");
+        const squad = state.squad.map(p => `${p.slot}: ${p.name}`).join(' | ');
+        // Logic for Google Form Submission here
+        alert("Team Saved! Now opening submission form...");
+        window.open(`https://docs.google.com/forms/d/e/YOUR_FORM_ID/formResponse?entry.1=${u}&entry.2=${t}&entry.3=${squad}`, '_blank');
     }
 
     fetchData();
 </script>
 </body>
 </html>
-
