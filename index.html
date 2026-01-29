@@ -68,7 +68,7 @@
         <div class="scroll-area">
             <table>
                 <thead><tr><th>Player</th><th>County</th><th>Pos</th><th>Price</th><th>Action</th></tr></thead>
-                <tbody id="marketBody"><tr><td colspan="5" style="text-align:center; padding:20px;">Loading players...</td></tr></tbody>
+                <tbody id="marketBody"><tr><td colspan="5" style="text-align:center; padding:20px;">Checking spreadsheet...</td></tr></tbody>
             </table>
         </div>
     </div>
@@ -109,17 +109,25 @@
     const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTcdzjZ4zYlGgFe5acS8xOb1vHR9b8i98UudIOe-iC9Z1d6x6AY5zATgX217cNjcNtAGDLJ56y8Jr8N/pub?gid=0&single=true&output=csv';
     const submissionsUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTcdzjZ4zYlGgFe5acS8xOb1vHR9b8i98UudIOe-iC9Z1d6x6AY5zATgX217cNjcNtAGDLJ56y8Jr8N/pub?gid=1045949920&single=true&output=csv';
 
-    // Using a more reliable CORS proxy
-    const proxy = (url) => 'https://corsproxy.io/?' + encodeURIComponent(url);
+    // Multi-proxy fallback for better reliability
+    const proxies = [
+        (url) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+        (url) => `https://corsproxy.io/?${encodeURIComponent(url)}`
+    ];
 
     let state = { budget: 100.0, squad: [], countyLimits: {} };
     let playerDatabase = [];
     const limits = { GK: 1, DEF: 6, MID: 2, FWD: 6, SUB: 3 };
 
-    async function fetchData() {
+    async function fetchData(proxyIndex = 0) {
+        if (proxyIndex >= proxies.length) {
+            document.getElementById('marketBody').innerHTML = `<tr><td colspan="5" style="color:red; text-align:center;">Failed to load. Is the sheet published to web?</td></tr>`;
+            return;
+        }
+
         try {
-            const res = await fetch(proxy(csvUrl));
-            if (!res.ok) throw new Error("Could not fetch player data");
+            const res = await fetch(proxies[proxyIndex](csvUrl));
+            if (!res.ok) throw new Error();
             const data = await res.text();
             
             const rows = data.split('\n').filter(r => r.trim() !== '').slice(1);
@@ -172,7 +180,8 @@
 
             loadSavedTeam();
         } catch (e) { 
-            document.getElementById('marketBody').innerHTML = `<tr><td colspan="5" style="color:red; text-align:center;">Failed to load players. Try clicking Refresh.</td></tr>`;
+            console.log(`Proxy ${proxyIndex} failed, trying next...`);
+            fetchData(proxyIndex + 1);
         }
     }
 
@@ -181,7 +190,7 @@
         if (!user) return alert("Please enter a username.");
 
         try {
-            const res = await fetch(proxy(submissionsUrl));
+            const res = await fetch(proxies[0](submissionsUrl));
             const data = await res.text();
             const rows = data.split('\n').map(r => r.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/));
             const record = rows.find(r => r[1] && r[1].replace(/"/g, '').toLowerCase().trim() === user);
@@ -225,12 +234,12 @@
     }
 
     function saveAndRefresh() {
-        localStorage.setItem('gaa_fantasy_orchard', JSON.stringify(state));
+        localStorage.setItem('gaa_fantasy_v3', JSON.stringify(state));
         refresh();
     }
 
     function loadSavedTeam() {
-        const saved = localStorage.getItem('gaa_fantasy_orchard');
+        const saved = localStorage.getItem('gaa_fantasy_v3');
         if (saved) {
             state = JSON.parse(saved);
             refresh();
@@ -240,7 +249,7 @@
     function resetTeam() {
         if(confirm("Clear current team?")) {
             state = { budget: 100.0, squad: [], countyLimits: {} };
-            localStorage.removeItem('gaa_fantasy_orchard');
+            localStorage.removeItem('gaa_fantasy_v3');
             refresh();
         }
     }
@@ -278,8 +287,14 @@
         if (!u || !t) return alert("Enter Manager and Team names.");
         
         const squad = state.squad.map(p => `${p.slot}: ${p.name}`).join(' | ');
+
+        // THESE ARE YOUR LIVE IDs FROM YOUR LINK
         const formID = "1FAIpQLSffAvVbFoCJ3F6GIfx2BmklEeN55naTRBGijibJTOkKkNK3Bg"; 
-        const url = `https://docs.google.com/forms/d/e/${formID}/formResponse?usp=pp_url&entry.470377441=${encodeURIComponent(u)}&entry.1733584413=${encodeURIComponent(t)}&entry.1850596456=${encodeURIComponent(squad)}&submit=Submit`;
+        const entryUser = "entry.470377441"; 
+        const entryTeam = "entry.1733584413"; 
+        const entrySquad = "entry.1850596456"; 
+
+        const url = `https://docs.google.com/forms/d/e/${formID}/formResponse?usp=pp_url&${entryUser}=${encodeURIComponent(u)}&${entryTeam}=${encodeURIComponent(t)}&${entrySquad}=${encodeURIComponent(squad)}&submit=Submit`;
         
         window.open(url, '_blank');
     }
