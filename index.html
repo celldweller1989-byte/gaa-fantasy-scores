@@ -37,20 +37,18 @@
         .remove-btn { color: var(--danger); cursor: pointer; font-weight: bold; }
 
         .btn-add { background: var(--orchard-orange); color: white; border: none; padding: 4px 8px; cursor: pointer; border-radius: 2px; font-weight: bold; }
-        #submission-zone { padding: 10px; border-top: 2px solid var(--orchard-orange); background: #fffbe6; }
-        .btn-submit { background: var(--secondary); color: white; border: none; padding: 10px; width: 100%; cursor: pointer; font-weight: bold; }
+        #submission-zone { padding: 15px; border-top: 2px solid var(--orchard-orange); background: #fffbe6; }
+        .btn-submit { background: var(--secondary); color: white; border: none; padding: 12px; width: 100%; cursor: pointer; font-weight: bold; border-radius: 4px; }
+        .btn-submit:disabled { background: #999; }
         
         .load-bar { padding: 10px; background: #eee; border-bottom: 1px solid #ccc; display: flex; gap: 5px; }
         .btn-load { background: var(--orchard-dark); color: white; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer; font-size: 0.8em; }
-        .refresh-btn { background: none; border: 1px solid #ccc; cursor: pointer; font-size: 0.7em; padding: 2px 5px; }
-        
-        #error-msg { color: #721c24; background-color: #f8d7da; padding: 10px; margin: 10px; border-radius: 4px; display: none; font-size: 0.8em; }
     </style>
 </head>
 <body>
 
 <div class="header">
-    <div style="font-weight: bold; font-size: 1.4em;">ORCHARD FANS FANTASY</div>
+    <div style="font-weight: bold; font-size: 1.4em; letter-spacing: -1px;">ORCHARD FANS FANTASY</div>
     <div class="stats-container">
         <div>BUDGET: <span class="stat-value" id="budget">100.0</span>m</div>
         <div>SQUAD: <span class="stat-value" id="count">0</span>/18</div>
@@ -61,9 +59,8 @@
     <div class="panel">
         <div class="panel-header">
             <span>Transfer Market</span>
-            <button class="refresh-btn" onclick="location.reload()">🔄 Force Reload</button>
+            <button onclick="fetchData()" style="font-size: 0.7em; cursor:pointer;">🔄 Refresh</button>
         </div>
-        <div id="error-msg"></div>
         <div class="filter-bar">
             <input type="text" id="nameSearch" placeholder="Search Players..." onkeyup="runFilters()" style="flex-grow:1;">
             <select id="countyFilter" onchange="runFilters()"><option value="">All Counties</option></select>
@@ -71,11 +68,7 @@
         <div class="scroll-area">
             <table>
                 <thead><tr><th>Player</th><th>County</th><th>Pos</th><th>Price</th><th>Action</th></tr></thead>
-                <tbody id="marketBody">
-                    <tr><td colspan="5" style="text-align:center; padding:20px;">
-                        Loading Players...<br><small>If this takes too long, check your internet.</small>
-                    </td></tr>
-                </tbody>
+                <tbody id="marketBody"><tr><td colspan="5" style="text-align:center; padding:20px;">Connecting to Sheet...</td></tr></tbody>
             </table>
         </div>
     </div>
@@ -83,7 +76,7 @@
     <div class="panel">
         <div class="panel-header">Team Management</div>
         <div class="load-bar">
-            <input type="text" id="loadUser" placeholder="Enter Username..." style="flex-grow:1; padding:4px;">
+            <input type="text" id="loadUser" placeholder="Manager Name..." style="flex-grow:1; padding:4px;">
             <button class="btn-load" onclick="loadRemoteTeam()">LOAD</button>
         </div>
         <div class="scroll-area" style="padding: 10px;">
@@ -94,10 +87,196 @@
             <div id="list-SUB" class="slot-group"></div>
 
             <div id="submission-zone" style="display:none;">
-                <input type="text" id="username" placeholder="Manager Name" style="width:96%; padding:6px; margin-bottom:5px;">
-                <input type="text" id="teamName" placeholder="Team Name" style="width:96%; padding:6px; margin-bottom:10px;">
+                <input type="text" id="mgrName" placeholder="Manager Name" style="width:94%; padding:8px; margin-bottom:8px; border:1px solid #ccc;">
+                <input type="text" id="tmName" placeholder="Team Name" style="width:94%; padding:8px; margin-bottom:12px; border:1px solid #ccc;">
                 <button onclick="submitSquad()" class="btn-submit">SUBMIT FINAL SQUAD</button>
             </div>
-            <button onclick="resetTeam()" style="width:100%; margin-top:10px; border:none; background:#999; color:white; padding:5px; cursor:pointer; font-size:0.7em;">RESET SELECTION</button>
+            <button onclick="resetTeam()" style="width:100%; margin-top:10px; border:none; background:#ccc; color:#333; padding:5px; cursor:pointer; font-size:0.7em;">RESET ALL</button>
         </div>
     </div>
+
+    <div class="panel">
+        <div class="panel-header">Leaderboard</div>
+        <div class="scroll-area" id="leaderboard" style="padding:10px; font-size:0.85em;">
+            <div style="display:flex; justify-content:space-between; border-bottom:1px solid #eee; padding:5px 0;"><b>Manager</b><b>Pts</b></div>
+            <div style="text-align:center; color:#999; margin-top:20px;">Scores update weekly</div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Configuration
+    const playersUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTcdzjZ4zYlGgFe5acS8xOb1vHR9b8i98UudIOe-iC9Z1d6x6AY5zATgX217cNjcNtAGDLJ56y8Jr8N/pub?gid=0&single=true&output=csv';
+    const submissionsSheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTcdzjZ4zYlGgFe5acS8xOb1vHR9b8i98UudIOe-iC9Z1d6x6AY5zATgX217cNjcNtAGDLJ56y8Jr8N/pub?gid=1045949920&single=true&output=csv';
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbyS_6mvNQ_YUG_F-XT0T5iz_VhAMhrmalJFqCxNg3CNerb3rwZr_2RjBb0x_2kRBcO17g/exec';
+
+    let state = { budget: 100.0, squad: [], countyLimits: {} };
+    let playerDatabase = [];
+    const limits = { GK: 1, DEF: 6, MID: 2, FWD: 6, SUB: 3 };
+
+    async function fetchData() {
+        try {
+            const res = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(playersUrl)}`);
+            const data = await res.text();
+            const rows = data.split('\n').filter(r => r.trim() !== '').slice(1);
+            
+            const tbody = document.getElementById('marketBody');
+            const countyDropdown = document.getElementById('countyFilter');
+            let counties = new Set();
+            playerDatabase = [];
+            tbody.innerHTML = '';
+
+            rows.forEach(row => {
+                const cols = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(c => c.replace(/"/g, '').trim());
+                if(cols.length < 8) return;
+
+                const county = cols[0], name = `${cols[1]} ${cols[2]}`.trim();
+                const totalPts = parseFloat(cols[5]) || 0, pos = cols[7].toUpperCase();
+                
+                counties.add(county);
+                let p = 5.0 + (Math.floor(totalPts / 3) * 0.1);
+                const price = parseFloat(Math.max(4.0, p).toFixed(1));
+                
+                playerDatabase.push({ name, county, pos, price });
+
+                const tr = document.createElement('tr');
+                tr.setAttribute('data-name', name.toLowerCase());
+                tr.setAttribute('data-county', county.toLowerCase());
+                tr.innerHTML = `
+                    <td><b>${name}</b></td><td>${county}</td><td>${pos}</td>
+                    <td style="color:var(--orchard-orange);font-weight:bold;">${price}m</td>
+                    <td><button class="btn-add" onclick="pickPlayer('${name.replace(/'/g, "\\'")}','${county}','${pos}',${price})">ADD</button></td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            Array.from(counties).sort().forEach(c => {
+                const opt = document.createElement('option'); opt.value = c.toLowerCase(); opt.innerText = c;
+                countyDropdown.appendChild(opt);
+            });
+            loadSavedTeam();
+        } catch (e) { 
+            document.getElementById('marketBody').innerHTML = '<tr><td colspan="5">Error loading players.</td></tr>';
+        }
+    }
+
+    function pickPlayer(name, county, pos, price, loading = false) {
+        if (state.squad.length >= 18) return loading ? null : alert("Squad Full!");
+        if (state.budget < price) return loading ? null : alert("Insufficient Funds!");
+        if ((state.countyLimits[county] || 0) >= 2) return loading ? null : alert("Max 2 players per county!");
+
+        let count = state.squad.filter(p => p.slot === pos).length;
+        let slot = (count >= limits[pos]) ? 'SUB' : pos;
+        if (slot === 'SUB' && state.squad.filter(p => p.slot === 'SUB').length >= limits.SUB) return loading ? null : alert("Bench is Full!");
+
+        state.squad.push({name, county, slot, price});
+        state.budget -= price;
+        state.countyLimits[county] = (state.countyLimits[county] || 0) + 1;
+        
+        if (!loading) saveAndRefresh(); else refresh();
+    }
+
+    function drop(i) {
+        const p = state.squad[i];
+        state.budget += p.price;
+        state.countyLimits[p.county]--;
+        state.squad.splice(i, 1);
+        saveAndRefresh();
+    }
+
+    function saveAndRefresh() {
+        localStorage.setItem('gaa_fantasy_vFinal', JSON.stringify(state));
+        refresh();
+    }
+
+    function loadSavedTeam() {
+        const saved = localStorage.getItem('gaa_fantasy_vFinal');
+        if (saved) { state = JSON.parse(saved); refresh(); }
+    }
+
+    function resetTeam() {
+        if(confirm("Clear current team?")) {
+            state = { budget: 100.0, squad: [], countyLimits: {} };
+            localStorage.removeItem('gaa_fantasy_vFinal');
+            refresh();
+        }
+    }
+
+    function refresh() {
+        document.getElementById('budget').innerText = state.budget.toFixed(1);
+        document.getElementById('count').innerText = state.squad.length;
+        document.getElementById('submission-zone').style.display = (state.squad.length === 18) ? "block" : "none";
+        ['GK','DEF','MID','FWD','SUB'].forEach(id => {
+            document.getElementById('list-'+id).innerHTML = `<span class="slot-title">${id}</span>`;
+        });
+        state.squad.forEach((p, i) => {
+            const d = document.createElement('div'); d.className = 'player-row';
+            d.innerHTML = `<span>${p.name}</span><span class="remove-btn" onclick="drop(${i})">✕</span>`;
+            document.getElementById('list-'+p.slot).appendChild(d);
+        });
+    }
+
+    async function submitSquad() {
+        const m = document.getElementById('mgrName').value.trim();
+        const t = document.getElementById('tmName').value.trim();
+        if (!m || !t) return alert("Please enter Manager and Team names.");
+        
+        const squadList = state.squad.map(p => `${p.slot}: ${p.name}`).join(' | ');
+        const submitBtn = document.querySelector('.btn-submit');
+        
+        submitBtn.innerText = "SENDING...";
+        submitBtn.disabled = true;
+
+        try {
+            fetch(scriptURL, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ managerName: m, teamName: t, squadList: squadList })
+            });
+
+            setTimeout(() => {
+                alert("SUCCESS! Your squad has been saved.");
+                submitBtn.innerText = "SUBMIT FINAL SQUAD";
+                submitBtn.disabled = false;
+            }, 2000);
+        } catch (e) {
+            alert("Error submitting team. Please try again.");
+            submitBtn.disabled = false;
+        }
+    }
+
+    async function loadRemoteTeam() {
+        const user = document.getElementById('loadUser').value.trim().toLowerCase();
+        if (!user) return alert("Enter Manager Name");
+        try {
+            const res = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(submissionsSheetUrl)}`);
+            const data = await res.text();
+            const rows = data.split('\n').map(r => r.split(','));
+            const record = rows.find(r => r[1] && r[1].replace(/"/g, '').toLowerCase().trim() === user);
+            if (record) {
+                const names = record[3].replace(/"/g, '').split(' | ').map(s => s.split(': ')[1]);
+                state = { budget: 100.0, squad: [], countyLimits: {} };
+                names.forEach(n => {
+                    const p = playerDatabase.find(pd => pd.name === n);
+                    if(p) pickPlayer(p.name, p.county, p.pos, p.price, true);
+                });
+                saveAndRefresh();
+            } else { alert("User not found."); }
+        } catch (e) { alert("Error loading data."); }
+    }
+
+    function runFilters() {
+        const s = document.getElementById('nameSearch').value.toLowerCase();
+        const c = document.getElementById('countyFilter').value.toLowerCase();
+        document.querySelectorAll('#marketBody tr').forEach(row => {
+            const mN = row.getAttribute('data-name').includes(s);
+            const mC = c === "" || row.getAttribute('data-county') === c;
+            row.style.display = (mN && mC) ? "" : "none";
+        });
+    }
+
+    fetchData();
+</script>
+</body>
+</html>
