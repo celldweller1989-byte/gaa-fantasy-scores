@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>GAA Fantasy Hub</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; background: #f0f2f5; }
+        .box { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+        th { background: #004a99; color: white; }
+        tr:nth-child(even) { background: #f9f9f9; }
+        #debug { margin-top: 20px; padding: 10px; background: #ffdada; border: 1px solid red; display: none; color: #a00; }
+    </style>
+</head>
+<body>
+
+<div class="box">
+    <h1>🏆 Live GAA Fantasy Standings</h1>
+    <p>Data source: <a id="sheetLink" href="#">Google Sheet CSV</a></p>
+    
+    <table id="mainTable">
+        <thead>
+            <tr>
+                <th>Player</th>
+                <th>County</th>
+                <th>Pos</th>
+                <th>G</th>
+                <th>P</th>
+                <th>Total</th>
+            </tr>
+        </thead>
+        <tbody id="tableBody">
+            <tr><td colspan="6">Searching for scores...</td></tr>
+        </tbody>
+    </table>
+
+    <div id="debug"></div>
+</div>
+
+<script>
+    const url = 'https://api.allorigins.win/raw?url=' + encodeURIComponent('https://docs.google.com/spreadsheets/d/e/2PACX-1vTcdzjZ4zYlGgFe5acS8xOb1vHR9b8i98UudIOe-iC9Z1d6x6AY5zATgX217cNjcNtAGDLJ56y8Jr8N/pub?output=csv');
+
+    async function fetchData() {
+        const debugBox = document.getElementById('debug');
+        const tableBody = document.getElementById('tableBody');
+
+        try {
+            // Adding a timestamp to the URL to force Google to give us fresh data (prevents caching)
+            const freshUrl = url + '&cachebust=' + new Date().getTime();
+            const response = await fetch(freshUrl);
+            
+            if (!response.ok) throw new Error('Google Sheet rejected the request.');
+
+            const text = await response.text();
+            const rows = text.split('\n').filter(r => r.trim() !== '');
+
+            if (rows.length <= 1) {
+                tableBody.innerHTML = '<tr><td colspan="6">Sheet found, but it looks like there are no players listed yet!</td></tr>';
+                return;
+            }
+
+            tableBody.innerHTML = '';
+            // Process rows (skipping header row 0)
+            for (let i = 1; i < rows.length; i++) {
+                const cols = rows[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${(cols[0] || 'Unknown').replace(/"/g, '')}</td>
+                    <td>${(cols[1] || '-').replace(/"/g, '')}</td>
+                    <td>${(cols[2] || '-').replace(/"/g, '')}</td>
+                    <td>${(cols[3] || '0').replace(/"/g, '')}</td>
+                    <td>${(cols[4] || '0').replace(/"/g, '')}</td>
+                    <td><strong>${(cols[5] || '0').replace(/"/g, '')}</strong></td>
+                `;
+                tableBody.appendChild(tr);
+            }
+        } catch (err) {
+            debugBox.style.display = 'block';
+            debugBox.innerText = 'Error: ' + err.message + '. Make sure the sheet is "Published to Web" as a CSV.';
+            console.error(err);
+        }
+    }
+
+    fetchData();
+</script>
+</body>
+</html>
