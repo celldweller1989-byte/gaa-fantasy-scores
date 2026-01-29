@@ -24,7 +24,11 @@
         .player-card { display: flex; justify-content: space-between; padding: 5px 0; font-size: 0.85em; border-bottom: 1px solid #eee; }
         .remove-btn { color: var(--danger); cursor: pointer; font-weight: bold; }
         .btn-add { background: var(--secondary); color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; }
-        .btn-reset { background: #666; color: white; border: none; padding: 10px; border-radius: 4px; cursor: pointer; margin-top: 10px; font-weight: bold; }
+        
+        /* Submission Styling */
+        #submission-zone { background: #eef9f0; padding: 15px; border-radius: 8px; margin-top: 15px; border: 1px solid #c3e6cb; }
+        .input-field { width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; }
+        .btn-submit { width: 100%; padding: 12px; background: var(--secondary); color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -46,13 +50,7 @@
         <div class="scroll-area">
             <table>
                 <thead>
-                    <tr>
-                        <th>Player</th>
-                        <th>County</th>
-                        <th>Pos</th>
-                        <th>Price</th>
-                        <th>Action</th>
-                    </tr>
+                    <tr><th>Player</th><th>County</th><th>Pos</th><th>Price</th><th>Action</th></tr>
                 </thead>
                 <tbody id="marketBody"></tbody>
             </table>
@@ -67,8 +65,14 @@
         <div id="list-FWD" class="slot-group"><div class="slot-title">Forwards (6)</div></div>
         <div id="list-SUB" class="slot-group"><div class="slot-title">Substitutes (3)</div></div>
         
-        <button onclick="window.print()" style="width:100%; margin-top:auto; padding:10px; cursor:pointer; background: var(--primary); color: white; border: none; border-radius: 4px; font-weight: bold;">Print Team</button>
-        <button onclick="resetTeam()" class="btn-reset">Reset Team</button>
+        <div id="submission-zone" style="display:none;">
+            <p style="margin:0 0 10px 0; font-size:0.8em; font-weight:bold; color:#155724;">✅ Squad Complete!</p>
+            <input type="text" id="username" class="input-field" placeholder="Manager Name (Username)">
+            <input type="text" id="teamName" class="input-field" placeholder="Fantasy Team Name">
+            <button onclick="submitSquad()" class="btn-submit">Submit to Leaderboard</button>
+        </div>
+
+        <button onclick="resetTeam()" style="margin-top:10px; background:#666; color:white; border:none; padding:8px; border-radius:4px; cursor:pointer;">Reset Team</button>
     </div>
 </div>
 
@@ -93,11 +97,8 @@
                 const cols = row.split(',').map(c => c.replace(/"/g, '').trim());
                 if(cols.length < 3) return;
 
-                // CORRECTED MAPPING FROM IMAGE
-                const county = cols[0] || "Unknown";
-                const firstName = cols[1] || "";
-                const lastName = cols[2] || "";
-                const name = `${firstName} ${lastName}`.trim();
+                const county = cols[0];
+                const name = `${cols[1]} ${cols[2]}`.trim();
                 const totalPts = parseFloat(cols[5]) || 0;
                 const lastWeek = parseFloat(cols[6]) || 0;
                 const pos = (cols[7] || "FWD").toUpperCase();
@@ -105,7 +106,6 @@
 
                 counties.add(county);
 
-                // Pricing Logic: Base + Points + Mins - Bad Form
                 let p = 5.0;
                 p += (Math.floor(totalPts / 3) * 0.1);
                 if (mins >= 50) p += 0.2;
@@ -131,9 +131,7 @@
                 opt.innerText = c;
                 countyDropdown.appendChild(opt);
             });
-        } catch (e) {
-            document.getElementById('marketBody').innerHTML = '<tr><td colspan="5">Error loading data.</td></tr>';
-        }
+        } catch (e) { console.error(e); }
     }
 
     function runFilters() {
@@ -173,7 +171,7 @@
     }
 
     function resetTeam() {
-        if(confirm("Are you sure you want to clear your entire team?")) {
+        if(confirm("Clear entire team?")) {
             state = { budget: 100.0, squad: [], countyLimits: {} };
             refresh();
         }
@@ -181,7 +179,12 @@
 
     function refresh() {
         document.getElementById('budget').innerText = state.budget.toFixed(1);
-        document.getElementById('count').innerText = state.squad.length;
+        const squadCount = state.squad.length;
+        document.getElementById('count').innerText = squadCount;
+
+        // Show Submission Zone only if 18 players picked
+        document.getElementById('submission-zone').style.display = (squadCount === 18) ? "block" : "none";
+
         ['GK','DEF','MID','FWD','SUB'].forEach(id => {
             const container = document.getElementById('list-'+id);
             container.innerHTML = `<div class="slot-title">${id}</div>`;
@@ -192,6 +195,25 @@
             d.innerHTML = `<span>${p.name}</span><span class="remove-btn" onclick="drop(${i})">✕</span>`;
             document.getElementById('list-'+p.slot).appendChild(d);
         });
+    }
+
+    function submitSquad() {
+        const user = document.getElementById('username').value;
+        const team = document.getElementById('teamName').value;
+        if (!user || !team) return alert("Please enter a Manager Name and Team Name!");
+
+        const squadString = state.squad.map(p => `${p.slot}: ${p.name}`).join(' | ');
+
+        // Replace with your Google Form IDs
+        const formID = "YOUR_FORM_ID_HERE";
+        const entryUser = "entry.111111"; // Replace with Username ID
+        const entryTeam = "entry.222222"; // Replace with Team Name ID
+        const entrySquad = "entry.333333"; // Replace with Squad List ID
+
+        const url = `https://docs.google.com/forms/d/e/${formID}/formResponse?usp=pp_url&${entryUser}=${encodeURIComponent(user)}&${entryTeam}=${encodeURIComponent(team)}&${entrySquad}=${encodeURIComponent(squadString)}&submit=Submit`;
+        
+        window.open(url, '_blank');
+        alert("Submission sent! Check the new tab to confirm.");
     }
 
     fetchData();
