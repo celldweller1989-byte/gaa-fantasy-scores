@@ -48,7 +48,7 @@
 <body>
 
 <div class="header">
-    <div style="font-weight: bold; font-size: 1.4em; letter-spacing: -1px;">ORCHARD FANS FANTASY</div>
+    <div style="font-weight: bold; font-size: 1.4em;">ORCHARD FANS FANTASY</div>
     <div class="stats-container">
         <div>BUDGET: <span class="stat-value" id="budget">100.0</span>m</div>
         <div>SQUAD: <span class="stat-value" id="count">0</span>/18</div>
@@ -68,7 +68,7 @@
         <div class="scroll-area">
             <table>
                 <thead><tr><th>Player</th><th>County</th><th>Pos</th><th>Price</th><th>Action</th></tr></thead>
-                <tbody id="marketBody"><tr><td colspan="5" style="text-align:center; padding:20px;">Checking spreadsheet...</td></tr></tbody>
+                <tbody id="marketBody"><tr><td colspan="5" style="text-align:center; padding:20px;">Connecting to Sheet...</td></tr></tbody>
             </table>
         </div>
     </div>
@@ -106,30 +106,22 @@
 </div>
 
 <script>
-    const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTcdzjZ4zYlGgFe5acS8xOb1vHR9b8i98UudIOe-iC9Z1d6x6AY5zATgX217cNjcNtAGDLJ56y8Jr8N/pub?gid=0&single=true&output=csv';
-    const submissionsUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTcdzjZ4zYlGgFe5acS8xOb1vHR9b8i98UudIOe-iC9Z1d6x6AY5zATgX217cNjcNtAGDLJ56y8Jr8N/pub?gid=1045949920&single=true&output=csv';
-
-    // Multi-proxy fallback for better reliability
-    const proxies = [
-        (url) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
-        (url) => `https://corsproxy.io/?${encodeURIComponent(url)}`
-    ];
+    // ID from your shared URL
+    const sheetID = '1sVhmmhRRESUvaLSyHCqPp6R-U7FwOQWL-3xtZ7W7g3w';
+    const playersUrl = `https://docs.google.com/spreadsheets/d/${sheetID}/gviz/tq?tqx=out:csv&gid=0`;
+    const submissionsUrl = `https://docs.google.com/spreadsheets/d/${sheetID}/gviz/tq?tqx=out:csv&gid=1045949920`;
 
     let state = { budget: 100.0, squad: [], countyLimits: {} };
     let playerDatabase = [];
     const limits = { GK: 1, DEF: 6, MID: 2, FWD: 6, SUB: 3 };
 
-    async function fetchData(proxyIndex = 0) {
-        if (proxyIndex >= proxies.length) {
-            document.getElementById('marketBody').innerHTML = `<tr><td colspan="5" style="color:red; text-align:center;">Failed to load. Is the sheet published to web?</td></tr>`;
-            return;
-        }
-
+    async function fetchData() {
         try {
-            const res = await fetch(proxies[proxyIndex](csvUrl));
-            if (!res.ok) throw new Error();
+            // Using direct gviz fetch which is usually more stable than the published CSV
+            const res = await fetch(playersUrl);
             const data = await res.text();
             
+            // Basic CSV parser for Gviz output
             const rows = data.split('\n').filter(r => r.trim() !== '').slice(1);
             const tbody = document.getElementById('marketBody');
             const countyDropdown = document.getElementById('countyFilter');
@@ -149,9 +141,10 @@
                 const pos = (cols[7] || "FWD").toUpperCase();
                 const mins = parseFloat(cols[8]) || 0;
                 
-                if (!name || name.includes("undefined")) return;
+                if (!name || name === " ") return;
                 counties.add(county);
 
+                // Price Formula
                 let p = 5.0;
                 p += (Math.floor(totalPts / 3) * 0.1);
                 if (mins >= 50) p += 0.2;
@@ -180,17 +173,15 @@
 
             loadSavedTeam();
         } catch (e) { 
-            console.log(`Proxy ${proxyIndex} failed, trying next...`);
-            fetchData(proxyIndex + 1);
+            document.getElementById('marketBody').innerHTML = `<tr><td colspan="5" style="color:red; text-align:center;">Market Error. Ensure Sheet is Shared "Anyone with Link".</td></tr>`;
         }
     }
 
     async function loadRemoteTeam() {
         const user = document.getElementById('loadUser').value.trim().toLowerCase();
-        if (!user) return alert("Please enter a username.");
-
+        if (!user) return alert("Enter Username");
         try {
-            const res = await fetch(proxies[0](submissionsUrl));
+            const res = await fetch(submissionsUrl);
             const data = await res.text();
             const rows = data.split('\n').map(r => r.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/));
             const record = rows.find(r => r[1] && r[1].replace(/"/g, '').toLowerCase().trim() === user);
@@ -203,19 +194,19 @@
                     const p = playerDatabase.find(pd => pd.name === name);
                     if (p) pickPlayer(p.name, p.county, p.pos, p.price, true);
                 });
-                alert("Team loaded successfully!");
-            } else { alert("Username not found."); }
-        } catch (e) { alert("Error loading team data."); }
+                alert("Team loaded!");
+            } else { alert("User not found."); }
+        } catch (e) { alert("Load Error."); }
     }
 
     function pickPlayer(name, county, pos, price, loading = false) {
-        if (state.squad.length >= 18) return loading ? null : alert("Squad full!");
-        if (state.budget < price) return loading ? null : alert("Insufficient budget!");
+        if (state.squad.length >= 18) return loading ? null : alert("Full!");
+        if (state.budget < price) return loading ? null : alert("Budget!");
         if ((state.countyLimits[county] || 0) >= 2) return loading ? null : alert("Max 2 per county!");
 
         let count = state.squad.filter(p => p.slot === pos).length;
         let slot = (count >= limits[pos]) ? 'SUB' : pos;
-        if (slot === 'SUB' && state.squad.filter(p => p.slot === 'SUB').length >= limits.SUB) return loading ? null : alert("Sub slots full!");
+        if (slot === 'SUB' && state.squad.filter(p => p.slot === 'SUB').length >= limits.SUB) return loading ? null : alert("Subs Full!");
 
         state.squad.push({name, county, slot, price});
         state.budget -= price;
@@ -234,12 +225,12 @@
     }
 
     function saveAndRefresh() {
-        localStorage.setItem('gaa_fantasy_v3', JSON.stringify(state));
+        localStorage.setItem('orchard_v4', JSON.stringify(state));
         refresh();
     }
 
     function loadSavedTeam() {
-        const saved = localStorage.getItem('gaa_fantasy_v3');
+        const saved = localStorage.getItem('orchard_v4');
         if (saved) {
             state = JSON.parse(saved);
             refresh();
@@ -247,9 +238,9 @@
     }
 
     function resetTeam() {
-        if(confirm("Clear current team?")) {
+        if(confirm("Reset?")) {
             state = { budget: 100.0, squad: [], countyLimits: {} };
-            localStorage.removeItem('gaa_fantasy_v3');
+            localStorage.removeItem('orchard_v4');
             refresh();
         }
     }
@@ -260,8 +251,7 @@
         document.getElementById('submission-zone').style.display = (state.squad.length === 18) ? "block" : "none";
 
         ['GK','DEF','MID','FWD','SUB'].forEach(id => {
-            const container = document.getElementById('list-'+id);
-            container.innerHTML = `<span class="slot-title">${id}</span>`;
+            document.getElementById('list-'+id).innerHTML = `<span class="slot-title">${id}</span>`;
         });
         state.squad.forEach((p, i) => {
             const d = document.createElement('div');
@@ -284,17 +274,11 @@
     function submitSquad() {
         const u = document.getElementById('username').value;
         const t = document.getElementById('teamName').value;
-        if (!u || !t) return alert("Enter Manager and Team names.");
+        if (!u || !t) return alert("Missing Info");
         
         const squad = state.squad.map(p => `${p.slot}: ${p.name}`).join(' | ');
-
-        // THESE ARE YOUR LIVE IDs FROM YOUR LINK
         const formID = "1FAIpQLSffAvVbFoCJ3F6GIfx2BmklEeN55naTRBGijibJTOkKkNK3Bg"; 
-        const entryUser = "entry.470377441"; 
-        const entryTeam = "entry.1733584413"; 
-        const entrySquad = "entry.1850596456"; 
-
-        const url = `https://docs.google.com/forms/d/e/${formID}/formResponse?usp=pp_url&${entryUser}=${encodeURIComponent(u)}&${entryTeam}=${encodeURIComponent(t)}&${entrySquad}=${encodeURIComponent(squad)}&submit=Submit`;
+        const url = `https://docs.google.com/forms/d/e/${formID}/formResponse?usp=pp_url&entry.470377441=${encodeURIComponent(u)}&entry.1733584413=${encodeURIComponent(t)}&entry.1850596456=${encodeURIComponent(squad)}&submit=Submit`;
         
         window.open(url, '_blank');
     }
