@@ -32,3 +32,259 @@
         td { padding: 8px; border-bottom: 1px solid #eee; font-size: 0.85em; }
 
         .slot-group { margin-bottom: 8px; border: 1px solid #eee; background: #fff; }
+        .slot-title { font-size: 0.65em; background: #f9f9f9; padding: 4px 8px; font-weight: bold; display: block; border-bottom: 1px solid #eee; }
+        .player-row { display: flex; justify-content: space-between; padding: 5px 8px; font-size: 0.8em; }
+        .remove-btn { color: var(--danger); cursor: pointer; font-weight: bold; }
+
+        .btn-add { background: var(--orchard-orange); color: white; border: none; padding: 4px 8px; cursor: pointer; border-radius: 2px; font-weight: bold; }
+        #submission-zone { padding: 10px; border-top: 2px solid var(--orchard-orange); background: #fffbe6; }
+        .btn-submit { background: var(--secondary); color: white; border: none; padding: 10px; width: 100%; cursor: pointer; font-weight: bold; }
+        
+        .load-bar { padding: 10px; background: #eee; border-bottom: 1px solid #ccc; display: flex; gap: 5px; }
+        .btn-load { background: var(--orchard-dark); color: white; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer; font-size: 0.8em; }
+        .refresh-btn { background: none; border: 1px solid #ccc; cursor: pointer; font-size: 0.7em; padding: 2px 5px; }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <div style="font-weight: bold; font-size: 1.4em; letter-spacing: -1px;">ORCHARD FANS FANTASY</div>
+    <div class="stats-container">
+        <div>BUDGET: <span class="stat-value" id="budget">100.0</span>m</div>
+        <div>SQUAD: <span class="stat-value" id="count">0</span>/18</div>
+    </div>
+</div>
+
+<div class="main-content">
+    <div class="panel">
+        <div class="panel-header">
+            <span>Transfer Market</span>
+            <button class="refresh-btn" onclick="fetchData()">🔄 Refresh</button>
+        </div>
+        <div class="filter-bar">
+            <input type="text" id="nameSearch" placeholder="Search Players..." onkeyup="runFilters()" style="flex-grow:1;">
+            <select id="countyFilter" onchange="runFilters()"><option value="">All Counties</option></select>
+        </div>
+        <div class="scroll-area">
+            <table>
+                <thead><tr><th>Player</th><th>County</th><th>Pos</th><th>Price</th><th>Action</th></tr></thead>
+                <tbody id="marketBody"><tr><td colspan="5" style="text-align:center; padding:20px;">Loading players...</td></tr></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="panel">
+        <div class="panel-header">Team Management</div>
+        <div class="load-bar">
+            <input type="text" id="loadUser" placeholder="Enter Username..." style="flex-grow:1; padding:4px;">
+            <button class="btn-load" onclick="loadRemoteTeam()">LOAD</button>
+        </div>
+        <div class="scroll-area" style="padding: 10px;">
+            <div id="list-GK" class="slot-group"></div>
+            <div id="list-DEF" class="slot-group"></div>
+            <div id="list-MID" class="slot-group"></div>
+            <div id="list-FWD" class="slot-group"></div>
+            <div id="list-SUB" class="slot-group"></div>
+
+            <div id="submission-zone" style="display:none;">
+                <input type="text" id="username" placeholder="Manager Name" style="width:96%; padding:6px; margin-bottom:5px;">
+                <input type="text" id="teamName" placeholder="Team Name" style="width:96%; padding:6px; margin-bottom:10px;">
+                <button onclick="submitSquad()" class="btn-submit">SUBMIT FINAL SQUAD</button>
+            </div>
+            <button onclick="resetTeam()" style="width:100%; margin-top:10px; border:none; background:#999; color:white; padding:5px; cursor:pointer; font-size:0.7em;">RESET SELECTION</button>
+        </div>
+    </div>
+
+    <div class="panel">
+        <div class="panel-header">Leaderboard</div>
+        <div class="scroll-area" id="leaderboard" style="padding:10px; font-size:0.85em;">
+            <div style="display:flex; justify-content:space-between; border-bottom:1px solid #eee; padding:5px 0;"><b>Manager</b><b>Pts</b></div>
+            <div style="display:flex; justify-content:space-between; padding:5px 0;"><span>Armagh_Paul</span><span>142</span></div>
+            <div style="display:flex; justify-content:space-between; padding:5px 0;"><span>BananaMan</span><span>129</span></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTcdzjZ4zYlGgFe5acS8xOb1vHR9b8i98UudIOe-iC9Z1d6x6AY5zATgX217cNjcNtAGDLJ56y8Jr8N/pub?gid=0&single=true&output=csv';
+    const submissionsUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTcdzjZ4zYlGgFe5acS8xOb1vHR9b8i98UudIOe-iC9Z1d6x6AY5zATgX217cNjcNtAGDLJ56y8Jr8N/pub?gid=1045949920&single=true&output=csv';
+
+    // Using a more reliable CORS proxy
+    const proxy = (url) => 'https://corsproxy.io/?' + encodeURIComponent(url);
+
+    let state = { budget: 100.0, squad: [], countyLimits: {} };
+    let playerDatabase = [];
+    const limits = { GK: 1, DEF: 6, MID: 2, FWD: 6, SUB: 3 };
+
+    async function fetchData() {
+        try {
+            const res = await fetch(proxy(csvUrl));
+            if (!res.ok) throw new Error("Could not fetch player data");
+            const data = await res.text();
+            
+            const rows = data.split('\n').filter(r => r.trim() !== '').slice(1);
+            const tbody = document.getElementById('marketBody');
+            const countyDropdown = document.getElementById('countyFilter');
+            let counties = new Set();
+
+            playerDatabase = [];
+            tbody.innerHTML = '';
+
+            rows.forEach((row) => {
+                const cols = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(c => c.replace(/"/g, '').trim());
+                if(cols.length < 8) return;
+
+                const county = cols[0];
+                const name = `${cols[1]} ${cols[2]}`.trim();
+                const totalPts = parseFloat(cols[5]) || 0;
+                const lastWeek = parseFloat(cols[6]) || 0;
+                const pos = (cols[7] || "FWD").toUpperCase();
+                const mins = parseFloat(cols[8]) || 0;
+                
+                if (!name || name.includes("undefined")) return;
+                counties.add(county);
+
+                let p = 5.0;
+                p += (Math.floor(totalPts / 3) * 0.1);
+                if (mins >= 50) p += 0.2;
+                if (lastWeek <= 0 && totalPts > 0) p -= 0.2;
+                const price = parseFloat(Math.max(4.0, p).toFixed(1));
+
+                playerDatabase.push({ name, county, pos, price });
+
+                const tr = document.createElement('tr');
+                tr.setAttribute('data-name', name.toLowerCase());
+                tr.setAttribute('data-county', county.toLowerCase());
+                tr.innerHTML = `
+                    <td><b>${name}</b></td><td>${county}</td><td>${pos}</td>
+                    <td style="color:var(--orchard-orange); font-weight:bold;">${price}m</td>
+                    <td><button class="btn-add" onclick="pickPlayer('${name.replace(/'/g, "\\'")}','${county}','${pos}',${price})">ADD</button></td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            countyDropdown.innerHTML = '<option value="">All Counties</option>';
+            Array.from(counties).sort().forEach(c => {
+                const opt = document.createElement('option');
+                opt.value = c.toLowerCase(); opt.innerText = c;
+                countyDropdown.appendChild(opt);
+            });
+
+            loadSavedTeam();
+        } catch (e) { 
+            document.getElementById('marketBody').innerHTML = `<tr><td colspan="5" style="color:red; text-align:center;">Failed to load players. Try clicking Refresh.</td></tr>`;
+        }
+    }
+
+    async function loadRemoteTeam() {
+        const user = document.getElementById('loadUser').value.trim().toLowerCase();
+        if (!user) return alert("Please enter a username.");
+
+        try {
+            const res = await fetch(proxy(submissionsUrl));
+            const data = await res.text();
+            const rows = data.split('\n').map(r => r.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/));
+            const record = rows.find(r => r[1] && r[1].replace(/"/g, '').toLowerCase().trim() === user);
+            
+            if (record) {
+                const squadString = record[3].replace(/"/g, '');
+                const squadNames = squadString.split(' | ').map(s => s.split(': ')[1]);
+                state = { budget: 100.0, squad: [], countyLimits: {} };
+                squadNames.forEach(name => {
+                    const p = playerDatabase.find(pd => pd.name === name);
+                    if (p) pickPlayer(p.name, p.county, p.pos, p.price, true);
+                });
+                alert("Team loaded successfully!");
+            } else { alert("Username not found."); }
+        } catch (e) { alert("Error loading team data."); }
+    }
+
+    function pickPlayer(name, county, pos, price, loading = false) {
+        if (state.squad.length >= 18) return loading ? null : alert("Squad full!");
+        if (state.budget < price) return loading ? null : alert("Insufficient budget!");
+        if ((state.countyLimits[county] || 0) >= 2) return loading ? null : alert("Max 2 per county!");
+
+        let count = state.squad.filter(p => p.slot === pos).length;
+        let slot = (count >= limits[pos]) ? 'SUB' : pos;
+        if (slot === 'SUB' && state.squad.filter(p => p.slot === 'SUB').length >= limits.SUB) return loading ? null : alert("Sub slots full!");
+
+        state.squad.push({name, county, slot, price});
+        state.budget -= price;
+        state.countyLimits[county] = (state.countyLimits[county] || 0) + 1;
+        
+        if (!loading) saveAndRefresh();
+        else refresh();
+    }
+
+    function drop(i) {
+        const p = state.squad[i];
+        state.budget += p.price;
+        state.countyLimits[p.county]--;
+        state.squad.splice(i, 1);
+        saveAndRefresh();
+    }
+
+    function saveAndRefresh() {
+        localStorage.setItem('gaa_fantasy_orchard', JSON.stringify(state));
+        refresh();
+    }
+
+    function loadSavedTeam() {
+        const saved = localStorage.getItem('gaa_fantasy_orchard');
+        if (saved) {
+            state = JSON.parse(saved);
+            refresh();
+        }
+    }
+
+    function resetTeam() {
+        if(confirm("Clear current team?")) {
+            state = { budget: 100.0, squad: [], countyLimits: {} };
+            localStorage.removeItem('gaa_fantasy_orchard');
+            refresh();
+        }
+    }
+
+    function refresh() {
+        document.getElementById('budget').innerText = state.budget.toFixed(1);
+        document.getElementById('count').innerText = state.squad.length;
+        document.getElementById('submission-zone').style.display = (state.squad.length === 18) ? "block" : "none";
+
+        ['GK','DEF','MID','FWD','SUB'].forEach(id => {
+            const container = document.getElementById('list-'+id);
+            container.innerHTML = `<span class="slot-title">${id}</span>`;
+        });
+        state.squad.forEach((p, i) => {
+            const d = document.createElement('div');
+            d.className = 'player-row';
+            d.innerHTML = `<span>${p.name}</span><span class="remove-btn" onclick="drop(${i})">✕</span>`;
+            document.getElementById('list-'+p.slot).appendChild(d);
+        });
+    }
+
+    function runFilters() {
+        const s = document.getElementById('nameSearch').value.toLowerCase();
+        const c = document.getElementById('countyFilter').value.toLowerCase();
+        document.querySelectorAll('#marketBody tr').forEach(row => {
+            const mN = row.getAttribute('data-name')?.includes(s);
+            const mC = c === "" || row.getAttribute('data-county') === c;
+            row.style.display = (mN && mC) ? "" : "none";
+        });
+    }
+
+    function submitSquad() {
+        const u = document.getElementById('username').value;
+        const t = document.getElementById('teamName').value;
+        if (!u || !t) return alert("Enter Manager and Team names.");
+        
+        const squad = state.squad.map(p => `${p.slot}: ${p.name}`).join(' | ');
+        const formID = "1FAIpQLSffAvVbFoCJ3F6GIfx2BmklEeN55naTRBGijibJTOkKkNK3Bg"; 
+        const url = `https://docs.google.com/forms/d/e/${formID}/formResponse?usp=pp_url&entry.470377441=${encodeURIComponent(u)}&entry.1733584413=${encodeURIComponent(t)}&entry.1850596456=${encodeURIComponent(squad)}&submit=Submit`;
+        
+        window.open(url, '_blank');
+    }
+
+    fetchData();
+</script>
+</body>
+</html>
