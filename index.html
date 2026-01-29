@@ -2,167 +2,77 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>GAA Fantasy League Manager</title>
+    <title>GAA Fantasy Manager</title>
     <style>
-        :root { --primary: #004a99; --secondary: #28a745; --danger: #dc3545; }
-        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; margin: 0; display: flex; flex-direction: column; height: 100vh; }
+        :root { --primary: #004a99; --secondary: #28a745; --danger: #dc3545; --dark: #1a1a1a; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; margin: 0; display: flex; flex-direction: column; height: 100vh; color: var(--dark); }
         
-        /* Header & Stats */
-        .header { background: var(--primary); color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
-        .stats-bar { display: flex; gap: 20px; font-weight: bold; }
+        /* Header Stats */
+        .header { background: var(--primary); color: white; padding: 15px 25px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.3); }
+        .stats { display: flex; gap: 30px; font-size: 1.1em; }
+        .stat-val { font-weight: bold; color: #ffeb3b; }
 
-        .main-layout { display: grid; grid-template-columns: 1fr 380px; gap: 20px; padding: 20px; overflow: hidden; flex-grow: 1; }
+        .main-container { display: grid; grid-template-columns: 1fr 400px; gap: 20px; padding: 20px; overflow: hidden; flex-grow: 1; }
         
-        /* Player List */
-        .scroll-box { background: white; border-radius: 12px; overflow-y: auto; padding: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        /* Player Selection Side */
+        .market { background: white; border-radius: 12px; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+        .table-wrap { overflow-y: auto; flex-grow: 1; }
         table { width: 100%; border-collapse: collapse; }
-        th { position: sticky; top: -20px; background: white; padding: 10px; border-bottom: 2px solid #eee; text-align: left; }
-        td { padding: 12px; border-bottom: 1px solid #eee; }
+        th { position: sticky; top: 0; background: #f8f9fa; padding: 15px; text-align: left; border-bottom: 2px solid #eee; z-index: 10; }
+        td { padding: 12px 15px; border-bottom: 1px solid #eee; }
 
-        /* Sidebar */
-        .sidebar { background: #fff; border-radius: 12px; padding: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); overflow-y: auto; }
-        .slot-group { margin-bottom: 15px; }
-        .slot-title { font-size: 0.8em; color: #666; text-transform: uppercase; font-weight: bold; border-bottom: 1px solid #eee; margin-bottom: 5px; }
-        .player-tag { background: #e9ecef; margin: 4px 0; padding: 8px; border-radius: 4px; display: flex; justify-content: space-between; font-size: 0.9em; }
-        .remove-btn { color: var(--danger); cursor: pointer; font-weight: bold; }
+        /* Squad Side */
+        .squad-panel { background: #fff; border-radius: 12px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); overflow-y: auto; display: flex; flex-direction: column; }
+        .slot-group { margin-bottom: 15px; background: #f8f9fa; padding: 10px; border-radius: 8px; }
+        .slot-header { font-size: 0.75em; color: #666; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; font-weight: bold; border-bottom: 1px solid #ddd; }
+        .player-row { display: flex; justify-content: space-between; align-items: center; background: white; margin: 4px 0; padding: 8px 12px; border-radius: 4px; border-left: 4px solid var(--primary); font-size: 0.9em; }
+        
+        .btn-add { background: var(--secondary); color: white; border: none; padding: 8px 14px; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        .btn-add:hover { filter: brightness(1.1); }
+        .btn-add:disabled { background: #ccc; cursor: not-allowed; }
+        .remove { color: var(--danger); cursor: pointer; font-weight: bold; padding: 0 5px; }
 
-        .btn-add { background: var(--secondary); color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; }
-        .btn-add:disabled { background: #ccc; }
+        .price-tag { font-family: monospace; font-weight: bold; }
+        .up { color: var(--secondary); }
+        .down { color: var(--danger); }
     </style>
 </head>
 <body>
 
 <div class="header">
-    <h1>GAA Fantasy Hub</h1>
-    <div class="stats-bar">
-        <span>Budget: <span id="budget-display">100.0</span>m</span>
-        <span>Squad: <span id="squad-count">0</span>/18</span>
+    <div style="font-size: 1.5em; font-weight: bold;">🏆 GAA Fantasy League</div>
+    <div class="stats">
+        <div>Remaining: <span class="stat-val" id="budget">100.0</span>m</div>
+        <div>Squad: <span class="stat-val" id="count">0</span>/18</div>
     </div>
 </div>
 
-<div class="main-layout">
-    <div class="scroll-box">
-        <table id="playerTable">
-            <thead>
-                <tr>
-                    <th>Player</th>
-                    <th>County</th>
-                    <th>Pos</th>
-                    <th>Price</th>
-                    <th>Action</th>
-                </tr>
-            </thead>
-            <tbody id="tableBody"></tbody>
-        </table>
-    </div>
-
-    <div class="sidebar">
-        <h3>My Squad</h3>
-        <div id="roster">
-            <div class="slot-group"><div class="slot-title">Goalkeeper (1)</div><div id="pos-GK"></div></div>
-            <div class="slot-group"><div class="slot-title">Defenders (6)</div><div id="pos-DEF"></div></div>
-            <div class="slot-group"><div class="slot-title">Midfielders (2)</div><div id="pos-MID"></div></div>
-            <div class="slot-group"><div class="slot-title">Forwards (6)</div><div id="pos-FWD"></div></div>
-            <div class="slot-group"><div class="slot-title">Substitutes (3)</div><div id="pos-SUB"></div></div>
+<div class="main-container">
+    <div class="market">
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Player</th>
+                        <th>County</th>
+                        <th>Pos</th>
+                        <th>Last Score</th>
+                        <th>Price</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="marketBody"></tbody>
+            </table>
         </div>
     </div>
-</div>
 
-<script>
-    const sheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTcdzjZ4zYlGgFe5acS8xOb1vHR9b8i98UudIOe-iC9Z1d6x6AY5zATgX217cNjcNtAGDLJ56y8Jr8N/pub?gid=0&single=true&output=csv';
-    const proxyUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(sheetUrl);
-
-    let state = {
-        budget: 100.0,
-        squad: [],
-        countyCounts: {}
-    };
-
-    const limits = { GK: 1, DEF: 6, MID: 2, FWD: 6, SUB: 3 };
-
-    async function init() {
-        const response = await fetch(proxyUrl);
-        const data = await response.text();
-        const rows = data.split('\n').slice(1);
-        
-        const tbody = document.getElementById('tableBody');
-        rows.forEach(row => {
-            const cols = row.split(',');
-            if(cols.length < 6) return;
-
-            const name = `${cols[1]} ${cols[2]}`.replace(/"/g, '');
-            const county = cols[0].replace(/"/g, '');
-            const pos = (cols[7] || 'FWD').trim().replace(/"/g, '');
-            // Logic: Base price 5m + (points / 10). Adjusts based on score.
-            const points = parseFloat(cols[5]) || 0;
-            const price = (5 + (points / 10)).toFixed(1);
-
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td>${name}</td>
-                <td>${county}</td>
-                <td>${pos}</td>
-                <td>${price}m</td>
-                <td><button class="btn-add" onclick="pickPlayer('${name}','${county}','${pos}',${price})">Add</button></td>
-            `;
-            tbody.appendChild(tr);
-        });
-    }
-
-    function pickPlayer(name, county, pos, price) {
-        // Rule Check: Budget
-        if (state.budget < price) return alert("Not enough money!");
-        
-        // Rule Check: Squad Size
-        if (state.squad.length >= 18) return alert("Squad full!");
-
-        // Rule Check: County Cap (Max 2)
-        if ((state.countyCounts[county] || 0) >= 2) return alert("Max 2 players per county!");
-
-        // Rule Check: Position Limits
-        let currentPosCount = state.squad.filter(p => p.pos === pos).length;
-        let finalPos = pos;
-        
-        if (currentPosCount >= limits[pos]) {
-            if (state.squad.filter(p => p.pos === 'SUB').length < limits.SUB) {
-                finalPos = 'SUB';
-            } else {
-                return alert(`Position ${pos} and Sub bench are full!`);
-            }
-        }
-
-        // Add Player
-        state.squad.push({name, county, pos: finalPos, price, originalPos: pos});
-        state.budget -= price;
-        state.countyCounts[county] = (state.countyCounts[county] || 0) + 1;
-
-        updateUI();
-    }
-
-    function removePlayer(index) {
-        const p = state.squad[index];
-        state.budget += p.price;
-        state.countyCounts[p.county]--;
-        state.squad.splice(index, 1);
-        updateUI();
-    }
-
-    function updateUI() {
-        document.getElementById('budget-display').innerText = state.budget.toFixed(1);
-        document.getElementById('squad-count').innerText = state.squad.length;
-
-        // Clear slots
-        ['GK', 'DEF', 'MID', 'FWD', 'SUB'].forEach(id => document.getElementById(`pos-${id}`).innerHTML = '');
-
-        state.squad.forEach((p, index) => {
-            const div = document.createElement('div');
-            div.className = 'player-tag';
-            div.innerHTML = `<span>${p.name} (${p.county})</span> <span class="remove-btn" onclick="removePlayer(${index})">✕</span>`;
-            document.getElementById(`pos-${p.pos}`).appendChild(div);
-        });
-    }
-
-    init();
-</script>
-</body>
-</html>
+    <div class="squad-panel">
+        <h3 style="margin-top:0;">My Selection</h3>
+        <div id="roster">
+            <div class="slot-group"><div class="slot-header">Goalkeeper (1)</div><div id="list-GK"></div></div>
+            <div class="slot-group"><div class="slot-header">Defenders (6)</div><div id="list-DEF"></div></div>
+            <div class="slot-group"><div class="slot-header">Midfielders (2)</div><div id="list-MID"></div></div>
+            <div class="slot-group"><div class="slot-header">Forwards (6)</div><div id="list-FWD"></div></div>
+            <div class="slot-group"><div class="slot-header">Substitutes (3)</div><div id="list-SUB"></div></div>
+        </div>
+        <button onclick="window.print()" style="margin
