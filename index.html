@@ -39,6 +39,10 @@
         .btn-add { background: var(--orchard-orange); color: white; border: none; padding: 4px 8px; cursor: pointer; border-radius: 2px; }
         #submission-zone { padding: 10px; border-top: 2px solid var(--orchard-orange); background: #fffbe6; }
         .btn-submit { background: var(--secondary); color: white; border: none; padding: 10px; width: 100%; cursor: pointer; font-weight: bold; }
+        
+        /* Load Team Bar */
+        .load-bar { padding: 10px; background: #eee; border-bottom: 1px solid #ccc; display: flex; gap: 5px; }
+        .btn-load { background: var(--orchard-dark); color: white; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer; font-size: 0.8em; }
     </style>
 </head>
 <body>
@@ -68,6 +72,10 @@
 
     <div class="panel">
         <div class="panel-header">My Team Management</div>
+        <div class="load-bar">
+            <input type="text" id="loadUser" placeholder="Username" style="flex-grow:1; padding:4px;">
+            <button class="btn-load" onclick="loadRemoteTeam()">LOAD</button>
+        </div>
         <div class="scroll-area" style="padding: 10px;">
             <div id="list-GK" class="slot-group"></div>
             <div id="list-DEF" class="slot-group"></div>
@@ -78,7 +86,7 @@
             <div id="submission-zone" style="display:none;">
                 <input type="text" id="username" placeholder="Manager/Username" style="width:96%; padding:6px; margin-bottom:5px;">
                 <input type="text" id="teamName" placeholder="Team Name" style="width:96%; padding:6px; margin-bottom:10px;">
-                <button onclick="submitSquad()" class="btn-submit">SUBMIT FINAL TEAM</button>
+                <button onclick="submitSquad()" class="btn-submit">SUBMIT UPDATED TEAM</button>
             </div>
             <button onclick="resetTeam()" style="width:100%; margin-top:10px; border:none; background:#999; color:white; padding:5px; cursor:pointer; font-size:0.7em;">RESET SELECTION</button>
         </div>
@@ -95,22 +103,30 @@
 </div>
 
 <script>
+    // Player Database URL
     const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTcdzjZ4zYlGgFe5acS8xOb1vHR9b8i98UudIOe-iC9Z1d6x6AY5zATgX217cNjcNtAGDLJ56y8Jr8N/pub?gid=0&single=true&output=csv';
-    const proxy = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(csvUrl);
+    
+    // Replace this with your Form Responses CSV URL to enable "Load Team" feature
+    const submissionsUrl = 'YOUR_GOOGLE_FORM_RESPONSES_CSV_URL';
+
+    const proxy = (url) => 'https://api.allorigins.win/raw?url=' + encodeURIComponent(url);
 
     let state = { budget: 100.0, squad: [], countyLimits: {} };
+    let playerDatabase = [];
     const limits = { GK: 1, DEF: 6, MID: 2, FWD: 6, SUB: 3 };
 
     async function fetchData() {
         try {
-            const res = await fetch(proxy);
+            const res = await fetch(proxy(csvUrl));
             const data = await res.text();
             const rows = data.split('\n').filter(r => r.trim() !== '').slice(1);
             const tbody = document.getElementById('marketBody');
             const countyDropdown = document.getElementById('countyFilter');
             let counties = new Set();
 
+            playerDatabase = [];
             tbody.innerHTML = '';
+
             rows.forEach((row) => {
                 const cols = row.split(',').map(c => c.replace(/"/g, '').trim());
                 if(cols.length < 3) return;
@@ -127,7 +143,9 @@
                 p += (Math.floor(totalPts / 3) * 0.1);
                 if (mins >= 50) p += 0.2;
                 if (lastWeek <= 0 && totalPts > 0) p -= 0.2;
-                const price = Math.max(4.0, p).toFixed(1);
+                const price = parseFloat(Math.max(4.0, p).toFixed(1));
+
+                playerDatabase.push({ name, county, pos, price });
 
                 const tr = document.createElement('tr');
                 tr.setAttribute('data-name', name.toLowerCase());
@@ -146,21 +164,39 @@
                 countyDropdown.appendChild(opt);
             });
 
-            loadSavedTeam(); // Initialize Local Storage check
+            loadSavedTeam();
         } catch (e) { console.error(e); }
     }
 
-    function runFilters() {
-        const s = document.getElementById('nameSearch').value.toLowerCase();
-        const c = document.getElementById('countyFilter').value.toLowerCase();
-        document.querySelectorAll('#marketBody tr').forEach(row => {
-            const mN = row.getAttribute('data-name').includes(s);
-            const mC = c === "" || row.getAttribute('data-county') === c;
-            row.style.display = (mN && mC) ? "" : "none";
-        });
+    async function loadRemoteTeam() {
+        const user = document.getElementById('loadUser').value.trim().toLowerCase();
+        if (!user) return alert("Enter a username!");
+        if (submissionsUrl === 'YOUR_GOOGLE_FORM_RESPONSES_CSV_URL') return alert("Admin: Link the Form Response CSV in the code!");
+
+        try {
+            const res = await fetch(proxy(submissionsUrl));
+            const data = await res.text();
+            const rows = data.split('\n').map(r => r.split(','));
+            
+            // Assuming Manager Name is Column B and Squad is Column D
+            const record = rows.find(r => r[1] && r[1].toLowerCase().trim() === user);
+            
+            if (record) {
+                const squadNames = record[3].split(' | ').map(s => s.split(': ')[1]);
+                state = { budget: 100.0, squad: [], countyLimits: {} };
+                
+                squadNames.forEach(name => {
+                    const p = playerDatabase.find(pd => pd.name === name);
+                    if (p) pickPlayer(p.name, p.county, p.pos, p.price, true);
+                });
+                alert("Team Loaded!");
+            } else {
+                alert("User not found in submissions.");
+            }
+        } catch (e) { alert("Error loading data."); }
     }
 
-    function pickPlayer(name, county, pos, price) {
+    function pickPlayer(name, county, pos, price, loading = false) {
         if (state.squad.length >= 18) return alert("Squad full!");
         if (state.budget < price) return alert("Insufficient budget!");
         if ((state.countyLimits[county] || 0) >= 2) return alert("Max 2 per county!");
@@ -168,7 +204,7 @@
         let count = state.squad.filter(p => p.slot === pos).length;
         let slot = (count >= limits[pos]) ? 'SUB' : pos;
         
-        if (slot === 'SUB' && state.squad.filter(p => p.slot === 'SUB').length >= limits.SUB) return alert("Slot and Subs full!");
+        if (slot === 'SUB' && state.squad.filter(p => p.slot === 'SUB').length >= limits.SUB) return alert("Slot full!");
 
         state.squad.push({name, county, slot, price});
         state.budget -= price;
@@ -222,13 +258,21 @@
         });
     }
 
+    function runFilters() {
+        const s = document.getElementById('nameSearch').value.toLowerCase();
+        const c = document.getElementById('countyFilter').value.toLowerCase();
+        document.querySelectorAll('#marketBody tr').forEach(row => {
+            const mN = row.getAttribute('data-name').includes(s);
+            const mC = c === "" || row.getAttribute('data-county') === c;
+            row.style.display = (mN && mC) ? "" : "none";
+        });
+    }
+
     function submitSquad() {
         const u = document.getElementById('username').value;
         const t = document.getElementById('teamName').value;
         if (!u || !t) return alert("Enter Manager and Team names!");
         const squad = state.squad.map(p => `${p.slot}: ${p.name}`).join(' | ');
-        // Logic for Google Form Submission here
-        alert("Team Saved! Now opening submission form...");
         window.open(`https://docs.google.com/forms/d/e/YOUR_FORM_ID/formResponse?entry.1=${u}&entry.2=${t}&entry.3=${squad}`, '_blank');
     }
 
