@@ -3,53 +3,198 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GAA Fantasy Manager Pro</title>
+    <title>GAA Fantasy Manager</title>
     <style>
-        :root { 
-            --primary: #004a99; 
-            --secondary: #28a745; 
-            --danger: #dc3545; 
-            --bg: #f0f2f5;
-            --white: #ffffff;
-        }
-        
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
-        
-        /* Header Stats */
-        .header { background: var(--primary); color: white; padding: 15px 25px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.2); z-index: 1000; }
-        .stats-container { display: flex; gap: 40px; }
-        .stat-item { text-align: center; }
-        .stat-label { font-size: 0.7em; text-transform: uppercase; opacity: 0.8; display: block; }
-        .stat-value { font-size: 1.3em; font-weight: bold; color: #ffeb3b; }
-
-        .main-content { display: grid; grid-template-columns: 1fr 400px; gap: 20px; padding: 20px; overflow: hidden; flex-grow: 1; }
-        
-        /* Market Side */
-        .market-panel { background: var(--white); border-radius: 12px; display: flex; flex-direction: column; box-shadow: 0 4px 12px rgba(0,0,0,0.08); overflow: hidden; }
+        :root { --primary: #004a99; --secondary: #28a745; --danger: #dc3545; --bg: #f0f2f5; }
+        body { font-family: sans-serif; background: var(--bg); margin: 0; display: flex; flex-direction: column; height: 100vh; }
+        .header { background: var(--primary); color: white; padding: 15px 25px; display: flex; justify-content: space-between; align-items: center; }
+        .stats-container { display: flex; gap: 30px; font-weight: bold; }
+        .stat-value { color: #ffeb3b; }
+        .main-content { display: grid; grid-template-columns: 1fr 380px; gap: 20px; padding: 20px; overflow: hidden; flex-grow: 1; }
+        .market-panel { background: white; border-radius: 12px; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
         .filter-bar { padding: 15px; background: #f8f9fa; border-bottom: 2px solid #eee; display: flex; gap: 10px; }
-        .filter-bar input, .filter-bar select { padding: 10px; border-radius: 6px; border: 1px solid #ddd; outline: none; }
-        .filter-bar input { flex-grow: 1; }
-        
+        .filter-bar input, .filter-bar select { padding: 8px; border-radius: 4px; border: 1px solid #ddd; }
         .scroll-area { overflow-y: auto; flex-grow: 1; }
         table { width: 100%; border-collapse: collapse; }
-        th { position: sticky; top: 0; background: #f8f9fa; padding: 15px; text-align: left; border-bottom: 2px solid #eee; z-index: 10; font-size: 0.9em; color: #555; }
-        td { padding: 12px 15px; border-bottom: 1px solid #eee; font-size: 0.95em; }
-
-        /* Squad Side */
-        .squad-panel { background: var(--white); border-radius: 12px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); overflow-y: auto; display: flex; flex-direction: column; }
-        .slot-group { margin-bottom: 12px; background: #f8f9fa; padding: 10px; border-radius: 8px; border: 1px solid #ececec; }
-        .slot-title { font-size: 0.7em; color: #777; text-transform: uppercase; font-weight: bold; margin-bottom: 6px; display: block; border-bottom: 1px solid #ddd; padding-bottom: 3px; }
-        .player-card { display: flex; justify-content: space-between; align-items: center; background: white; margin: 4px 0; padding: 8px 12px; border-radius: 4px; border-left: 4px solid var(--primary); font-size: 0.85em; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
-        
-        .btn-add { background: var(--secondary); color: white; border: none; padding: 6px 12px; border-radius: 5px; cursor: pointer; font-weight: bold; }
-        .btn-add:disabled { background: #ccc; cursor: not-allowed; }
-        .remove-icon { color: var(--danger); cursor: pointer; font-weight: bold; padding: 0 5px; font-size: 1.2em; }
-
-        .price-up { color: var(--secondary); font-weight: bold; }
-        .price-down { color: var(--danger); font-weight: bold; }
+        th { position: sticky; top: 0; background: #f8f9fa; padding: 12px; text-align: left; border-bottom: 2px solid #eee; z-index: 10; }
+        td { padding: 10px 12px; border-bottom: 1px solid #eee; font-size: 0.9em; }
+        .squad-panel { background: white; border-radius: 12px; padding: 20px; overflow-y: auto; box-shadow: 0 4px 12px rgba(0,0,0,0.1); display: flex; flex-direction: column; }
+        .slot-group { margin-bottom: 10px; background: #f9f9f9; padding: 8px; border-radius: 6px; border: 1px solid #eee; }
+        .slot-title { font-size: 0.7em; color: #777; text-transform: uppercase; font-weight: bold; }
+        .player-card { display: flex; justify-content: space-between; padding: 5px 0; font-size: 0.85em; border-bottom: 1px solid #eee; }
+        .remove-btn { color: var(--danger); cursor: pointer; font-weight: bold; }
+        .btn-add { background: var(--secondary); color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; }
+        .btn-reset { background: #666; color: white; border: none; padding: 10px; border-radius: 4px; cursor: pointer; margin-top: 10px; font-weight: bold; }
     </style>
 </head>
 <body>
 
 <div class="header">
-    <div style="font-weight: bold; font-size: 1.4em;">🏆
+    <div style="font-weight: bold; font-size: 1.2em;">🏆 GAA FANTASY</div>
+    <div class="stats-container">
+        <div>Budget: <span class="stat-value" id="budget">100.0</span>m</div>
+        <div>Squad: <span class="stat-value" id="count">0</span>/18</div>
+    </div>
+</div>
+
+<div class="main-content">
+    <div class="market-panel">
+        <div class="filter-bar">
+            <input type="text" id="nameSearch" placeholder="Search name..." onkeyup="runFilters()" style="flex-grow:1;">
+            <select id="countyFilter" onchange="runFilters()"><option value="">All Counties</option></select>
+        </div>
+        <div class="scroll-area">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Player</th>
+                        <th>County</th>
+                        <th>Pos</th>
+                        <th>Price</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="marketBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="squad-panel">
+        <h3 style="margin-top:0;">My Roster</h3>
+        <div id="list-GK" class="slot-group"><div class="slot-title">Goalkeeper (1)</div></div>
+        <div id="list-DEF" class="slot-group"><div class="slot-title">Defenders (6)</div></div>
+        <div id="list-MID" class="slot-group"><div class="slot-title">Midfielders (2)</div></div>
+        <div id="list-FWD" class="slot-group"><div class="slot-title">Forwards (6)</div></div>
+        <div id="list-SUB" class="slot-group"><div class="slot-title">Substitutes (3)</div></div>
+        
+        <button onclick="window.print()" style="width:100%; margin-top:auto; padding:10px; cursor:pointer; background: var(--primary); color: white; border: none; border-radius: 4px; font-weight: bold;">Print Team</button>
+        <button onclick="resetTeam()" class="btn-reset">Reset Team</button>
+    </div>
+</div>
+
+<script>
+    const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTcdzjZ4zYlGgFe5acS8xOb1vHR9b8i98UudIOe-iC9Z1d6x6AY5zATgX217cNjcNtAGDLJ56y8Jr8N/pub?gid=0&single=true&output=csv';
+    const proxy = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(csvUrl);
+
+    let state = { budget: 100.0, squad: [], countyLimits: {} };
+    const limits = { GK: 1, DEF: 6, MID: 2, FWD: 6, SUB: 3 };
+
+    async function fetchData() {
+        try {
+            const res = await fetch(proxy);
+            const data = await res.text();
+            const rows = data.split('\n').filter(r => r.trim() !== '').slice(1);
+            const tbody = document.getElementById('marketBody');
+            const countyDropdown = document.getElementById('countyFilter');
+            let counties = new Set();
+
+            tbody.innerHTML = '';
+            rows.forEach((row) => {
+                const cols = row.split(',').map(c => c.replace(/"/g, '').trim());
+                if(cols.length < 3) return;
+
+                // CORRECTED MAPPING FROM IMAGE
+                const county = cols[0] || "Unknown";
+                const firstName = cols[1] || "";
+                const lastName = cols[2] || "";
+                const name = `${firstName} ${lastName}`.trim();
+                const totalPts = parseFloat(cols[5]) || 0;
+                const lastWeek = parseFloat(cols[6]) || 0;
+                const pos = (cols[7] || "FWD").toUpperCase();
+                const mins = parseFloat(cols[8]) || 0;
+
+                counties.add(county);
+
+                // Pricing Logic: Base + Points + Mins - Bad Form
+                let p = 5.0;
+                p += (Math.floor(totalPts / 3) * 0.1);
+                if (mins >= 50) p += 0.2;
+                if (lastWeek <= 0 && totalPts > 0) p -= 0.2;
+                const finalPrice = Math.max(4.0, p).toFixed(1);
+
+                const tr = document.createElement('tr');
+                tr.setAttribute('data-name', name.toLowerCase());
+                tr.setAttribute('data-county', county.toLowerCase());
+                tr.innerHTML = `
+                    <td><b>${name}</b></td>
+                    <td>${county}</td>
+                    <td>${pos}</td>
+                    <td>${finalPrice}m</td>
+                    <td><button class="btn-add" onclick="pickPlayer('${name.replace(/'/g, "\\'")}','${county.replace(/'/g, "\\'")}','${pos}',${finalPrice})">Add</button></td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            Array.from(counties).sort().forEach(c => {
+                const opt = document.createElement('option');
+                opt.value = c.toLowerCase();
+                opt.innerText = c;
+                countyDropdown.appendChild(opt);
+            });
+        } catch (e) {
+            document.getElementById('marketBody').innerHTML = '<tr><td colspan="5">Error loading data.</td></tr>';
+        }
+    }
+
+    function runFilters() {
+        const s = document.getElementById('nameSearch').value.toLowerCase();
+        const c = document.getElementById('countyFilter').value.toLowerCase();
+        document.querySelectorAll('#marketBody tr').forEach(row => {
+            const mN = row.getAttribute('data-name').includes(s);
+            const mC = c === "" || row.getAttribute('data-county') === c;
+            row.style.display = (mN && mC) ? "" : "none";
+        });
+    }
+
+    function pickPlayer(name, county, pos, price) {
+        if (state.squad.length >= 18) return alert("Squad full!");
+        if (state.budget < price) return alert("No budget!");
+        if ((state.countyLimits[county] || 0) >= 2) return alert("Max 2 per county!");
+
+        let count = state.squad.filter(p => p.slot === pos).length;
+        let slot = (count >= limits[pos]) ? 'SUB' : pos;
+        
+        if (slot === 'SUB' && state.squad.filter(p => p.slot === 'SUB').length >= limits.SUB) {
+            return alert("Position and Subs full!");
+        }
+
+        state.squad.push({name, county, slot, price});
+        state.budget -= price;
+        state.countyLimits[county] = (state.countyLimits[county] || 0) + 1;
+        refresh();
+    }
+
+    function drop(i) {
+        const p = state.squad[i];
+        state.budget += p.price;
+        state.countyLimits[p.county]--;
+        state.squad.splice(i, 1);
+        refresh();
+    }
+
+    function resetTeam() {
+        if(confirm("Are you sure you want to clear your entire team?")) {
+            state = { budget: 100.0, squad: [], countyLimits: {} };
+            refresh();
+        }
+    }
+
+    function refresh() {
+        document.getElementById('budget').innerText = state.budget.toFixed(1);
+        document.getElementById('count').innerText = state.squad.length;
+        ['GK','DEF','MID','FWD','SUB'].forEach(id => {
+            const container = document.getElementById('list-'+id);
+            container.innerHTML = `<div class="slot-title">${id}</div>`;
+        });
+        state.squad.forEach((p, i) => {
+            const d = document.createElement('div');
+            d.className = 'player-card';
+            d.innerHTML = `<span>${p.name}</span><span class="remove-btn" onclick="drop(${i})">✕</span>`;
+            document.getElementById('list-'+p.slot).appendChild(d);
+        });
+    }
+
+    fetchData();
+</script>
+</body>
+</html>
