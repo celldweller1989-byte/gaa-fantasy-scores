@@ -7,56 +7,53 @@
             const response = await fetch(csvUrl + '&cache=' + new Date().getTime());
             const data = await response.text();
             
-            // Convert CSV text into an array of rows, skipping the header
-            let rows = data.split('\n').slice(1).filter(row => row.trim() !== '');
+            // Clean up rows and remove empty ones
+            let rows = data.split('\n').filter(row => row.trim() !== '');
+            // Remove the header row
+            rows.shift();
 
-            // SORTING LOGIC: Sort by County (Index 0) then Position (Index 7)
+            // 1. Safe Sort
             rows.sort((a, b) => {
                 const colsA = a.split(',');
                 const colsB = b.split(',');
-                
-                // Compare County
-                if (colsA[0] < colsB[0]) return -1;
-                if (colsA[0] > colsB[0]) return 1;
-
-                // If County is same, compare Position (Column H is index 7)
-                const posA = (colsA[7] || '').trim();
-                const posB = (colsB[7] || '').trim();
-                if (posA < posB) return -1;
-                if (posA > posB) return 1;
-                
+                // Sort by County (Index 0)
+                if ((colsA[0] || '') < (colsB[0] || '')) return -1;
+                if ((colsA[0] || '') > (colsB[0] || '')) return 1;
                 return 0;
             });
 
             tableBody.innerHTML = ''; 
 
             rows.forEach(row => {
-                const cols = row.split(',');
-                if (cols.length >= 6) {
+                // This regex handles names with commas or quotes safely
+                const cols = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+                
+                if (cols.length >= 3) { // Ensure at least County and Names exist
                     const tr = document.createElement('tr');
                     
-                    // Mapping your specific columns:
-                    // cols[0]: County, cols[1]: First, cols[2]: Last, 
-                    // cols[3]: Goals, cols[4]: Points, cols[5]: Fantasy, cols[7]: Position
-                    
-                    const firstName = (cols[1] || '').replace(/"/g, '');
-                    const lastName = (cols[2] || '').replace(/"/g, '');
-                    const county = (cols[0] || '').replace(/"/g, '');
-                    const position = (cols[7] || 'N/A').replace(/"/g, '');
+                    // Column Map: A=0(County), B=1(First), C=2(Last), D=3(G), E=4(P), F=5(Total), H=7(Pos)
+                    const county = (cols[0] || '').replace(/"/g, '').trim();
+                    const first = (cols[1] || '').replace(/"/g, '').trim();
+                    const last = (cols[2] || '').replace(/"/g, '').trim();
+                    const goals = (cols[3] || '0').trim();
+                    const points = (cols[4] || '0').trim();
+                    const fPoints = (cols[5] || '0').trim();
+                    const pos = (cols[7] || 'N/A').replace(/"/g, '').trim();
 
                     tr.innerHTML = `
-                        <td>${firstName} ${lastName}</td>
+                        <td>${first} ${last}</td>
                         <td>${county}</td>
-                        <td>${position}</td>
-                        <td>${cols[3] || '0'}</td>
-                        <td>${cols[4] || '0'}</td>
-                        <td class="score">${cols[5] || '0'}</td>
+                        <td>${pos}</td>
+                        <td>${goals}</td>
+                        <td>${points}</td>
+                        <td class="score">${fPoints}</td>
                     `;
                     tableBody.appendChild(tr);
                 }
             });
         } catch (err) {
-            console.error("Error loading data:", err);
+            console.error("Error:", err);
+            tableBody.innerHTML = '<tr><td colspan="6">Error loading data. Check console for details.</td></tr>';
         }
     }
 
