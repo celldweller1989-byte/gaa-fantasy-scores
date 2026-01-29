@@ -68,7 +68,7 @@
         <div class="scroll-area">
             <table>
                 <thead><tr><th>Player</th><th>County</th><th>Pos</th><th>Price</th><th>Action</th></tr></thead>
-                <tbody id="marketBody"><tr><td colspan="5" style="text-align:center; padding:20px;">Connecting to Sheet...</td></tr></tbody>
+                <tbody id="marketBody"><tr><td colspan="5" style="text-align:center; padding:20px;">Fetching live players...</td></tr></tbody>
             </table>
         </div>
     </div>
@@ -106,10 +106,9 @@
 </div>
 
 <script>
-    // ID from your shared URL
-    const sheetID = '1sVhmmhRRESUvaLSyHCqPp6R-U7FwOQWL-3xtZ7W7g3w';
-    const playersUrl = `https://docs.google.com/spreadsheets/d/${sheetID}/gviz/tq?tqx=out:csv&gid=0`;
-    const submissionsUrl = `https://docs.google.com/spreadsheets/d/${sheetID}/gviz/tq?tqx=out:csv&gid=1045949920`;
+    // These are the direct CSV links to your specific Published Tabs
+    const playersUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTcdzjZ4zYlGgFe5acS8xOb1vHR9b8i98UudIOe-iC9Z1d6x6AY5zATgX217cNjcNtAGDLJ56y8Jr8N/pub?gid=0&single=true&output=csv';
+    const submissionsUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTcdzjZ4zYlGgFe5acS8xOb1vHR9b8i98UudIOe-iC9Z1d6x6AY5zATgX217cNjcNtAGDLJ56y8Jr8N/pub?gid=1045949920&single=true&output=csv';
 
     let state = { budget: 100.0, squad: [], countyLimits: {} };
     let playerDatabase = [];
@@ -117,11 +116,9 @@
 
     async function fetchData() {
         try {
-            // Using direct gviz fetch which is usually more stable than the published CSV
             const res = await fetch(playersUrl);
             const data = await res.text();
             
-            // Basic CSV parser for Gviz output
             const rows = data.split('\n').filter(r => r.trim() !== '').slice(1);
             const tbody = document.getElementById('marketBody');
             const countyDropdown = document.getElementById('countyFilter');
@@ -144,7 +141,6 @@
                 if (!name || name === " ") return;
                 counties.add(county);
 
-                // Price Formula
                 let p = 5.0;
                 p += (Math.floor(totalPts / 3) * 0.1);
                 if (mins >= 50) p += 0.2;
@@ -173,7 +169,7 @@
 
             loadSavedTeam();
         } catch (e) { 
-            document.getElementById('marketBody').innerHTML = `<tr><td colspan="5" style="color:red; text-align:center;">Market Error. Ensure Sheet is Shared "Anyone with Link".</td></tr>`;
+            document.getElementById('marketBody').innerHTML = `<tr><td colspan="5" style="color:red; text-align:center;">Error Loading Players. Refresh page or check Spreadsheet Publish settings.</td></tr>`;
         }
     }
 
@@ -200,9 +196,9 @@
     }
 
     function pickPlayer(name, county, pos, price, loading = false) {
-        if (state.squad.length >= 18) return loading ? null : alert("Full!");
-        if (state.budget < price) return loading ? null : alert("Budget!");
-        if ((state.countyLimits[county] || 0) >= 2) return loading ? null : alert("Max 2 per county!");
+        if (state.squad.length >= 18) return loading ? null : alert("Squad Full!");
+        if (state.budget < price) return loading ? null : alert("Budget Exceeded!");
+        if ((state.countyLimits[county] || 0) >= 2) return loading ? null : alert("Max 2 players per county!");
 
         let count = state.squad.filter(p => p.slot === pos).length;
         let slot = (count >= limits[pos]) ? 'SUB' : pos;
@@ -225,12 +221,12 @@
     }
 
     function saveAndRefresh() {
-        localStorage.setItem('orchard_v4', JSON.stringify(state));
+        localStorage.setItem('gaa_fantasy_final_v5', JSON.stringify(state));
         refresh();
     }
 
     function loadSavedTeam() {
-        const saved = localStorage.getItem('orchard_v4');
+        const saved = localStorage.getItem('gaa_fantasy_final_v5');
         if (saved) {
             state = JSON.parse(saved);
             refresh();
@@ -238,9 +234,9 @@
     }
 
     function resetTeam() {
-        if(confirm("Reset?")) {
+        if(confirm("Reset Squad?")) {
             state = { budget: 100.0, squad: [], countyLimits: {} };
-            localStorage.removeItem('orchard_v4');
+            localStorage.removeItem('gaa_fantasy_final_v5');
             refresh();
         }
     }
@@ -274,7 +270,7 @@
     function submitSquad() {
         const u = document.getElementById('username').value;
         const t = document.getElementById('teamName').value;
-        if (!u || !t) return alert("Missing Info");
+        if (!u || !t) return alert("Please enter Manager and Team names.");
         
         const squad = state.squad.map(p => `${p.slot}: ${p.name}`).join(' | ');
         const formID = "1FAIpQLSffAvVbFoCJ3F6GIfx2BmklEeN55naTRBGijibJTOkKkNK3Bg"; 
