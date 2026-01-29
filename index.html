@@ -3,22 +3,21 @@
 <head>
     <title>GAA Fantasy Hub</title>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; padding: 20px; background: #f0f2f5; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 20px; background: #f4f7f9; color: #333; }
         .box { max-width: 900px; margin: auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        h1 { color: #004a99; text-align: center; }
+        h1 { color: #004a99; text-align: center; border-bottom: 2px solid #004a99; padding-bottom: 10px; }
         table { width: 100%; border-collapse: collapse; margin-top: 20px; }
         th, td { border: 1px solid #eee; padding: 12px; text-align: left; }
-        th { background: #004a99; color: white; cursor: pointer; }
+        th { background: #004a99; color: white; text-transform: uppercase; font-size: 0.85em; }
         tr:nth-child(even) { background: #fcfcfc; }
-        .score-cell { font-weight: bold; color: #2e7d32; }
-        #error-log { color: #cc0000; background: #fff1f1; padding: 10px; display: none; margin-top: 10px; border-radius: 4px; }
+        tr:hover { background: #f1f7ff; }
+        .total-cell { font-weight: bold; color: #2e7d32; }
     </style>
 </head>
 <body>
 
 <div class="box">
-    <h1>🏆 Live GAA Fantasy Standings</h1>
-    <div id="error-log"></div>
+    <h1>🏆 GAA Fantasy Leaderboard</h1>
     <table id="mainTable">
         <thead>
             <tr>
@@ -27,39 +26,36 @@
                 <th>Pos</th>
                 <th>Goals</th>
                 <th>Points</th>
-                <th>Total</th>
+                <th>Total Score</th>
             </tr>
         </thead>
         <tbody id="tableBody">
-            <tr><td colspan="6" style="text-align:center;">Loading scores...</td></tr>
+            <tr><td colspan="6" style="text-align:center;">Fetching data...</td></tr>
         </tbody>
     </table>
 </div>
 
 <script>
-    // This is your specific CSV link with a proxy to stop the "Failed to Fetch" error
+    // Using AllOrigins proxy to ensure the "Failed to Fetch" error stays gone
     const sheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTcdzjZ4zYlGgFe5acS8xOb1vHR9b8i98UudIOe-iC9Z1d6x6AY5zATgX217cNjcNtAGDLJ56y8Jr8N/pub?gid=0&single=true&output=csv';
     const proxyUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(sheetUrl);
 
     async function fetchData() {
         const tableBody = document.getElementById('tableBody');
-        const errorLog = document.getElementById('error-log');
 
         try {
             const response = await fetch(proxyUrl);
-            if (!response.ok) throw new Error("Network response was not ok");
-            
             const data = await response.text();
-            // Split rows and skip the header
+            
+            // Split into rows and skip the header row
             let rows = data.split('\n').filter(r => r.trim() !== '').slice(1);
 
-            // SORTING: County (Col A/Index 0) then Position (Col H/Index 7)
+            // Sorting: First by County (Col A/Index 0), then by Position (Col H/Index 7)
             rows.sort((a, b) => {
                 const colA = a.split(',');
                 const colB = b.split(',');
                 if (colA[0] < colB[0]) return -1;
                 if (colA[0] > colB[0]) return 1;
-                // Secondary sort by Position (Index 7)
                 return (colA[7] || "").localeCompare(colB[7] || "");
             });
 
@@ -69,11 +65,10 @@
                 if (cols.length >= 6) {
                     const tr = document.createElement('tr');
                     
-                    // MAPPING BASED ON YOUR SCREENSHOT:
-                    // A=0(County), B=1(First), C=2(Last), D=3(G), E=4(P), F=5(Total), H=7(Pos)
-                    const fullName = `${cols[1]} ${cols[2]}`.replace(/"/g, '');
+                    // MAPPING: A=0(County), B=1(First), C=2(Last), D=3(G), E=4(P), F=5(Total), H=7(Pos)
+                    const fullName = `${cols[1].replace(/"/g, '')} ${cols[2].replace(/"/g, '')}`;
                     const county = cols[0].replace(/"/g, '');
-                    const pos = (cols[7] || 'N/A').replace(/"/g, '');
+                    const pos = (cols[7] || 'N/A').replace(/"/g, '').trim();
                     const goals = cols[3] || '0';
                     const points = cols[4] || '0';
                     const total = cols[5] || '0';
@@ -84,16 +79,13 @@
                         <td>${pos}</td>
                         <td>${goals}</td>
                         <td>${points}</td>
-                        <td class="score-cell">${total}</td>
+                        <td class="total-cell">${total}</td>
                     `;
                     tableBody.appendChild(tr);
                 }
             });
-
         } catch (err) {
-            errorLog.style.display = 'block';
-            errorLog.innerText = "Sync Error: " + err.message;
-            console.error(err);
+            tableBody.innerHTML = '<tr><td colspan="6" style="color:red;">Error loading data. Check the sheet is published to web.</td></tr>';
         }
     }
 
