@@ -10,72 +10,44 @@
         
         .header { background: var(--orange); color: white; padding: 20px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
         nav { display: flex; justify-content: center; background: var(--dark); padding: 0; position: sticky; top: 0; z-index: 100; }
-        .nav-link { color: white; padding: 15px 25px; text-decoration: none; font-weight: bold; cursor: pointer; transition: 0.3s; border: none; background: none; font-size: 14px; }
+        .nav-link { color: white; padding: 15px 20px; text-decoration: none; font-weight: bold; cursor: pointer; transition: 0.3s; border: none; background: none; font-size: 13px; text-transform: uppercase; }
         .nav-link:hover { background: #333; }
         .nav-link.active { background: var(--orange); }
 
         .container { padding: 15px; max-width: 1200px; margin: auto; }
         .main-layout { display: grid; grid-template-columns: 1fr 340px; gap: 20px; }
-        .panel { background: var(--white); border-radius: 8px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        .panel { background: var(--white); border-radius: 8px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 20px; }
 
-        /* Updated Search & Filter Bar */
-        .filter-bar { 
-            display: flex; 
-            flex-wrap: wrap; 
-            gap: 15px; 
-            margin-bottom: 20px; 
-            align-items: center;
-        }
-        .filter-item { flex: 1; min-width: 200px; }
+        /* Filter Bar */
+        .filter-bar { display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 20px; align-items: center; }
+        .filter-item { flex: 1; min-width: 180px; }
+        select, input { padding: 10px; border-radius: 6px; border: 2px solid var(--orange); width: 100%; height: 48px; box-sizing: border-box; font-size: 14px; outline: none; }
         
-        /* Orange Box Outlines */
-        select, input { 
-            padding: 10px; 
-            border-radius: 6px; 
-            border: 2px solid var(--orange); 
-            width: 100%; 
-            height: 48px; 
-            box-sizing: border-box; 
-            font-size: 14px;
-            outline: none;
-        }
-        select:focus, input:focus { box-shadow: 0 0 5px rgba(243, 112, 33, 0.5); }
-        
+        /* Table Styles */
         .scroll-box { max-height: 600px; overflow-y: auto; border: 1px solid #eee; border-radius: 5px; background: #fff; }
         table { width: 100%; border-collapse: collapse; }
         th { position: sticky; top: 0; background: #f8f8f8; padding: 12px; text-align: left; font-size: 11px; border-bottom: 2px solid #ddd; z-index: 5; text-transform: uppercase; }
         td { padding: 12px; border-bottom: 1px solid #eee; font-size: 14px; }
 
-        .player-info b { display: block; font-size: 14px; color: var(--dark); line-height: 1.2; }
-        .player-info span { display: block; font-size: 11px; color: var(--grey); font-weight: bold; text-transform: uppercase; margin-top: 2px; }
+        /* Rules UI */
+        .rules-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; }
+        .rule-card { border-left: 4px solid var(--orange); padding-left: 15px; }
+        .rule-card h3 { color: var(--orange); margin-top: 0; }
+        .rule-card ul { padding-left: 20px; margin: 0; }
+        .rule-card li { margin-bottom: 8px; font-size: 14px; }
 
-        .btn-group { display: flex; gap: 4px; }
-        .btn-pos { 
-            border: 1px solid var(--orange); 
-            background: white; 
-            color: var(--orange); 
-            padding: 5px 8px; 
-            border-radius: 4px; 
-            font-size: 10px; 
-            font-weight: bold; 
-            cursor: pointer; 
-            transition: 0.2s;
-            min-width: 38px;
-            text-align: center;
-        }
-        .btn-pos:hover { background: var(--orange); color: white; }
-
+        /* Squad Tracker */
         .pos-tracker { font-size: 12px; background: #fff3cd; padding: 12px; border-radius: 5px; margin-bottom: 15px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; border: 1px solid #ffeeba; }
         .squad-slot { display: flex; justify-content: space-between; background: #f9f9f9; padding: 8px; margin-bottom: 5px; border-radius: 4px; border-left: 4px solid var(--orange); align-items: center; font-size: 13px; }
+        .btn-group { display: flex; gap: 4px; }
+        .btn-pos { border: 1px solid var(--orange); background: white; color: var(--orange); padding: 5px 8px; border-radius: 4px; font-size: 10px; font-weight: bold; cursor: pointer; min-width: 38px; }
+        .btn-pos:hover { background: var(--orange); color: white; }
         .btn-remove { color: #dc3545; cursor: pointer; font-weight: bold; font-size: 18px; padding: 0 5px; }
 
-        .loading { text-align: center; padding: 50px; color: var(--orange); font-weight: bold; }
         .hidden { display: none; }
+        .loading { text-align: center; padding: 50px; color: var(--orange); font-weight: bold; }
 
-        @media (max-width: 900px) { 
-            .main-layout { grid-template-columns: 1fr; } 
-            .filter-item { min-width: 100%; }
-        }
+        @media (max-width: 900px) { .main-layout { grid-template-columns: 1fr; } .filter-item { min-width: 100%; } }
     </style>
 </head>
 <body>
@@ -83,21 +55,53 @@
 <div class="header"><h1>ORCHARD FANS FANTASY GAA</h1></div>
 
 <nav>
+    <button class="nav-link" id="btn-rules" onclick="navigate('rules')">RULES</button>
     <button class="nav-link active" id="btn-market" onclick="navigate('market')">TRANSFER MARKET</button>
     <button class="nav-link" id="btn-leaderboard" onclick="navigate('leaderboard')">LEADERBOARD</button>
 </nav>
 
 <div class="container">
+    <div id="page-rules" class="page hidden">
+        <div class="panel">
+            <h2 style="color:var(--orange); border-bottom: 2px solid var(--cream); padding-bottom: 10px;">Fantasy League Rules</h2>
+            <div class="rules-grid">
+                <div class="rule-card">
+                    <h3>Squad Selection</h3>
+                    <ul>
+                        <li>Total Budget: <b>100.0m</b></li>
+                        <li>Squad Size: <b>18 Players</b></li>
+                        <li>Max <b>2 Players</b> per County.</li>
+                        <li>Formation: 1 GK, 6 DEF, 2 MID, 6 FWD, 3 SUBS.</li>
+                    </ul>
+                </div>
+                <div class="rule-card">
+                    <h3>Scoring Points</h3>
+                    <ul>
+                        <li><b>Appearance:</b> +2 pts (60+ mins), +1 pt (<60 mins)</li>
+                        <li><b>Goals:</b> FWD (+3), MID (+5), DEF/GK (+8)</li>
+                        <li><b>Points:</b> +1 pt for all positions</li>
+                        <li><b>Clean Sheet:</b> GK (+5), DEF (+2)</li>
+                    </ul>
+                </div>
+                <div class="rule-card">
+                    <h3>Discipline & Bonus</h3>
+                    <ul>
+                        <li><b>Yellow Card:</b> -1 pt</li>
+                        <li><b>Black Card:</b> -2 pts</li>
+                        <li><b>Red Card:</b> -5 pts</li>
+                        <li><b>Man of the Match:</b> +3 pts</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div id="page-market" class="page">
         <div class="main-layout">
             <div class="panel">
                 <div class="filter-bar">
-                    <div class="filter-item">
-                        <input type="text" id="searchName" placeholder="Search Player Name..." onkeyup="applyFilters()">
-                    </div>
-                    <div class="filter-item">
-                        <select id="filterCounty" onchange="applyFilters()"><option value="ALL">All Counties</option></select>
-                    </div>
+                    <div class="filter-item"><input type="text" id="searchName" placeholder="Search Player..." onkeyup="applyFilters()"></div>
+                    <div class="filter-item"><select id="filterCounty" onchange="applyFilters()"><option value="ALL">All Counties</option></select></div>
                     <div class="filter-item">
                         <select id="filterPos" onchange="applyFilters()">
                             <option value="ALL">All Positions</option>
@@ -109,24 +113,19 @@
                 <div class="scroll-box">
                     <div id="loading-market" class="loading">Fetching Player Data...</div>
                     <table id="market-table" class="hidden">
-                        <thead>
-                            <tr><th>Player</th><th>Pts</th><th>Price</th><th>Add to Squad</th></tr>
-                        </thead>
+                        <thead><tr><th>Player</th><th>Pts</th><th>Price</th><th>Add to Squad</th></tr></thead>
                         <tbody id="market-body"></tbody>
                     </table>
                 </div>
             </div>
-
             <div class="panel">
                 <div class="pos-tracker" id="pos-tracker">
                     <div>GK: 0/1</div><div>DEF: 0/6</div><div>MID: 0/2</div><div>FWD: 0/6</div><div style="color:var(--orange)">SUBS: 0/3</div>
                 </div>
-                <div style="font-weight:bold; margin-bottom: 15px; font-size: 15px;">
-                    Budget: <span id="budget-val">100.0</span>m | Squad: <span id="count-val">0</span>/18
-                </div>
+                <div style="font-weight:bold; margin-bottom: 15px; font-size: 15px;">Budget: <span id="budget-val">100.0</span>m | Squad: <span id="count-val">0</span>/18</div>
                 <div id="squad-list"></div>
                 <div id="submission-area" class="hidden" style="margin-top:15px; border-top: 2px solid var(--green); padding-top:15px;">
-                    <input type="text" id="team-name" placeholder="Enter Team Name" style="margin-bottom:10px; padding:10px; width:100%; box-sizing:border-box;">
+                    <input type="text" id="team-name" placeholder="Enter Team Name" style="margin-bottom:10px; padding:10px; width:100%; box-sizing:border-box; border:2px solid var(--orange); border-radius:6px; outline:none;">
                     <button style="background:var(--green); color:white; border:none; width:100%; padding:15px; cursor:pointer; font-weight:bold; border-radius:4px;" onclick="submitTeam()">SUBMIT TEAM</button>
                 </div>
                 <button onclick="resetSquad()" style="width:100%; margin-top:10px; padding:8px; background:#f0f0f0; border:1px solid #ccc; border-radius:4px; cursor:pointer;">Reset Squad</button>
@@ -147,4 +146,156 @@
 </div>
 
 <script>
-    const SCORERS_URL = '
+    const SCORERS_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTcdzjZ4zYlGgFe5acS8xOb1vHR9b8i98UudIOe-iC9Z1d6x6AY5zATgX217cNjcNtAGDLJ56y8Jr8N/pub?output=csv';
+    const ENTRIES_URL = 'PASTE_YOUR_ENTRIES_CSV_LINK_HERE';
+
+    let allPlayers = [];
+    let state = { budget: 100.0, squad: [] };
+    const LIMITS = { GK: 1, DEF: 6, MID: 2, FWD: 6, SUB: 3 };
+
+    async function init() {
+        try {
+            const res = await fetch(SCORERS_URL + '&t=' + new Date().getTime());
+            const text = await res.text();
+            processScorers(text);
+        } catch (e) { document.getElementById('loading-market').innerText = "Sync Error."; }
+    }
+
+    function parseCSV(text) {
+        const rows = []; let row = []; let field = ''; let inQuotes = false;
+        for (let i = 0; i < text.length; i++) {
+            const char = text[i]; const next = text[i+1];
+            if (inQuotes) {
+                if (char === '"' && next === '"') { field += '"'; i++; }
+                else if (char === '"') inQuotes = false;
+                else field += char;
+            } else {
+                if (char === '"') inQuotes = true;
+                else if (char === ',') { row.push(field); field = ''; }
+                else if (char === '\n' || char === '\r') {
+                    if (field || row.length) { row.push(field); rows.push(row); row = []; field = ''; }
+                    if (char === '\r' && next === '\n') i++;
+                } else field += char;
+            }
+        }
+        if (field || row.length) { row.push(field); rows.push(row); }
+        return rows;
+    }
+
+    function processScorers(csvText) {
+        const data = parseCSV(csvText);
+        const countySet = new Set();
+        allPlayers = [];
+        for (let i = 1; i < data.length; i++) {
+            const col = data[i];
+            if (!col[0] || col[0].trim() === "") continue;
+            const county = col[0].trim();
+            const fullName = ((col[1] || "") + " " + (col[2] || "")).trim();
+            const rawPos = (col[3] || "").toLowerCase();
+            const totalPts = parseInt(col[8]) || 0;
+            let pos = "FWD";
+            const pNum = parseInt(rawPos.replace(/\D/g, ''));
+            if (pNum === 1 || rawPos.includes("gk")) pos = "GK";
+            else if ((pNum >= 2 && pNum <= 7) || rawPos.includes("def")) pos = "DEF";
+            else if ((pNum >= 8 && pNum <= 9) || rawPos.includes("mid")) pos = "MID";
+            allPlayers.push({ county, name: fullName, pos, points: totalPts, price: (pos === "GK" ? 4.5 : (pos === "DEF" || pos === "MID" ? 5.0 : 6.0)) });
+            countySet.add(county);
+        }
+        const filter = document.getElementById('filterCounty');
+        filter.innerHTML = '<option value="ALL">All Counties</option>';
+        Array.from(countySet).sort().forEach(c => {
+            const opt = document.createElement('option'); opt.value = c; opt.innerText = c;
+            filter.appendChild(opt);
+        });
+        document.getElementById('loading-market').classList.add('hidden');
+        document.getElementById('market-table').classList.remove('hidden');
+        applyFilters();
+    }
+
+    function applyFilters() {
+        const nameQ = document.getElementById('searchName').value.toLowerCase();
+        const countyQ = document.getElementById('filterCounty').value;
+        const posQ = document.getElementById('filterPos').value;
+        const filtered = allPlayers.filter(p => (p.name.toLowerCase().includes(nameQ)) && (countyQ === "ALL" || p.county === countyQ) && (posQ === "ALL" || p.pos === posQ));
+        renderMarket(filtered);
+    }
+
+    function renderMarket(data) {
+        document.getElementById('market-body').innerHTML = data.map(p => `
+            <tr>
+                <td><b>${p.name}</b><br><small style="color:var(--grey)">${p.county}</small></td>
+                <td>${p.points}</td>
+                <td>${p.price.toFixed(1)}m</td>
+                <td>
+                    <div class="btn-group">
+                        <button class="btn-pos" onclick="addPlayer('${p.name.replace(/'/g, "\\'")}', '${p.county.replace(/'/g, "\\'")}', 'GK', ${p.price})">GK</button>
+                        <button class="btn-pos" onclick="addPlayer('${p.name.replace(/'/g, "\\'")}', '${p.county.replace(/'/g, "\\'")}', 'DEF', ${p.price})">DEF</button>
+                        <button class="btn-pos" onclick="addPlayer('${p.name.replace(/'/g, "\\'")}', '${p.county.replace(/'/g, "\\'")}', 'MID', ${p.price})">MID</button>
+                        <button class="btn-pos" onclick="addPlayer('${p.name.replace(/'/g, "\\'")}', '${p.county.replace(/'/g, "\\'")}', 'FWD', ${p.price})">FWD</button>
+                    </div>
+                </td>
+            </tr>
+        `).join('') || '<tr><td colspan="4" style="text-align:center;">No players found.</td></tr>';
+    }
+
+    function navigate(page) {
+        document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
+        document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+        document.getElementById('page-' + page).classList.remove('hidden');
+        document.getElementById('btn-' + page).classList.add('active');
+        if (page === 'leaderboard') loadLeaderboard();
+    }
+
+    function addPlayer(name, county, role, price) {
+        if (state.squad.length >= 18) return alert("Squad full!");
+        if (state.budget < price) return alert("Insufficient budget!");
+        if (state.squad.filter(p => p.county === county).length >= 2) return alert("Max 2 per county!");
+        let finalRole = (state.squad.filter(p => p.role === role).length < LIMITS[role]) ? role : (state.squad.filter(p => p.role === 'SUB').length < LIMITS.SUB ? 'SUB' : null);
+        if (!finalRole) return alert(role + " slots full.");
+        state.squad.push({name, county, price, role: finalRole});
+        state.budget -= price;
+        updateUI();
+    }
+
+    function removePlayer(i) {
+        state.budget += state.squad[i].price;
+        state.squad.splice(i, 1);
+        updateUI();
+    }
+
+    function updateUI() {
+        document.getElementById('budget-val').innerText = state.budget.toFixed(1);
+        document.getElementById('count-val').innerText = state.squad.length;
+        const counts = { GK: 0, DEF: 0, MID: 0, FWD: 0, SUB: 0 };
+        state.squad.forEach(p => counts[p.role]++);
+        document.getElementById('pos-tracker').innerHTML = `<div>GK: ${counts.GK}/1</div><div>DEF: ${counts.DEF}/6</div><div>MID: ${counts.MID}/2</div><div>FWD: ${counts.FWD}/6</div><div style="color:var(--orange)">SUBS: ${counts.SUB}/3</div>`;
+        document.getElementById('squad-list').innerHTML = state.squad.map((p, i) => `<div class="squad-slot"><span><b>${p.role}</b>: ${p.name}</span><span class="btn-remove" onclick="removePlayer(${i})">×</span></div>`).join('');
+        document.getElementById('submission-area').classList.toggle('hidden', state.squad.length !== 18);
+    }
+
+    async function loadLeaderboard() {
+        try {
+            const res = await fetch(ENTRIES_URL + '&t=' + new Date().getTime());
+            const text = await res.text();
+            const data = parseCSV(text).slice(1);
+            const playerPoints = {};
+            allPlayers.forEach(p => playerPoints[p.name] = p.points);
+            const teams = data.map(col => {
+                if (col.length < 2) return null;
+                const teamName = col[0]; const squadStr = col[1]; let total = 0;
+                Object.keys(playerPoints).forEach(pName => { if (squadStr.includes(pName)) total += playerPoints[pName]; });
+                return { teamName, total };
+            }).filter(x => x).sort((a,b) => b.total - a.total);
+            document.getElementById('leaderboard-body').innerHTML = teams.map((t, i) => `<tr><td>${i+1}</td><td>${t.teamName}</td><td style="text-align:right; font-weight:bold;">${t.total}</td></tr>`).join('');
+            document.getElementById('loading-leaderboard').classList.add('hidden');
+            document.getElementById('leaderboard-table').classList.remove('hidden');
+        } catch (e) { document.getElementById('loading-leaderboard').innerText = "Leaderboard error."; }
+    }
+
+    function resetSquad() { state.squad = []; state.budget = 100.0; updateUI(); }
+    function submitTeam() { alert("Submitted!"); location.reload(); }
+
+    init();
+</script>
+</body>
+</html>
