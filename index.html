@@ -59,9 +59,7 @@
 <script>
     // --- SETTINGS ---
     const playersUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTcdzjZ4zYlGgFe5acS8xOb1vHR9b8i98UudIOe-iC9Z1d6x6AY5zATgX217cNjcNtAGDLJ56y8Jr8N/pub?output=csv&t=' + Date.now();
-    
-    // UPDATED WITH YOUR NEW URL
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbyVpULAmK_3FrHRSod9UUqnhQ2uR0pCGOXbKOWdVjJLgtp-bU5zHbEFqWSKKiXpTK8sZw/exec';
+    const scriptURL = 'PASTE_YOUR_NEW_DEPLOYMENT_URL_HERE'; // <--- PUT YOUR URL HERE
 
     let state = { budget: 100.0, squad: [] };
     let masterDatabase = [];
@@ -96,4 +94,77 @@
 
     function renderMarket(data) {
         document.getElementById('market-body').innerHTML = data.map(p => `
-            <tr data-
+            <tr data-search="${p.name.toLowerCase()} ${p.county.toLowerCase()}">
+                <td><b>${p.name}</b><br><small>${p.county}</small></td>
+                <td>${p.pos}</td>
+                <td>
+                    <span class="stat-tag">G: ${p.goals} | P: ${p.pts}</span>
+                    <span class="stat-tag">CS: ${p.cs} | Y/R: ${p.yellow}/${p.red}</span>
+                </td>
+                <td style="color:var(--orange); font-weight:bold;">${p.price.toFixed(1)}m</td>
+                <td><button class="btn-add" onclick="add('${p.name.replace(/'/g, "\\'")}', '${p.pos}', ${p.price})">ADD</button></td>
+            </tr>
+        `).join('');
+    }
+
+    function add(name, pos, price) {
+        if (state.squad.length >= 18) return alert("Squad full!");
+        if (state.budget < price) return alert("Budget exceeded!");
+        state.squad.push({name, pos, price});
+        state.budget -= price;
+        update();
+    }
+
+    function remove(i) {
+        state.budget += state.squad[i].price;
+        state.squad.splice(i, 1);
+        update();
+    }
+
+    function update() {
+        document.getElementById('budget-val').innerText = state.budget.toFixed(1);
+        document.getElementById('count-val').innerText = state.squad.length;
+        const list = document.getElementById('squad-list');
+        list.innerHTML = state.squad.map((p, i) => `
+            <div class="squad-slot">
+                <span><b>${p.pos}</b>: ${p.name}</span>
+                <button onclick="remove(${i})" style="border:none;background:none;color:red;cursor:pointer;">✕</button>
+            </div>
+        `).join('') || '<p style="text-align:center;color:#888;">Select 18 players</p>';
+        document.getElementById('submission-form').style.display = (state.squad.length === 18) ? 'block' : 'none';
+    }
+
+    async function sendTeam() {
+        const mName = document.getElementById('mgr-name').value.trim();
+        const tName = document.getElementById('team-name').value.trim();
+        if (!mName || !tName) return alert("Fill in names!");
+
+        const btn = document.getElementById('submit-button');
+        btn.disabled = true; btn.innerText = "SAVING...";
+
+        const params = new URLSearchParams();
+        params.append('managerName', mName);
+        params.append('teamName', tName);
+        params.append('squadList', state.squad.map(p => p.name).join(', '));
+
+        try {
+            await fetch(scriptURL, { method: 'POST', mode: 'no-cors', body: params });
+            alert("SUCCESS! Team recorded.");
+            location.reload();
+        } catch (e) {
+            alert("Error saving.");
+            btn.disabled = false;
+        }
+    }
+
+    function filterTable() {
+        const q = document.getElementById('playerSearch').value.toLowerCase();
+        document.querySelectorAll('#market-body tr').forEach(r => {
+            r.style.display = r.getAttribute('data-search').includes(q) ? '' : 'none';
+        });
+    }
+
+    init();
+</script>
+</body>
+</html>
