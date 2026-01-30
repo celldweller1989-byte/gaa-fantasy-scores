@@ -14,7 +14,7 @@
         .panel { background: var(--white); border-radius: 8px; padding: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 15px; }
         .main-layout { display: grid; grid-template-columns: 1fr 340px; gap: 15px; }
         
-        /* Filter Bar Styles */
+        /* Filter Section */
         .filter-bar { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 10px; margin-bottom: 15px; }
         select, input { padding: 12px; border-radius: 5px; border: 1px solid #ccc; width: 100%; box-sizing: border-box; font-size: 0.9em; height: 45px; }
 
@@ -43,6 +43,16 @@
     <button class="tab-btn" onclick="showTab('rules')">Rules</button>
 </div>
 
+<div id="rules" class="tab-content panel" style="display:none;">
+    <h3>Squad Rules</h3>
+    <ul>
+        <li><b>Starting XV:</b> 1 GK, 6 DEF, 2 MID, 6 FWD</li>
+        <li><b>Bench:</b> 3 Substitutes</li>
+        <li><b>Budget:</b> 50.0m</li>
+        <li><b>County Limit:</b> Max 2 players per county</li>
+    </ul>
+</div>
+
 <div id="market" class="tab-content">
     <div class="main-layout">
         <div class="panel">
@@ -52,7 +62,6 @@
                     <option value="ALL">All Counties</option>
                     <option value="Armagh">Armagh</option>
                     <option value="Cork">Cork</option>
-                    <option value="Derry">Derry</option>
                     <option value="Donegal">Donegal</option>
                     <option value="Dublin">Dublin</option>
                     <option value="Galway">Galway</option>
@@ -97,22 +106,54 @@
 </div>
 
 <script>
-    // Note: I added .trim() to the data to handle Excel spaces automatically
+    // Your Google Sheets CSV Link
+    const SCORES_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTcdzjZ4zYlGgFe5acS8xOb1vHR9b8i98UudIOe-iC9Z1d6x6AY5zATgX217cNjcNtAGDLJ56y8Jr8N/pub?output=csv';
+
     const playersData = [
-        ["Donegal", "Gavin Mulreany", "GK", 7, 4.5], ["Donegal", "Caolan McColgan", "DEF", 0, 5.0], ["Donegal", "Brendan McCole", "DEF", 0, 5.0], ["Donegal", "Finbarr Roarty", "DEF", 1, 5.0], ["Donegal", "Ryan McHugh", "DEF", 1, 5.0], ["Donegal", "Caolan McGonagle", "DEF", 1, 5.0], ["Donegal", "Peadar Mogan", "DEF", 0, 5.0], ["Donegal", "Hugh McFadden", "MID", 0, 5.0], ["Donegal", "Jason McGee", "MID", 1, 5.0], ["Donegal", "Dáire Ó Baoill", "FWD", 5, 6.0], ["Donegal", "Shane O'Donnell", "FWD", 1, 6.0], ["Donegal", "Ciarán Moore", "FWD", 0, 6.0], ["Donegal", "Conor O'Donnell", "FWD", 2, 6.0], ["Donegal", "Michael Langan", "FWD", 12, 6.0], ["Donegal", "Shea Malone", "FWD", 3, 6.0],
-        ["Dublin", "Evan Comerford", "GK", 0, 4.5], ["Dublin", "Eoin Murchan", "DEF", 0, 5.0], ["Dublin", "Seán MacMahon", "DEF", 0, 5.0], ["Dublin", "David Byrne", "DEF", 0, 5.0], ["Dublin", "Robert Shaw", "DEF", 0, 5.0], ["Dublin", "Nathan Doran", "DEF", 0, 5.0], ["Dublin", "Eoin Kennedy", "DEF", 0, 5.0], ["Dublin", "Ethan Dunne", "MID", 0, 5.0], ["Dublin", "Tom Lahiff", "MID", 0, 5.0], ["Dublin", "Killian McGinnis", "FWD", 2, 6.0], ["Dublin", "Niall Scully", "FWD", 0, 6.0], ["Dublin", "Brian Howard", "FWD", 1, 6.0], ["Dublin", "Paddy Small", "FWD", 2, 6.0], ["Dublin", "Con O'Callaghan", "FWD", 14, 6.0], ["Dublin", "Lorcan O'Dell", "FWD", 0, 6.0],
-        ["Monaghan", "Darren McDonnell", "GK", 1, 4.5], ["Monaghan", "Ryan Wylie", "DEF", 0, 5.0], ["Monaghan", "Kieran Duffy", "DEF", 0, 5.0], ["Monaghan", "Ryan O'Toole", "DEF", 0, 5.0], ["Monaghan", "Karl O'Connell", "DEF", 0, 5.0], ["Monaghan", "Killian Lavelle", "DEF", 0, 5.0], ["Monaghan", "Kevin Loughran", "DEF", 0, 5.0], ["Monaghan", "Andrew Woods", "MID", 1, 5.0], ["Monaghan", "Gary Mohan", "MID", 0, 5.0], ["Monaghan", "Michael Hamill", "FWD", 0, 6.0], ["Monaghan", "Joel Wilson", "FWD", 0, 6.0], ["Monaghan", "Barry McBennett", "FWD", 1, 6.0], ["Monaghan", "David Garland", "FWD", 2, 6.0], ["Monaghan", "Jason Irwin", "FWD", 1, 6.0], ["Monaghan", "Stephen Mooney", "FWD", 5, 6.0],
+        ["Donegal", "Gavin Mulreany", "GK", 0, 4.5], ["Donegal", "Caolan McColgan", "DEF", 0, 5.0], ["Donegal", "Brendan McCole", "DEF", 0, 5.0], ["Donegal", "Finbarr Roarty", "DEF", 0, 5.0], ["Donegal", "Ryan McHugh", "DEF", 0, 5.0], ["Donegal", "Caolan McGonagle", "DEF", 0, 5.0], ["Donegal", "Peadar Mogan", "DEF", 0, 5.0], ["Donegal", "Hugh McFadden", "MID", 0, 5.0], ["Donegal", "Jason McGee", "MID", 0, 5.0], ["Donegal", "Dáire Ó Baoill", "FWD", 0, 6.0], ["Donegal", "Shane O'Donnell", "FWD", 0, 6.0], ["Donegal", "Ciarán Moore", "FWD", 0, 6.0], ["Donegal", "Conor O'Donnell", "FWD", 0, 6.0], ["Donegal", "Michael Langan", "FWD", 0, 6.0], ["Donegal", "Shea Malone", "FWD", 0, 6.0],
+        ["Dublin", "Evan Comerford", "GK", 0, 4.5], ["Dublin", "Eoin Murchan", "DEF", 0, 5.0], ["Dublin", "Seán MacMahon", "DEF", 0, 5.0], ["Dublin", "David Byrne", "DEF", 0, 5.0], ["Dublin", "Robert Shaw", "DEF", 0, 5.0], ["Dublin", "Nathan Doran", "DEF", 0, 5.0], ["Dublin", "Eoin Kennedy", "DEF", 0, 5.0], ["Dublin", "Ethan Dunne", "MID", 0, 5.0], ["Dublin", "Tom Lahiff", "MID", 0, 5.0], ["Dublin", "Killian McGinnis", "FWD", 0, 6.0], ["Dublin", "Niall Scully", "FWD", 0, 6.0], ["Dublin", "Brian Howard", "FWD", 0, 6.0], ["Dublin", "Paddy Small", "FWD", 0, 6.0], ["Dublin", "Con O'Callaghan", "FWD", 0, 6.0], ["Dublin", "Lorcan O'Dell", "FWD", 0, 6.0],
+        ["Monaghan", "Darren McDonnell", "GK", 0, 4.5], ["Monaghan", "Ryan Wylie", "DEF", 0, 5.0], ["Monaghan", "Kieran Duffy", "DEF", 0, 5.0], ["Monaghan", "Ryan O'Toole", "DEF", 0, 5.0], ["Monaghan", "Karl O'Connell", "DEF", 0, 5.0], ["Monaghan", "Killian Lavelle", "DEF", 0, 5.0], ["Monaghan", "Kevin Loughran", "DEF", 0, 5.0], ["Monaghan", "Andrew Woods", "MID", 0, 5.0], ["Monaghan", "Gary Mohan", "MID", 0, 5.0], ["Monaghan", "Michael Hamill", "FWD", 0, 6.0], ["Monaghan", "Joel Wilson", "FWD", 0, 6.0], ["Monaghan", "Barry McBennett", "FWD", 0, 6.0], ["Monaghan", "David Garland", "FWD", 0, 6.0], ["Monaghan", "Jason Irwin", "FWD", 0, 6.0], ["Monaghan", "Stephen Mooney", "FWD", 0, 6.0],
         ["Armagh", "Blaine Hughes", "GK", 0, 4.5], ["Armagh", "Paddy Burns", "DEF", 0, 5.0], ["Armagh", "Aaron McKay", "DEF", 0, 5.0], ["Armagh", "Peter McGrane", "DEF", 0, 5.0], ["Armagh", "Barry McCambridge", "DEF", 0, 5.0], ["Armagh", "Greg McCabe", "DEF", 0, 5.0], ["Armagh", "Aidan Forker", "DEF", 0, 5.0], ["Armagh", "Ben Crealey", "MID", 0, 5.0], ["Armagh", "Niall Grimley", "MID", 0, 5.0], ["Armagh", "Oisin Conaty", "FWD", 0, 6.0], ["Armagh", "Rian O'Neill", "FWD", 0, 6.0], ["Armagh", "Tiernan Kelly", "FWD", 0, 6.0], ["Armagh", "Rory Grugan", "FWD", 0, 6.0], ["Armagh", "Andrew Murnin", "FWD", 0, 6.0], ["Armagh", "Conor Turbitt", "FWD", 0, 6.0],
-        ["Mayo", "Colm Reape", "GK", 1, 4.5], ["Mayo", "Jack Coyne", "DEF", 0, 5.0], ["Mayo", "David McBrien", "DEF", 0, 5.0], ["Mayo", "Rory Brickenden", "DEF", 0, 5.0], ["Mayo", "Donnacha McHugh", "DEF", 1, 5.0], ["Mayo", "Sam Callinan", "DEF", 0, 5.0], ["Mayo", "Eoin McGreal", "DEF", 0, 5.0], ["Mayo", "Stephen Coen", "MID", 0, 5.0], ["Mayo", "Jack Carney", "MID", 0, 5.0], ["Mayo", "Bob Tuohy", "FWD", 1, 6.0], ["Mayo", "Frank Irwin", "FWD", 0, 6.0], ["Mayo", "Jordan Flynn", "FWD", 0, 6.0], ["Mayo", "Aidan O'Shea", "FWD", 3, 6.0], ["Mayo", "Darragh Beirne", "FWD", 2, 6.0], ["Mayo", "Tommy Conroy", "FWD", 0, 6.0],
+        ["Mayo", "Colm Reape", "GK", 0, 4.5], ["Mayo", "Jack Coyne", "DEF", 0, 5.0], ["Mayo", "David McBrien", "DEF", 0, 5.0], ["Mayo", "Rory Brickenden", "DEF", 0, 5.0], ["Mayo", "Donnacha McHugh", "DEF", 0, 5.0], ["Mayo", "Sam Callinan", "DEF", 0, 5.0], ["Mayo", "Eoin McGreal", "DEF", 0, 5.0], ["Mayo", "Stephen Coen", "MID", 0, 5.0], ["Mayo", "Jack Carney", "MID", 0, 5.0], ["Mayo", "Bob Tuohy", "FWD", 0, 6.0], ["Mayo", "Frank Irwin", "FWD", 0, 6.0], ["Mayo", "Jordan Flynn", "FWD", 0, 6.0], ["Mayo", "Aidan O'Shea", "FWD", 0, 6.0], ["Mayo", "Darragh Beirne", "FWD", 0, 6.0], ["Mayo", "Tommy Conroy", "FWD", 0, 6.0],
         ["Galway", "Connor Gleeson", "GK", 0, 4.5], ["Galway", "Kieran Molloy", "DEF", 0, 5.0], ["Galway", "Sean Fitzgerald", "DEF", 0, 5.0], ["Galway", "Jack Glynn", "DEF", 0, 5.0], ["Galway", "Liam Silke", "DEF", 0, 5.0], ["Galway", "Johnny McGrath", "DEF", 0, 5.0], ["Galway", "Dylan McHugh", "DEF", 0, 5.0], ["Galway", "Sean Kelly", "MID", 0, 5.0], ["Galway", "Cian Hernon", "MID", 0, 5.0], ["Galway", "Finnian Ó Laoi", "FWD", 0, 6.0], ["Galway", "Ciarán Mulhern", "FWD", 0, 6.0], ["Galway", "Daniel O'Flaherty", "FWD", 0, 6.0], ["Galway", "Fionn McDonagh", "FWD", 0, 6.0], ["Galway", "Robert Finnerty", "FWD", 0, 6.0], ["Galway", "Oisín Mac Donnacha", "FWD", 0, 6.0],
         ["Kerry", "Shane Murphy", "GK", 0, 4.5], ["Kerry", "Evan Looney", "DEF", 0, 5.0], ["Kerry", "Jason Foley", "DEF", 0, 5.0], ["Kerry", "Dylan Casey", "DEF", 0, 5.0], ["Kerry", "Armin Heinrich", "DEF", 0, 5.0], ["Kerry", "Mike Breen", "DEF", 0, 5.0], ["Kerry", "Tadhg Morley", "DEF", 0, 5.0], ["Kerry", "Seán O'Brien", "MID", 0, 5.0], ["Kerry", "Liam Smith", "MID", 0, 5.0], ["Kerry", "Joe O'Connor", "FWD", 0, 6.0], ["Kerry", "Seán O'Shea", "FWD", 0, 6.0], ["Kerry", "Micheál Burns", "FWD", 0, 6.0], ["Kerry", "David Clifford", "FWD", 0, 6.0], ["Kerry", "Paudie Clifford", "FWD", 0, 6.0], ["Kerry", "Dara Moynihan", "FWD", 0, 6.0],
-        ["Cork", "Patrick Doyle", "GK", 0, 4.5], ["Cork", "Seán Brady", "DEF", 0, 5.0], ["Cork", "Daniel O'Mahony", "DEF", 0, 5.0], ["Cork", "Tommy Walsh", "DEF", 2, 5.0], ["Cork", "Brian O'Driscoll", "DEF", 0, 5.0], ["Cork", "Rory Maguire", "DEF", 0, 5.0], ["Cork", "Seán Walsh", "DEF", 0, 5.0], ["Cork", "Ian Maguire", "MID", 0, 5.0], ["Cork", "Colm O'Callaghan", "MID", 1, 5.0], ["Cork", "Luke Fahy", "FWD", 2, 6.0], ["Cork", "Maurice Shanley", "FWD", 0, 6.0], ["Cork", "Paul Walsh", "FWD", 2, 6.0], ["Cork", "Mark Cronin", "FWD", 7, 6.0], ["Cork", "Chris Óg Jones", "FWD", 1, 6.0], ["Cork", "Ruairí Deane", "FWD", 1, 6.0]
+        ["Cork", "Patrick Doyle", "GK", 0, 4.5], ["Cork", "Seán Brady", "DEF", 0, 5.0], ["Cork", "Daniel O'Mahony", "DEF", 0, 5.0], ["Cork", "Tommy Walsh", "DEF", 0, 5.0], ["Cork", "Brian O'Driscoll", "DEF", 0, 5.0], ["Cork", "Rory Maguire", "DEF", 0, 5.0], ["Cork", "Seán Walsh", "DEF", 0, 5.0], ["Cork", "Ian Maguire", "MID", 0, 5.0], ["Cork", "Colm O'Callaghan", "MID", 0, 5.0], ["Cork", "Luke Fahy", "FWD", 0, 6.0], ["Cork", "Maurice Shanley", "FWD", 0, 6.0], ["Cork", "Paul Walsh", "FWD", 0, 6.0], ["Cork", "Mark Cronin", "FWD", 0, 6.0], ["Cork", "Chris Óg Jones", "FWD", 0, 6.0], ["Cork", "Ruairí Deane", "FWD", 0, 6.0]
     ];
 
     let state = { budget: 50.0, squad: [] };
     const LIMITS = { GK: 1, DEF: 6, MID: 2, FWD: 6, SUB: 3 };
 
-    function init() { renderMarket(playersData); }
+    async function init() { 
+        renderMarket(playersData); 
+        await fetchWeeklyScores(); 
+    }
+
+    async function fetchWeeklyScores() {
+        try {
+            const response = await fetch(SCORES_CSV_URL + '&t=' + new Date().getTime());
+            const text = await response.text();
+            const rows = text.split('\n').slice(1);
+            
+            rows.forEach(row => {
+                const cols = row.split(',');
+                if (cols.length < 10) return;
+                
+                // Construct fullName from First Name (index 1) and Last Name (index 2)
+                const fullName = (cols[1].trim() + " " + cols[2].trim());
+                const totalPoints = parseInt(cols[10]) || 0;
+                
+                // Update player in the main array
+                const player = playersData.find(p => p[1].trim() === fullName);
+                if (player) {
+                    player[3] = totalPoints;
+                }
+            });
+            // Update the display immediately after data loads
+            applyFilters();
+        } catch (e) {
+            console.warn("Could not load scores. Check internet connection.");
+        }
+    }
 
     function showTab(t) {
         document.querySelectorAll('.tab-content').forEach(x => x.style.display = 'none');
@@ -121,25 +162,18 @@
         if (event) event.currentTarget.classList.add('active');
     }
 
-    // IMPROVED FILTER LOGIC
     function applyFilters() {
         const searchText = document.getElementById('searchName').value.toLowerCase().trim();
         const selectedCounty = document.getElementById('filterCounty').value.trim();
         const selectedPos = document.getElementById('filterPos').value.trim();
 
         const filtered = playersData.filter(p => {
-            // Clean the data strings for comparison
             const pCounty = p[0].trim();
             const pName = p[1].trim();
             const pPos = p[2].trim();
-
-            // 1. Search Box: Check Name OR County
+            
             const matchesSearch = pName.toLowerCase().includes(searchText) || pCounty.toLowerCase().includes(searchText);
-            
-            // 2. County Dropdown
             const matchesCounty = (selectedCounty === "ALL" || pCounty === selectedCounty);
-            
-            // 3. Position Dropdown
             const matchesPos = (selectedPos === "ALL" || pPos === selectedPos);
             
             return matchesSearch && matchesCounty && matchesPos;
@@ -156,18 +190,18 @@
                 <td>${p[4].toFixed(1)}m</td>
                 <td><button class="btn-add" onclick="addPlayer('${p[1].replace(/'/g, "\\'")}', '${p[0].trim()}', '${p[2].trim()}', ${p[4]})">+</button></td>
             </tr>
-        `).join('') || '<tr><td colspan="4" style="text-align:center; padding:20px;">No players found.</td></tr>';
+        `).join('') || '<tr><td colspan="4" style="text-align:center; padding:20px;">No players match filters.</td></tr>';
     }
 
     function addPlayer(name, county, pos, price) {
         if (state.squad.length >= 18) return alert("Squad full!");
         if (state.budget < price) return alert("Not enough budget!");
-        if (state.squad.filter(p => p.county === county).length >= 2) return alert(`Max 2 players from ${county}!`);
+        if (state.squad.filter(p => p.county === county).length >= 2) return alert(`Max 2 from ${county}!`);
         
         let role = (state.squad.filter(p => p.role === pos).length < LIMITS[pos]) ? pos : 
                    (state.squad.filter(p => p.role === 'SUB').length < LIMITS.SUB ? 'SUB' : null);
         
-        if (!role) return alert(`Starting slots for ${pos} and Sub slots are full!`);
+        if (!role) return alert(`Slots for ${pos} full!`);
         
         state.squad.push({name, county, pos, price, role});
         state.budget -= price;
@@ -192,7 +226,7 @@
         document.getElementById('submission-form').style.display = state.squad.length === 18 ? 'block' : 'none';
     }
 
-    async function sendTeam() {
+    function sendTeam() {
         const m = document.getElementById('mgr-name').value;
         const t = document.getElementById('team-name').value;
         if(!m || !t) return alert("Enter Manager & Team names!");
