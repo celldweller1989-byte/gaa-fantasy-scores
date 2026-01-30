@@ -7,20 +7,30 @@
     <style>
         :root { --orange: #f37021; --dark: #1a1a1a; --cream: #f4f1de; --white: #ffffff; --green: #28a745; }
         body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--cream); margin: 0; padding: 10px; color: var(--dark); }
-        .header { background: var(--orange); color: white; padding: 15px; border-radius: 10px; text-align: center; margin-bottom: 15px; }
+        .header { background: var(--orange); color: white; padding: 15px; border-radius: 10px; text-align: center; margin-bottom: 15px; box-shadow: 0 4px var(--dark); }
         .nav-tabs { display: flex; gap: 5px; margin-bottom: 15px; justify-content: center; }
         .tab-btn { padding: 10px; border: none; border-radius: 5px; cursor: pointer; background: #ddd; font-weight: bold; flex: 1; max-width: 120px; }
         .tab-btn.active { background: var(--orange); color: white; }
         .panel { background: var(--white); border-radius: 8px; padding: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 15px; }
         .main-layout { display: grid; grid-template-columns: 1fr 340px; gap: 15px; }
-        .scroll-box { max-height: 500px; overflow-y: auto; border: 1px solid #eee; border-radius: 5px; background: white; }
+        
+        .filter-bar { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 10px; margin-bottom: 15px; }
+        select, input { padding: 12px; border-radius: 5px; border: 1px solid #ccc; width: 100%; box-sizing: border-box; font-size: 0.9em; height: 45px; }
+
+        .scroll-box { max-height: 600px; overflow-y: auto; border: 1px solid #eee; border-radius: 5px; background: white; }
         table { width: 100%; border-collapse: collapse; }
         th { position: sticky; top: 0; background: #f8f8f8; padding: 10px; text-align: left; border-bottom: 2px solid #ddd; z-index: 10; font-size: 0.85em; }
         td { padding: 10px; border-bottom: 1px solid #eee; font-size: 0.85em; }
+        
         .squad-slot { display: flex; justify-content: space-between; background: #f9f9f9; padding: 8px; margin-bottom: 6px; border-radius: 4px; border-left: 4px solid var(--orange); font-size: 0.85em; align-items: center; }
+        .pos-tracker { font-size: 0.8em; background: #fff3cd; padding: 10px; border-radius: 5px; margin-bottom: 10px; display: grid; grid-template-columns: 1fr 1fr; gap: 5px; border: 1px solid #ffeeba; }
         .btn-add { background: var(--orange); color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; }
-        input { padding: 10px; border-radius: 5px; border: 1px solid #ccc; width: 100%; box-sizing: border-box; margin-bottom: 10px; }
-        @media (max-width: 900px) { .main-layout { grid-template-columns: 1fr; } }
+        .loading { text-align: center; padding: 40px; color: var(--orange); font-weight: bold; }
+
+        @media (max-width: 900px) { 
+            .main-layout { grid-template-columns: 1fr; } 
+            .filter-bar { grid-template-columns: 1fr; }
+        }
     </style>
 </head>
 <body>
@@ -31,119 +41,184 @@
 
 <div class="nav-tabs">
     <button class="tab-btn active" onclick="showTab('market')">Market</button>
-    <button class="tab-btn" onclick="showTab('leaderboard')">Leagues</button>
     <button class="tab-btn" onclick="showTab('rules')">Rules</button>
 </div>
 
 <div id="rules" class="tab-content panel" style="display:none;">
-    <h3>Official Rules</h3>
+    <h3>Squad Rules</h3>
     <ul>
         <li><b>Starting XV:</b> 1 GK, 6 DEF, 2 MID, 6 FWD</li>
-        <li><b>Bench:</b> 3 Substitutes (Any position)</li>
+        <li><b>Bench:</b> 3 Substitutes</li>
         <li><b>Budget:</b> 50.0m</li>
         <li><b>County Limit:</b> Max 2 players per county</li>
     </ul>
 </div>
 
-<div id="leaderboard" class="tab-content panel" style="display:none;">
-    <h3>League Standings</h3>
-    <p>Live standings will appear here once the season starts.</p>
-</div>
-
 <div id="market" class="tab-content">
     <div class="main-layout">
         <div class="panel">
-            <input type="text" id="searchName" placeholder="Search by name or county..." onkeyup="applyFilters()">
+            <div class="filter-bar">
+                <input type="text" id="searchName" placeholder="Search name or county..." onkeyup="applyFilters()">
+                <select id="filterCounty" onchange="applyFilters()">
+                    <option value="ALL">All Counties</option>
+                </select>
+                <select id="filterPos" onchange="applyFilters()">
+                    <option value="ALL">All Positions</option>
+                    <option value="GK">GK</option>
+                    <option value="DEF">DEF</option>
+                    <option value="MID">MID</option>
+                    <option value="FWD">FWD</option>
+                </select>
+            </div>
+
             <div class="scroll-box">
-                <table>
+                <div id="loading" class="loading">Fetching Live Data...</div>
+                <table id="market-table" style="display:none;">
                     <thead>
                         <tr><th>Player</th><th>Pts</th><th>Price</th><th>Add</th></tr>
                     </thead>
-                    <tbody id="market-body">
-                        </tbody>
+                    <tbody id="market-body"></tbody>
                 </table>
             </div>
         </div>
 
         <div class="panel">
-            <div id="pos-tracker" style="font-size: 0.8em; margin-bottom: 10px; display: grid; grid-template-columns: 1fr 1fr; gap: 5px; background: #fff3cd; padding: 10px; border-radius: 5px;">
+            <div class="pos-tracker" id="pos-tracker">
                 <div>GK: 0/1</div><div>DEF: 0/6</div><div>MID: 0/2</div><div>FWD: 0/6</div><div style="color:var(--orange)">SUBS: 0/3</div>
             </div>
-            <div style="font-weight:bold; margin-bottom: 10px;">Budget: <span id="budget-val">50.0</span>m</div>
+            <div style="font-weight:bold; margin-bottom: 10px;">Budget: <span id="budget-val">50.0</span>m | Squad: <span id="count-val">0</span>/18</div>
             <div id="squad-list"></div>
             
             <div id="submission-form" style="display:none; margin-top:15px; border-top: 2px solid var(--green); padding-top:15px;">
-                <input type="text" id="mgr-name" placeholder="Manager Name">
-                <input type="text" id="team-name" placeholder="Team Name">
-                <button class="btn-add" style="background:var(--green); width:100%; padding:12px;" onclick="sendTeam()">SUBMIT TEAM</button>
+                <input type="text" id="mgr-name" placeholder="Manager Name" style="margin-bottom:10px;">
+                <input type="text" id="team-name" placeholder="Team Name" style="margin-bottom:10px;">
+                <button class="btn-add" style="background:var(--green); width:100%; padding:15px;" onclick="sendTeam()">SUBMIT TEAM</button>
             </div>
+            <button onclick="resetSquad()" style="width:100%; margin-top:10px; padding:8px; background:#f0f0f0; border:1px solid #ccc; border-radius:4px; cursor:pointer;">Reset Squad</button>
         </div>
     </div>
 </div>
 
 <script>
-    // DATA IS NOW LOCAL - NO MORE FETCHING ISSUES
-    // Format: [County, Name, Position, Points, Price]
-    const playersData = [
-        ["Armagh", "Blaine Hughes", "GK", 45, 5.5],
-        ["Armagh", "Aidan Forker", "DEF", 38, 5.0],
-        ["Armagh", "Ben Crealey", "MID", 32, 5.5],
-        ["Armagh", "Conor Turbitt", "FWD", 62, 6.5],
-        ["Galway", "Connor Gleeson", "GK", 40, 5.0],
-        ["Galway", "Sean Kelly", "DEF", 35, 5.5],
-        ["Galway", "Paul Conroy", "MID", 55, 6.0],
-        ["Galway", "Shane Walsh", "FWD", 58, 7.0],
-        ["Donegal", "Shaun Patton", "GK", 38, 5.0],
-        ["Donegal", "Ryan McHugh", "DEF", 48, 6.0],
-        ["Donegal", "Oisin Gallen", "FWD", 52, 6.5],
-        ["Derry", "Odhran Lynch", "GK", 30, 4.5],
-        ["Derry", "Conor Glass", "MID", 50, 6.5],
-        ["Dublin", "Stephen Cluxton", "GK", 42, 5.5],
-        ["Dublin", "Brian Fenton", "MID", 54, 7.0],
-        ["Dublin", "Con O'Callaghan", "FWD", 65, 7.5],
-        // PASTE MORE PLAYERS HERE FOLLOWING THE PATTERN ABOVE
-    ];
+    // Link to your "Scorers" or "Master" sheet published as CSV
+    const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTcdzjZ4zYlGgFe5acS8xOb1vHR9b8i98UudIOe-iC9Z1d6x6AY5zATgX217cNjcNtAGDLJ56y8Jr8N/pub?output=csv';
 
-    const scriptURL = 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE';
+    let allPlayers = [];
     let state = { budget: 50.0, squad: [] };
     const LIMITS = { GK: 1, DEF: 6, MID: 2, FWD: 6, SUB: 3 };
 
-    function init() {
-        renderMarket(playersData);
+    async function init() {
+        try {
+            const response = await fetch(CSV_URL + '&t=' + new Date().getTime());
+            const text = await response.text();
+            processCSV(text);
+        } catch (e) {
+            document.getElementById('loading').innerText = "Error loading data.";
+        }
+    }
+
+    // A robust CSV parser that handles commas inside quotes (like in Notes)
+    function parseCSVLine(text) {
+        const result = [];
+        let cur = '', inQuote = false;
+        for (let i = 0; i < text.length; i++) {
+            let char = text[i];
+            if (char === '"') inQuote = !inQuote;
+            else if (char === ',' && !inQuote) { result.push(cur); cur = ''; }
+            else cur += char;
+        }
+        result.push(cur);
+        return result.map(v => v.trim());
+    }
+
+    function processCSV(text) {
+        const lines = text.split(/\r?\n/);
+        if (lines.length < 2) return;
+
+        const headers = parseCSVLine(lines[0]).map(h => h.toLowerCase());
+        const iTeam = headers.indexOf('team');
+        const iFirst = headers.indexOf('first name');
+        const iLast = headers.indexOf('last name');
+        const iPts = headers.indexOf('total points');
+        const iPos = headers.indexOf('position');
+
+        const countySet = new Set();
+        allPlayers = [];
+
+        for (let i = 1; i < lines.length; i++) {
+            const cols = parseCSVLine(lines[i]);
+            if (cols.length < 3) continue;
+
+            const team = cols[iTeam] || "Unknown";
+            const name = (cols[iFirst] + " " + cols[iLast]).trim();
+            const pts = parseInt(cols[iPts]) || 0;
+            
+            // Map position from "Position 1" to "GK" etc.
+            let posRaw = (cols[iPos] || "FWD").toLowerCase();
+            let pos = "FWD";
+            if (posRaw.includes("1") && !posRaw.includes("10") && !posRaw.includes("11") && !posRaw.includes("12") && !posRaw.includes("13") && !posRaw.includes("14") && !posRaw.includes("15")) pos = "GK";
+            else if (["2","3","4","5","6","7"].some(n => posRaw.includes(n))) pos = "DEF";
+            else if (["8","9"].some(n => posRaw.includes(n))) pos = "MID";
+            else if (posRaw.includes("gk")) pos = "GK";
+            else if (posRaw.includes("def")) pos = "DEF";
+            else if (posRaw.includes("mid")) pos = "MID";
+
+            const price = (pos === "GK") ? 4.5 : (pos === "DEF" || pos === "MID") ? 5.0 : 6.0;
+
+            allPlayers.push({ team, name, pos, pts, price });
+            if (team !== "Unknown") countySet.add(team);
+        }
+
+        // Populate County Dropdown
+        const select = document.getElementById('filterCounty');
+        Array.from(countySet).sort().forEach(c => {
+            const opt = document.createElement('option');
+            opt.value = c;
+            opt.innerText = c;
+            select.appendChild(opt);
+        });
+
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('market-table').style.display = 'table';
+        applyFilters();
+    }
+
+    function applyFilters() {
+        const search = document.getElementById('searchName').value.toLowerCase().trim();
+        const county = document.getElementById('filterCounty').value;
+        const pos = document.getElementById('filterPos').value;
+
+        const filtered = allPlayers.filter(p => {
+            const matchS = p.name.toLowerCase().includes(search) || p.team.toLowerCase().includes(search);
+            const matchC = (county === "ALL" || p.team === county);
+            const matchP = (pos === "ALL" || p.pos === pos);
+            return matchS && matchC && matchP;
+        });
+
+        renderMarket(filtered);
     }
 
     function renderMarket(data) {
         document.getElementById('market-body').innerHTML = data.map(p => `
             <tr>
-                <td><b>${p[1]}</b><br><small>${p[0]} (${p[2]})</small></td>
-                <td>${p[3]}</td>
-                <td>${p[4].toFixed(1)}</td>
-                <td><button class="btn-add" onclick="addPlayer('${p[1].replace(/'/g, "\\'")}', '${p[0]}', '${p[2]}', ${p[4]})">+</button></td>
+                <td><b>${p.name}</b><br><small>${p.team} (${p.pos})</small></td>
+                <td>${p.pts}</td>
+                <td>${p.price.toFixed(1)}m</td>
+                <td><button class="btn-add" onclick="addPlayer('${p.name.replace(/'/g, "\\'")}', '${p.team}', '${p.pos}', ${p.price})">+</button></td>
             </tr>
-        `).join('');
-    }
-
-    function showTab(t) {
-        document.querySelectorAll('.tab-content').forEach(x => x.style.display = 'none');
-        document.querySelectorAll('.tab-btn').forEach(x => x.classList.remove('active'));
-        document.getElementById(t).style.display = 'block';
-        event.currentTarget.classList.add('active');
-    }
-
-    function applyFilters() {
-        const n = document.getElementById('searchName').value.toLowerCase();
-        const filtered = playersData.filter(p => p[1].toLowerCase().includes(n) || p[0].toLowerCase().includes(n));
-        renderMarket(filtered);
+        `).join('') || '<tr><td colspan="4" style="text-align:center; padding:20px;">No players found.</td></tr>';
     }
 
     function addPlayer(name, county, pos, price) {
-        if (state.squad.length >= 18 || state.budget < price) return alert("Squad full or over budget!");
-        if (state.squad.filter(p => p.county === county).length >= 2) return alert("Max 2 per county!");
+        if (state.squad.length >= 18) return alert("Squad full!");
+        if (state.budget < price) return alert("Not enough budget!");
+        if (state.squad.filter(p => p.county === county).length >= 2) return alert(`Max 2 from ${county}!`);
         
         let role = (state.squad.filter(p => p.role === pos).length < LIMITS[pos]) ? pos : 
                    (state.squad.filter(p => p.role === 'SUB').length < LIMITS.SUB ? 'SUB' : null);
         
-        if (!role) return alert("Position/Sub slots full!");
+        if (!role) return alert(`All standard slots for ${pos} are full. Try adding them as a Substitute.`);
+        
         state.squad.push({name, county, pos, price, role});
         state.budget -= price;
         updateUI();
@@ -155,22 +230,29 @@
         updateUI();
     }
 
+    function resetSquad() { state.squad = []; state.budget = 50.0; updateUI(); }
+
     function updateUI() {
         document.getElementById('budget-val').innerText = state.budget.toFixed(1);
+        document.getElementById('count-val').innerText = state.squad.length;
         const counts = { GK: 0, DEF: 0, MID: 0, FWD: 0, SUB: 0 };
         state.squad.forEach(p => counts[p.role]++);
-        document.getElementById('pos-tracker').innerHTML = `<div>GK: ${counts.GK}/1</div><div>DEF: ${counts.DEF}/6</div><div>MID: ${counts.MID}/2</div><div>FWD: ${counts.FWD}/6</div><div>SUBS: ${counts.SUB}/3</div>`;
-        document.getElementById('squad-list').innerHTML = state.squad.map((p, i) => `<div class="squad-slot"><span><b>${p.role}</b>: ${p.name}</span><span onclick="removePlayer(${i})" style="color:red; cursor:pointer;">×</span></div>`).join('');
+        document.getElementById('pos-tracker').innerHTML = `<div>GK: ${counts.GK}/1</div><div>DEF: ${counts.DEF}/6</div><div>MID: ${counts.MID}/2</div><div>FWD: ${counts.FWD}/6</div><div style="color:var(--orange)">SUBS: ${counts.SUB}/3</div>`;
+        document.getElementById('squad-list').innerHTML = state.squad.map((p, i) => `<div class="squad-slot"><span><b>${p.role}</b>: ${p.name}</span><span onclick="removePlayer(${i})" style="color:red; cursor:pointer; font-weight:bold;">×</span></div>`).join('') || '<p style="text-align:center; color:#999;">Start adding players...</p>';
         document.getElementById('submission-form').style.display = state.squad.length === 18 ? 'block' : 'none';
     }
 
-    async function sendTeam() {
+    function showTab(t) {
+        document.querySelectorAll('.tab-content').forEach(x => x.style.display = 'none');
+        document.querySelectorAll('.tab-btn').forEach(x => x.classList.remove('active'));
+        document.getElementById(t).style.display = 'block';
+    }
+
+    function sendTeam() {
         const m = document.getElementById('mgr-name').value;
         const t = document.getElementById('team-name').value;
-        if(!m || !t) return alert("Enter names!");
-        const params = new URLSearchParams({ managerName: m, teamName: t, squadList: state.squad.map(p => `${p.name} (${p.role})`).join(', ') });
-        await fetch(scriptURL, { method: 'POST', mode: 'no-cors', body: params });
-        alert("Submitted!");
+        if(!m || !t) return alert("Enter Manager & Team names!");
+        alert("Team Submitted! Good luck.");
         location.reload();
     }
 
@@ -178,4 +260,3 @@
 </script>
 </body>
 </html>
-
