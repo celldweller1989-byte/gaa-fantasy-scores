@@ -56,3 +56,121 @@
 </nav>
 
 <div class="container">
+    <div id="page-market" class="page">
+        <div class="main-layout">
+            <div class="panel">
+                <div class="filter-bar">
+                    <input type="text" id="searchName" placeholder="Search Player Name..." onkeyup="applyFilters()">
+                    <select id="filterCounty" onchange="applyFilters()"><option value="ALL">All Counties</option></select>
+                    <select id="filterPos" onchange="applyFilters()">
+                        <option value="ALL">All Positions</option>
+                        <option value="GK">GK</option><option value="DEF">DEF</option>
+                        <option value="MID">MID</option><option value="FWD">FWD</option>
+                    </select>
+                </div>
+
+                <div class="scroll-box">
+                    <div id="loading-market" class="loading">Fetching Players...</div>
+                    <table id="market-table" class="hidden">
+                        <thead>
+                            <tr><th>Player</th><th>Pos</th><th>Pts</th><th>Price</th><th>Add</th></tr>
+                        </thead>
+                        <tbody id="market-body"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="pos-tracker" id="pos-tracker">
+                    <div>GK: 0/1</div><div>DEF: 0/6</div><div>MID: 0/2</div><div>FWD: 0/6</div><div style="color:var(--orange)">SUBS: 0/3</div>
+                </div>
+                <div style="font-weight:bold; margin-bottom: 10px; font-size: 14px;">
+                    Budget: <span id="budget-val">100.0</span>m | Squad: <span id="count-val">0</span>/18
+                </div>
+                <div id="squad-list"></div>
+                <div id="submission-area" class="hidden" style="margin-top:15px; border-top: 2px solid var(--green); padding-top:15px;">
+                    <input type="text" id="team-name" placeholder="Enter Team Name" style="margin-bottom:10px;">
+                    <button class="btn-add" style="background:var(--green); width:100%; padding:15px;" onclick="submitTeam()">SUBMIT TEAM</button>
+                </div>
+                <button onclick="resetSquad()" style="width:100%; margin-top:10px; padding:8px; background:#f0f0f0; border:1px solid #ccc; border-radius:4px; cursor:pointer;">Reset Squad</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="page-leaderboard" class="page hidden">
+        <div class="panel leaderboard-container">
+            <h2 style="text-align:center; color: var(--orange);">🏆 STANDINGS</h2>
+            <div id="loading-leaderboard" class="loading">Loading Standings...</div>
+            <table id="leaderboard-table" class="hidden">
+                <thead>
+                    <tr><th class="rank-cell">#</th><th>Team Name</th><th class="pts-cell">Total Score</th></tr>
+                </thead>
+                <tbody id="leaderboard-body"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    const SCORERS_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTcdzjZ4zYlGgFe5acS8xOb1vHR9b8i98UudIOe-iC9Z1d6x6AY5zATgX217cNjcNtAGDLJ56y8Jr8N/pub?output=csv';
+    const ENTRIES_URL = 'PASTE_YOUR_ENTRIES_CSV_LINK_HERE';
+
+    let allPlayers = [];
+    let state = { budget: 100.0, squad: [] };
+    const LIMITS = { GK: 1, DEF: 6, MID: 2, FWD: 6, SUB: 3 };
+
+    async function init() {
+        try {
+            const res = await fetch(SCORERS_URL + '&t=' + new Date().getTime());
+            const text = await res.text();
+            processScorers(text);
+        } catch (e) { document.getElementById('loading-market').innerText = "Data Error."; }
+    }
+
+    function parseCSVLine(text) {
+        const result = []; let cur = '', inQuote = false;
+        for (let char of text) {
+            if (char === '"') inQuote = !inQuote;
+            else if (char === ',' && !inQuote) { result.push(cur.trim()); cur = ''; }
+            else cur += char;
+        }
+        result.push(cur.trim()); return result;
+    }
+
+    function processScorers(csvText) {
+        const lines = csvText.split(/\r?\n/);
+        const countySet = new Set();
+        allPlayers = [];
+
+        for (let i = 1; i < lines.length; i++) {
+            const col = parseCSVLine(lines[i]);
+            if (col.length < 9 || !col[0]) continue;
+
+            const county = col[0];
+            // UPPERCASE Surname (Col B) + First Name (Col C)
+            const lastName = (col[2] || "").toUpperCase();
+            const firstName = (col[1] || "");
+            const fullName = (lastName + " " + firstName).trim();
+            
+            const rawPos = col[3].toLowerCase();
+            const totalPts = parseInt(col[8]) || 0;
+
+            let pos = "FWD";
+            const pNum = parseInt(rawPos.replace(/\D/g, ''));
+            if (pNum === 1 || rawPos.includes("gk")) pos = "GK";
+            else if ((pNum >= 2 && pNum <= 7) || rawPos.includes("def")) pos = "DEF";
+            else if ((pNum >= 8 && pNum <= 9) || rawPos.includes("mid")) pos = "MID";
+
+            const price = (pos === "GK") ? 4.5 : (pos === "DEF" || pos === "MID") ? 5.0 : 6.0;
+
+            allPlayers.push({ county, name: fullName, pos, points: totalPts, price });
+            countySet.add(county);
+        }
+
+        const filterDropdown = document.getElementById('filterCounty');
+        Array.from(countySet).sort().forEach(c => {
+            const opt = document.createElement('option'); opt.value = c; opt.innerText = c;
+            filterDropdown.appendChild(opt);
+        });
+
+        document.getElementById('loading
