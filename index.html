@@ -1,274 +1,95 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Orchard Fans Fantasy GAA</title>
+    <title>GAA Fantasy Hub</title>
     <style>
-        :root { --orange: #f37021; --dark: #1a1a1a; --cream: #f4f1de; --white: #ffffff; --green: #28a745; --red: #dc3545; --grey: #777; --blue: #007bff; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--cream); margin: 0; padding: 0; color: var(--dark); }
-        .header { background: var(--orange); color: white; padding: 20px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
-        nav { display: flex; justify-content: center; background: var(--dark); padding: 0; position: sticky; top: 0; z-index: 100; flex-wrap: wrap; }
-        .nav-link { color: white; padding: 15px 20px; text-decoration: none; font-weight: bold; cursor: pointer; transition: 0.3s; border: none; background: none; font-size: 13px; text-transform: uppercase; }
-        .nav-link.active { background: var(--orange); }
-        
-        .container { padding: 15px; max-width: 1300px; margin: auto; }
-        .main-layout { display: grid; grid-template-columns: 1fr 360px; gap: 20px; }
-        .panel { background: var(--white); border-radius: 8px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 20px; }
-
-        .filter-bar { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
-        .filter-bar input, .filter-bar select { padding: 10px; border: 1px solid #ccc; border-radius: 5px; flex: 1; min-width: 150px; }
-
-        .scroll-box { max-height: 650px; overflow-y: auto; border: 1px solid #eee; border-radius: 5px; background: #fff; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 20px; background: #f0f2f5; color: #333; }
+        .box { max-width: 900px; margin: auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        h1 { color: #004a99; text-align: center; margin-bottom: 5px; }
+        .status { text-align: center; font-size: 0.9em; color: #666; margin-bottom: 20px; }
         table { width: 100%; border-collapse: collapse; }
-        th { position: sticky; top: 0; background: #f8f8f8; padding: 12px; text-align: left; font-size: 10px; border-bottom: 2px solid #ddd; z-index: 5; }
-        td { padding: 12px; border-bottom: 1px solid #eee; font-size: 13px; vertical-align: middle; }
-        
-        /* Tooltip Logic */
-        .player-cell { display: flex; align-items: center; position: relative; cursor: help; }
-        .tooltip { visibility: hidden; width: 180px; background-color: var(--dark); color: #fff; text-align: left; border-radius: 6px; padding: 10px; position: absolute; z-index: 100; bottom: 125%; left: 10%; opacity: 0; transition: opacity 0.3s; box-shadow: 0 4px 15px rgba(0,0,0,0.3); font-size: 11px; line-height: 1.4; }
-        .tooltip::after { content: ""; position: absolute; top: 100%; left: 20%; margin-left: -5px; border-width: 5px; border-style: solid; border-color: var(--dark) transparent transparent transparent; }
-        .player-cell:hover .tooltip { visibility: visible; opacity: 1; }
-
-        .county-badge { width: 35px; height: 35px; object-fit: contain; margin-right: 12px; }
-        .result-badge { font-size: 9px; font-weight: bold; padding: 2px 5px; border-radius: 4px; display: inline-block; margin-top: 4px; border: 1px solid #ddd; }
-        .res-win { background: #d4edda; color: #155724; }
-        .res-loss { background: #f8d7da; color: #721c24; }
-        
-        .trend-up { color: var(--green); font-weight: bold; }
-        .trend-down { color: var(--red); font-weight: bold; }
-
-        .btn-group { display: flex; gap: 2px; }
-        .btn-pos { border: 1px solid #ddd; background: #f9f9f9; color: #555; padding: 6px 2px; border-radius: 4px; font-size: 9px; font-weight: normal; cursor: pointer; flex: 1; transition: 0.2s; }
-        .btn-pos:hover { background: var(--orange); color: white; border-color: var(--orange); }
-        .btn-pref { border: 2px solid var(--orange); color: var(--orange); font-weight: bold; background: #fff5ee; }
-
-        .squad-slot { display: flex; justify-content: space-between; background: #f9f9f9; padding: 8px; margin-bottom: 5px; border-radius: 4px; border-left: 4px solid var(--orange); align-items: center; font-size: 12px; }
-        .pos-tracker { font-size: 11px; background: #fff3cd; padding: 10px; border-radius: 5px; margin-bottom: 15px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; border: 1px solid #ffeeba; }
-        .hidden { display: none; }
+        th, td { border: 1px solid #eee; padding: 12px; text-align: left; }
+        th { background: #004a99; color: white; text-transform: uppercase; font-size: 0.85em; }
+        tr:nth-child(even) { background: #fcfcfc; }
+        tr:hover { background: #f1f7ff; }
+        .total-cell { font-weight: bold; color: #2e7d32; }
+        #debug { margin-top: 20px; padding: 15px; background: #fff5f5; border-left: 5px solid #ff4d4d; display: none; }
+        button { display: block; margin: 10px auto; padding: 10px 20px; background: #004a99; color: white; border: none; border-radius: 5px; cursor: pointer; }
     </style>
 </head>
 <body>
 
-<div class="header"><h1>ORCHARD FANS FANTASY GAA</h1></div>
-<nav>
-    <button class="nav-link" onclick="showPage('rules')">RULES</button>
-    <button class="nav-link active" id="nav-market" onclick="showPage('market')">TRANSFER MARKET</button>
-    <button class="nav-link" onclick="showPage('leaderboard')">LEADERBOARD</button>
-</nav>
+<div class="box">
+    <h1>🏆 Live GAA Fantasy Standings</h1>
+    <p class="status">Syncing live with Google Sheets...</p>
+    
+    <button onclick="fetchData()">🔄 Refresh Data</button>
 
-<div class="container">
-    <div id="page-market" class="page">
-        <div class="filter-bar">
-            <input type="text" id="search-name" placeholder="Search player name..." oninput="filterPlayers()">
-            <select id="filter-county" onchange="filterPlayers()"><option value="">All Counties</option></select>
-            <select id="filter-pos" onchange="filterPlayers()">
-                <option value="">All Positions</option>
-                <option value="GK">Goalkeepers</option>
-                <option value="DEF">Defenders</option>
-                <option value="MID">Midfielders</option>
-                <option value="FWD">Forwards</option>
-            </select>
-        </div>
+    <table id="mainTable">
+        <thead>
+            <tr>
+                <th>Player</th>
+                <th>County</th>
+                <th>Pos</th>
+                <th>Goals</th>
+                <th>Points</th>
+                <th>Total Score</th>
+            </tr>
+        </thead>
+        <tbody id="tableBody">
+            <tr><td colspan="6" style="text-align:center;">Loading scores...</td></tr>
+        </tbody>
+    </table>
 
-        <div class="main-layout">
-            <div class="panel">
-                <div class="scroll-box">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Player Info (Hover for Stats)</th>
-                                <th>Total Pts</th>
-                                <th>Market Value</th>
-                                <th style="width: 180px;">Assign Position</th>
-                            </tr>
-                        </thead>
-                        <tbody id="market-body"></tbody>
-                    </table>
-                </div>
-            </div>
-
-            <div class="panel">
-                <h3>Your Squad</h3>
-                <div class="pos-tracker" id="pos-tracker">
-                    <div>GK: 0/1</div><div>DEF: 0/6</div><div>MID: 0/2</div>
-                    <div>FWD: 0/6</div><div>SUB: 0/3</div><div>Total: 0/18</div>
-                </div>
-                <div id="budget-val" style="font-weight:bold; margin-bottom:10px; font-size: 1.1em; color: var(--green);">Budget: 100.00m</div>
-                <div id="squad-list"></div>
-                <button onclick="resetSquad()" style="width:100%; margin-top:10px; padding:10px; cursor:pointer; background: #eee; border:1px solid #ccc; font-weight:bold;">RESET SQUAD</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="page-rules" class="page hidden"><div class="panel"><h2>Rules</h2><p>Big Win: +5 | Win: +2 | Loss: -2 | Big Loss: -5</p></div></div>
-    <div id="page-leaderboard" class="page hidden"><div class="panel"><h2>Leaderboard</h2></div></div>
+    <div id="debug"></div>
 </div>
 
 <script>
-    const SCORERS_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTcdzjZ4zYlGgFe5acS8xOb1vHR9b8i98UudIOe-iC9Z1d6x6AY5zATgX217cNjcNtAGDLJ56y8Jr8N/pub?output=csv';
-    let allPlayers = [];
-    let state = { budget: 100.0, squad: [] };
-    const LIMITS = { GK: 1, DEF: 6, MID: 2, FWD: 6, SUB: 3 };
+    // We use a proxy to tell the browser this request is safe
+    const rawUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTcdzjZ4zYlGgFe5acS8xOb1vHR9b8i98UudIOe-iC9Z1d6x6AY5zATgX217cNjcNtAGDLJ56y8Jr8N/pub?output=csv';
+    const proxyUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(rawUrl);
 
-    function getDirectImg(url) {
-        if (!url) return '';
-        let clean = url.trim();
-        if (clean.includes('imgur.com') && !clean.match(/\.(png|jpg|jpeg|gif)$/)) {
-            return clean.replace('imgur.com', 'i.imgur.com') + '.png';
-        }
-        return clean;
-    }
+    async function fetchData() {
+        const debugBox = document.getElementById('debug');
+        const tableBody = document.getElementById('tableBody');
 
-    async function init() {
         try {
-            const res = await fetch(SCORERS_URL + '&t=' + new Date().getTime());
-            const text = await res.text();
-            processScorers(text);
-        } catch (e) { console.error(e); }
-    }
-
-    function processScorers(csvText) {
-        const rows = csvText.split('\n').map(row => row.split(','));
-        allPlayers = [];
-        const counties = new Set();
-
-        for (let i = 1; i < rows.length; i++) {
-            const col = rows[i];
-            if (!col[0]) continue;
+            // Fetching via proxy to bypass CORS security
+            const response = await fetch(proxyUrl);
+            if (!response.ok) throw new Error('Network response was not ok');
             
-            let rawResult = (col[9] || "").trim().toLowerCase();
-            let displayResult = rawResult.replace('heavy', 'BIG').toUpperCase();
-            
-            let rawPts = parseInt(col[8]) || 0;
-            let bonus = (rawResult.includes("win")) ? (rawResult.includes("big") || rawResult.includes("heavy") ? 5 : 2) : 0;
-            let deduction = (rawResult.includes("loss")) ? (rawResult.includes("big") || rawResult.includes("heavy") ? 5 : 2) : 0;
-            
-            let totalPts = rawPts + bonus - deduction;
-            let price = 5.5 + (totalPts * 0.05);
+            const text = await response.text();
+            const rows = text.split('\n').filter(r => r.trim() !== '');
 
-            counties.add(col[0].trim());
+            if (rows.length <= 1) {
+                tableBody.innerHTML = '<tr><td colspan="6">No data found in sheet.</td></tr>';
+                return;
+            }
 
-            allPlayers.push({
-                id: i,
-                county: col[0].trim(),
-                name: (col[1] + " " + col[2]).trim(),
-                prefPos: (col[3] || "").trim().toUpperCase(),
-                badge: getDirectImg(col[14]), 
-                totalPts: totalPts,
-                price: Math.max(3.0, price),
-                result: displayResult,
-                statsHTML: `<strong>${col[0].trim()}</strong><br>Goals: ${col[4]||0}<br>1-pt: ${col[11]||0}<br>2-pt: ${col[12]||0}`
-            });
+            tableBody.innerHTML = '';
+            for (let i = 1; i < rows.length; i++) {
+                const cols = rows[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${(cols[0] || '').replace(/"/g, '')}</td>
+                    <td>${(cols[1] || '').replace(/"/g, '')}</td>
+                    <td>${(cols[2] || '').replace(/"/g, '')}</td>
+                    <td>${(cols[3] || '0').replace(/"/g, '')}</td>
+                    <td>${(cols[4] || '0').replace(/"/g, '')}</td>
+                    <td class="total-cell">${(cols[5] || '0').replace(/"/g, '')}</td>
+                `;
+                tableBody.appendChild(tr);
+            }
+            debugBox.style.display = 'none';
+        } catch (err) {
+            debugBox.style.display = 'block';
+            debugBox.innerText = 'Sync Error: ' + err.message + '. Try clicking Refresh in 30 seconds.';
+            console.error(err);
         }
-        
-        const countySelect = document.getElementById('filter-county');
-        [...counties].sort().forEach(c => {
-            const opt = document.createElement('option');
-            opt.value = opt.text = c;
-            countySelect.add(opt);
-        });
-
-        filterPlayers();
     }
 
-    function filterPlayers() {
-        const nameQuery = document.getElementById('search-name').value.toLowerCase();
-        const countyQuery = document.getElementById('filter-county').value;
-        const posQuery = document.getElementById('filter-pos').value;
-
-        const filtered = allPlayers.filter(p => {
-            const matchesName = p.name.toLowerCase().includes(nameQuery);
-            const matchesCounty = !countyQuery || p.county === countyQuery;
-            const matchesPos = !posQuery || p.prefPos === posQuery;
-            return matchesName && matchesCounty && matchesPos;
-        });
-
-        renderMarket(filtered);
-    }
-
-    function renderMarket(data) {
-        document.getElementById('market-body').innerHTML = data.map(p => {
-            const ptSymbol = p.totalPts >= 0 ? '▲' : '▼';
-            const priceSymbol = p.price > 5.5 ? '▲' : (p.price < 5.5 ? '▼' : '');
-            const resClass = p.result.includes('WIN') ? 'res-win' : 'res-loss';
-
-            return `
-            <tr>
-                <td>
-                    <div class="player-cell">
-                        <img src="${p.badge}" class="county-badge" onerror="this.src='https://ui-avatars.com/api/?name=${p.county[0]}&background=f37021&color=fff'">
-                        <div>
-                            <b>${p.name}</b><br>
-                            <span class="result-badge ${resClass}">${p.result || 'N/A'}</span>
-                        </div>
-                        <div class="tooltip">${p.statsHTML}</div>
-                    </div>
-                </td>
-                <td><span class="${p.totalPts >= 0 ? 'trend-up' : 'trend-down'}">${ptSymbol} ${p.totalPts}</span></td>
-                <td><span class="${p.price > 5.5 ? 'trend-up' : 'trend-down'}">${priceSymbol} ${p.price.toFixed(2)}m</span></td>
-                <td>
-                    <div class="btn-group">
-                        <button class="btn-pos ${p.prefPos==='GK'?'btn-pref':''}" onclick="addPlayer(${p.id}, 'GK')">GK</button>
-                        <button class="btn-pos ${p.prefPos==='DEF'?'btn-pref':''}" onclick="addPlayer(${p.id}, 'DEF')">DEF</button>
-                        <button class="btn-pos ${p.prefPos==='MID'?'btn-pref':''}" onclick="addPlayer(${p.id}, 'MID')">MID</button>
-                        <button class="btn-pos ${p.prefPos==='FWD'?'btn-pref':''}" onclick="addPlayer(${p.id}, 'FWD')">FWD</button>
-                        <button class="btn-pos" onclick="addPlayer(${p.id}, 'SUB')">SUB</button>
-                    </div>
-                </td>
-            </tr>
-        `}).join('');
-    }
-
-    function addPlayer(id, role) {
-        const p = allPlayers.find(x => x.id === id);
-        const currentInRole = state.squad.filter(x => x.role === role).length;
-
-        if (state.squad.length >= 18) return alert("Squad full!");
-        if (state.budget < p.price) return alert("Not enough cash!");
-        if (currentInRole >= LIMITS[role]) return alert(`Position ${role} is full!`);
-        if (state.squad.find(x => x.id === id)) return alert("Player already in squad!");
-
-        state.squad.push({ ...p, role });
-        state.budget -= p.price;
-        updateUI();
-    }
-
-    function updateUI() {
-        document.getElementById('budget-val').innerText = `Budget: ${state.budget.toFixed(2)}m`;
-        const counts = { GK: 0, DEF: 0, MID: 0, FWD: 0, SUB: 0 };
-        state.squad.forEach(p => counts[p.role]++);
-        
-        document.getElementById('pos-tracker').innerHTML = `
-            <div>GK: ${counts.GK}/1</div><div>DEF: ${counts.DEF}/6</div><div>MID: ${counts.MID}/2</div>
-            <div>FWD: ${counts.FWD}/6</div><div>SUB: ${counts.SUB}/3</div><div>Total: ${state.squad.length}/18</div>
-        `;
-
-        document.getElementById('squad-list').innerHTML = state.squad.map((p, i) => `
-            <div class="squad-slot">
-                <span><b>[${p.role}]</b> ${p.name}</span>
-                <button onclick="removePlayer(${i})" style="border:none; background:none; color:red; cursor:pointer;">×</button>
-            </div>
-        `).join('');
-    }
-
-    function removePlayer(idx) {
-        state.budget += state.squad[idx].price;
-        state.squad.splice(idx, 1);
-        updateUI();
-    }
-
-    function showPage(id) {
-        document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
-        document.getElementById('page-' + id).classList.remove('hidden');
-        document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
-        const activeBtn = Array.from(document.querySelectorAll('.nav-link')).find(b => b.textContent.toLowerCase().includes(id));
-        if(activeBtn) activeBtn.classList.add('active');
-    }
-
-    function resetSquad() { if(confirm("Clear squad?")) { state.squad = []; state.budget = 100.0; updateUI(); } }
-    init();
+    // Initial load
+    fetchData();
 </script>
 </body>
 </html>
-
