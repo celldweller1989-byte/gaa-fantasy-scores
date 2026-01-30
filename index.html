@@ -24,6 +24,7 @@
         .squad-slot { display: flex; justify-content: space-between; background: #f9f9f9; padding: 8px; margin-bottom: 6px; border-radius: 4px; border-left: 4px solid var(--orange); font-size: 0.85em; align-items: center; }
         .pos-tracker { font-size: 0.8em; background: #fff3cd; padding: 10px; border-radius: 5px; margin-bottom: 10px; display: grid; grid-template-columns: 1fr 1fr; gap: 5px; border: 1px solid #ffeeba; }
         .btn-add { background: var(--orange); color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        .loading { text-align: center; padding: 50px; font-weight: bold; color: var(--orange); }
         
         @media (max-width: 900px) { 
             .main-layout { grid-template-columns: 1fr; } 
@@ -59,20 +60,6 @@
                 <input type="text" id="searchName" placeholder="Search name or county..." onkeyup="applyFilters()">
                 <select id="filterCounty" onchange="applyFilters()">
                     <option value="ALL">All Counties</option>
-                    <option value="Armagh">Armagh</option>
-                    <option value="Cavan">Cavan</option>
-                    <option value="Cork">Cork</option>
-                    <option value="Derry">Derry</option>
-                    <option value="Donegal">Donegal</option>
-                    <option value="Dublin">Dublin</option>
-                    <option value="Galway">Galway</option>
-                    <option value="Kerry">Kerry</option>
-                    <option value="Kildare">Kildare</option>
-                    <option value="Mayo">Mayo</option>
-                    <option value="Meath">Meath</option>
-                    <option value="Monaghan">Monaghan</option>
-                    <option value="Roscommon">Roscommon</option>
-                    <option value="Tyrone">Tyrone</option>
                 </select>
                 <select id="filterPos" onchange="applyFilters()">
                     <option value="ALL">All Positions</option>
@@ -83,8 +70,9 @@
                 </select>
             </div>
 
-            <div class="scroll-box">
-                <table>
+            <div class="scroll-box" id="market-container">
+                <div class="loading">Loading players from Google Sheets...</div>
+                <table id="market-table" style="display:none;">
                     <thead>
                         <tr><th>Player</th><th>Pts</th><th>Price</th><th>Add</th></tr>
                     </thead>
@@ -111,62 +99,110 @@
 </div>
 
 <script>
-    const SCORES_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTcdzjZ4zYlGgFe5acS8xOb1vHR9b8i98UudIOe-iC9Z1d6x6AY5zATgX217cNjcNtAGDLJ56y8Jr8N/pub?output=csv';
+    // YOUR GOOGLE SHEETS LINK
+    const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTcdzjZ4zYlGgFe5acS8xOb1vHR9b8i98UudIOe-iC9Z1d6x6AY5zATgX217cNjcNtAGDLJ56y8Jr8N/pub?output=csv';
 
-    const playersData = [["Donegal", "Gavin Mulreany", "GK", 0, 4.5], ["Donegal", "Caolan McColgan", "DEF", 0, 5.0], ["Donegal", "Brendan McCole", "DEF", 0, 5.0], ["Donegal", "Finbarr Roarty", "DEF", 0, 5.0], ["Donegal", "Ryan McHugh", "DEF", 0, 5.0], ["Donegal", "Caolan McGonagle", "DEF", 0, 5.0], ["Donegal", "Peadar Mogan", "DEF", 0, 5.0], ["Donegal", "Hugh McFadden", "MID", 0, 5.0], ["Donegal", "Jason McGee", "MID", 0, 5.0], ["Donegal", "Dáire Ó Baoill", "FWD", 0, 6.0], ["Donegal", "Shane O'Donnell", "FWD", 0, 6.0], ["Donegal", "Ciarán Moore", "FWD", 0, 6.0], ["Donegal", "Conor O'Donnell", "FWD", 0, 6.0], ["Donegal", "Michael Langan", "FWD", 0, 6.0], ["Donegal", "Shea Malone", "FWD", 0, 6.0], ["Dublin", "Evan Comerford", "GK", 0, 4.5], ["Dublin", "Eoin Murchan", "DEF", 0, 5.0], ["Dublin", "Seán MacMahon", "DEF", 0, 5.0], ["Dublin", "David Byrne", "DEF", 0, 5.0], ["Dublin", "Robert Shaw", "DEF", 0, 5.0], ["Dublin", "Nathan Doran", "DEF", 0, 5.0], ["Dublin", "Eoin Kennedy", "DEF", 0, 5.0], ["Dublin", "Ethan Dunne", "MID", 0, 5.0], ["Dublin", "Tom Lahiff", "MID", 0, 5.0], ["Dublin", "Killian McGinnis", "FWD", 0, 6.0], ["Dublin", "Niall Scully", "FWD", 0, 6.0], ["Dublin", "Brian Howard", "FWD", 0, 6.0], ["Dublin", "Paddy Small", "FWD", 0, 6.0], ["Dublin", "Con O'Callaghan", "FWD", 0, 6.0], ["Dublin", "Lorcan O'Dell", "FWD", 0, 6.0], ["Monaghan", "Jack Kiernan", "GK", 0, 4.5], ["Monaghan", "Dylan Byrne", "DEF", 0, 5.0], ["Monaghan", "Darragh Treanor", "DEF", 0, 5.0], ["Monaghan", "Daragh McElearney", "DEF", 0, 5.0], ["Monaghan", "Dessie Ward", "DEF", 0, 5.0], ["Monaghan", "Ryan O’Toole", "DEF", 0, 5.0], ["Monaghan", "Thomas Hughes", "DEF", 0, 5.0], ["Monaghan", "Karl Gallagher", "MID", 0, 5.0], ["Monaghan", "Gary Mohan", "MID", 0, 5.0], ["Monaghan", "Jason Irwin", "FWD", 0, 6.0], ["Monaghan", "Mícheál Bannigan", "FWD", 0, 6.0], ["Monaghan", "David Garland", "FWD", 0, 6.0], ["Monaghan", "Stephen Mooney", "FWD", 0, 6.0], ["Monaghan", "Andrew Woods", "FWD", 0, 6.0], ["Monaghan", "Stephen O’Hanlon", "FWD", 0, 6.0], ["Armagh", "Blaine Hughes", "GK", 0, 4.5], ["Armagh", "Gareth Murphy", "DEF", 0, 5.0], ["Armagh", "Tomás McCormack", "DEF", 0, 5.0], ["Armagh", "Peter McGrane", "DEF", 0, 5.0], ["Armagh", "Greg McCabe", "DEF", 0, 5.0], ["Armagh", "Tiernan Kelly", "DEF", 0, 5.0], ["Armagh", "Jarly Óg Burns", "DEF", 0, 5.0], ["Armagh", "Callum O’Neill", "MID", 0, 5.0], ["Armagh", "Andrew Murnin", "MID", 0, 5.0], ["Armagh", "Joe McElroy", "FWD", 0, 6.0], ["Armagh", "Conor Turbitt", "FWD", 0, 6.0], ["Armagh", "Fergal O’Brien", "FWD", 0, 6.0], ["Armagh", "Cian McConville", "FWD", 0, 6.0], ["Armagh", "Oisín O’Neill", "FWD", 0, 6.0], ["Armagh", "Oisín Conaty", "FWD", 0, 6.0], ["Mayo", "Robbie Hennelly", "GK", 0, 4.5], ["Mayo", "Eoin McGreal", "DEF", 0, 5.0], ["Mayo", "Stephen Coen", "DEF", 0, 5.0], ["Mayo", "Enda Hession", "DEF", 0, 5.0], ["Mayo", "Sam Callinan", "DEF", 0, 5.0], ["Mayo", "Michael Plunkett", "DEF", 0, 5.0], ["Mayo", "Sean Morahan", "DEF", 0, 5.0], ["Mayo", "Bob Tuohy", "MID", 0, 5.0], ["Mayo", "David McBrien", "MID", 0, 5.0], ["Mayo", "Jack Carney", "FWD", 0, 6.0], ["Mayo", "Ryan O'Donoghue", "FWD", 0, 6.0], ["Mayo", "Jordan Flynn", "FWD", 0, 6.0], ["Mayo", "Darragh Beirne", "FWD", 0, 6.0], ["Mayo", "Aidan O'Shea", "FWD", 0, 6.0], ["Mayo", "Tommy Conroy", "FWD", 0, 6.0], ["Galway", "Connor Gleeson", "GK", 0, 4.5], ["Galway", "Kieran Molloy", "DEF", 0, 5.0], ["Galway", "Sean Fitzgerald", "DEF", 0, 5.0], ["Galway", "Jack Glynn", "DEF", 0, 5.0], ["Galway", "Liam Silke", "DEF", 0, 5.0], ["Galway", "Johnny McGrath", "DEF", 0, 5.0], ["Galway", "Dylan McHugh", "DEF", 0, 5.0], ["Galway", "Sean Kelly", "MID", 0, 5.0], ["Galway", "Cian Hernon", "MID", 0, 5.0], ["Galway", "Finnian Ó Laoi", "FWD", 0, 6.0], ["Galway", "Ciarán Mulhern", "FWD", 0, 6.0], ["Galway", "Daniel O'Flaherty", "FWD", 0, 6.0], ["Galway", "Fionn McDonagh", "FWD", 0, 6.0], ["Galway", "Robert Finnerty", "FWD", 0, 6.0], ["Galway", "Oisín Mac Donnacha", "FWD", 0, 6.0], ["Kerry", "Shane Murphy", "GK", 0, 4.5], ["Kerry", "Evan Looney", "DEF", 0, 5.0], ["Kerry", "Jason Foley", "DEF", 0, 5.0], ["Kerry", "Dylan Casey", "DEF", 0, 5.0], ["Kerry", "Armin Heinrich", "DEF", 0, 5.0], ["Kerry", "Mike Breen", "DEF", 0, 5.0], ["Kerry", "Tadhg Morley", "DEF", 0, 5.0], ["Kerry", "Seán O'Brien", "MID", 0, 5.0], ["Kerry", "Liam Smith", "MID", 0, 5.0], ["Kerry", "Joe O'Connor", "FWD", 0, 6.0], ["Kerry", "Seán O'Shea", "FWD", 0, 6.0], ["Kerry", "Micheál Burns", "FWD", 0, 6.0], ["Kerry", "David Clifford", "FWD", 0, 6.0], ["Kerry", "Tomás Kennedy", "FWD", 0, 6.0], ["Kerry", "Tony Brosnan", "FWD", 0, 6.0], ["Roscommon", "Aaron Brady", "GK", 0, 4.5], ["Roscommon", "Patrick Gavin", "DEF", 0, 5.0], ["Roscommon", "Caelim Keogh", "DEF", 0, 5.0], ["Roscommon", "Eoin McCormack", "DEF", 0, 5.0], ["Roscommon", "Eoin Ward", "DEF", 0, 5.0], ["Roscommon", "Ronan Daly", "DEF", 0, 5.0], ["Roscommon", "Senan Lambe", "DEF", 0, 5.0], ["Roscommon", "Keith Doyle", "MID", 0, 5.0], ["Roscommon", "Conor Ryan", "MID", 0, 5.0], ["Roscommon", "Dylan Ruane", "FWD", 0, 6.0], ["Roscommon", "Enda Smith", "FWD", 0, 6.0], ["Roscommon", "Darragh Heneghan", "FWD", 0, 6.0], ["Roscommon", "Diarmuid Murtagh", "FWD", 0, 6.0], ["Roscommon", "Daire Cregg", "FWD", 0, 6.0], ["Roscommon", "Eoin Colleran", "FWD", 0, 6.0]];
-
+    let allPlayers = [];
     let state = { budget: 50.0, squad: [] };
     const LIMITS = { GK: 1, DEF: 6, MID: 2, FWD: 6, SUB: 3 };
 
-    async function init() { 
-        applyFilters(); 
-        await fetchWeeklyScores(); 
+    async function init() {
+        try {
+            const response = await fetch(CSV_URL + '&t=' + new Date().getTime());
+            const csvData = await response.text();
+            processData(csvData);
+        } catch (error) {
+            document.querySelector('.loading').innerText = "Error loading data. Check your Google Sheets link.";
+            console.error(error);
+        }
     }
 
-    async function fetchWeeklyScores() {
-        try {
-            const response = await fetch(SCORES_CSV_URL + '&t=' + new Date().getTime());
-            const text = await response.text();
-            const rows = text.split('\n').slice(1);
+    function processData(csv) {
+        const rows = csv.split('\n');
+        const headers = rows[0].split(',').map(h => h.trim().toLowerCase());
+        
+        // Find column indices
+        const idxTeam = headers.indexOf('team');
+        const idxFirst = headers.indexOf('first name');
+        const idxLast = headers.indexOf('last name');
+        const idxPoints = headers.indexOf('total points');
+        const idxPos = headers.indexOf('position'); // Optional
+        const idxPrice = headers.indexOf('price');   // Optional
+
+        const counties = new Set();
+        allPlayers = [];
+
+        for (let i = 1; i < rows.length; i++) {
+            if (!rows[i].trim()) continue;
             
-            rows.forEach(row => {
-                const cols = row.split(',');
-                if (cols.length < 10) return;
-                const fullName = (cols[1].trim() + " " + cols[2].trim());
-                const totalPoints = parseInt(cols[10]) || 0;
-                const player = playersData.find(p => p[1].trim() === fullName);
-                if (player) { player[3] = totalPoints; }
-            });
-            applyFilters();
-        } catch (e) { console.warn("Live update failed."); }
+            // Simple split (note: doesn't handle commas inside quotes, but fine for standard names)
+            const cols = rows[i].split(',');
+            if (cols.length < 3) continue;
+
+            const team = cols[idxTeam]?.trim() || "Unknown";
+            const fname = cols[idxFirst]?.trim() || "";
+            const lname = cols[idxLast]?.trim() || "";
+            const fullName = fname + " " + lname;
+            const pts = parseInt(cols[idxPoints]) || 0;
+            
+            // Logic for Position
+            let posRaw = cols[idxPos]?.trim() || "FWD";
+            let pos = "FWD";
+            if (posRaw.includes("1") && !posRaw.includes("10") && !posRaw.includes("11")) pos = "GK";
+            else if (["2","3","4","5","6","7"].some(n => posRaw.includes(n))) pos = "DEF";
+            else if (["8","9"].some(n => posRaw.includes(n))) pos = "MID";
+            else if (posRaw.toLowerCase().includes("gk")) pos = "GK";
+            else if (posRaw.toLowerCase().includes("def")) pos = "DEF";
+            else if (posRaw.toLowerCase().includes("mid")) pos = "MID";
+
+            // Logic for Price
+            let price = parseFloat(cols[idxPrice]) || 0;
+            if (price === 0) {
+                if (pos === "GK") price = 4.5;
+                else if (pos === "DEF" || pos === "MID") price = 5.0;
+                else price = 6.0;
+            }
+
+            allPlayers.push({ team, name: fullName, pos, pts, price });
+            counties.add(team);
+        }
+
+        // Fill the County Dropdown
+        const countySelect = document.getElementById('filterCounty');
+        Array.from(counties).sort().forEach(c => {
+            const opt = document.createElement('option');
+            opt.value = c;
+            opt.innerText = c;
+            countySelect.appendChild(opt);
+        });
+
+        document.querySelector('.loading').style.display = 'none';
+        document.getElementById('market-table').style.display = 'table';
+        applyFilters();
     }
 
     function applyFilters() {
         const search = document.getElementById('searchName').value.toLowerCase().trim();
-        const county = document.getElementById('filterCounty').value.trim();
-        const pos = document.getElementById('filterPos').value.trim();
+        const county = document.getElementById('filterCounty').value;
+        const pos = document.getElementById('filterPos').value;
 
-        const filtered = playersData.filter(p => {
-            const pCounty = p[0].trim();
-            const pName = p[1].trim();
-            const pPos = p[2].trim();
-            
-            const matchS = pName.toLowerCase().includes(search) || pCounty.toLowerCase().includes(search);
-            const matchC = (county === "ALL" || pCounty === county);
-            const matchP = (pos === "ALL" || pPos === pos);
-            
+        const filtered = allPlayers.filter(p => {
+            const matchS = p.name.toLowerCase().includes(search) || p.team.toLowerCase().includes(search);
+            const matchC = (county === "ALL" || p.team === county);
+            const matchP = (pos === "ALL" || p.pos === pos);
             return matchS && matchC && matchP;
         });
+
         renderMarket(filtered);
     }
 
     function renderMarket(data) {
         document.getElementById('market-body').innerHTML = data.map(p => `
             <tr>
-                <td><b>${p[1]}</b><br><small>${p[0]} (${p[2]})</small></td>
-                <td>${p[3]}</td>
-                <td>${p[4].toFixed(1)}m</td>
-                <td><button class="btn-add" onclick="addPlayer('${p[1].replace(/'/g, "\\'")}', '${p[0].trim()}', '${p[2].trim()}', ${p[4]})">+</button></td>
+                <td><b>${p.name}</b><br><small>${p.team} (${p.pos})</small></td>
+                <td>${p.pts}</td>
+                <td>${p.price.toFixed(1)}m</td>
+                <td><button class="btn-add" onclick="addPlayer('${p.name.replace(/'/g, "\\'")}', '${p.team}', '${p.pos}', ${p.price})">+</button></td>
             </tr>
         `).join('') || '<tr><td colspan="4" style="text-align:center; padding:20px;">No players found.</td></tr>';
     }
@@ -175,9 +211,12 @@
         if (state.squad.length >= 18) return alert("Squad full!");
         if (state.budget < price) return alert("Not enough budget!");
         if (state.squad.filter(p => p.county === county).length >= 2) return alert(`Max 2 from ${county}!`);
+        
         let role = (state.squad.filter(p => p.role === pos).length < LIMITS[pos]) ? pos : 
                    (state.squad.filter(p => p.role === 'SUB').length < LIMITS.SUB ? 'SUB' : null);
-        if (!role) return alert(`Slots full!`);
+        
+        if (!role) return alert(`Slots for ${pos} full!`);
+        
         state.squad.push({name, county, pos, price, role});
         state.budget -= price;
         updateUI();
