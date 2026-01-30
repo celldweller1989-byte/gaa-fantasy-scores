@@ -7,18 +7,23 @@
     <style>
         :root { --orange: #f37021; --dark: #1a1a1a; --cream: #f4f1de; --white: #ffffff; --green: #28a745; --red: #dc3545; --grey: #777; --blue: #007bff; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--cream); margin: 0; padding: 0; color: var(--dark); }
+        
+        /* Header & Nav */
         .header { background: var(--orange); color: white; padding: 20px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
         nav { display: flex; justify-content: center; background: var(--dark); padding: 0; position: sticky; top: 0; z-index: 100; flex-wrap: wrap; }
         .nav-link { color: white; padding: 15px 20px; text-decoration: none; font-weight: bold; cursor: pointer; transition: 0.3s; border: none; background: none; font-size: 13px; text-transform: uppercase; }
         .nav-link.active { background: var(--orange); }
         
+        /* Layout */
         .container { padding: 15px; max-width: 1300px; margin: auto; }
         .main-layout { display: grid; grid-template-columns: 1fr 360px; gap: 20px; }
         .panel { background: var(--white); border-radius: 8px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 20px; }
 
+        /* Filters */
         .filter-bar { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
         .filter-bar input, .filter-bar select { padding: 10px; border: 1px solid #ccc; border-radius: 5px; flex: 1; min-width: 150px; }
 
+        /* Tables & Market */
         .scroll-box { max-height: 650px; overflow-y: auto; border: 1px solid #eee; border-radius: 5px; background: #fff; }
         table { width: 100%; border-collapse: collapse; }
         th { position: sticky; top: 0; background: #f8f8f8; padding: 12px; text-align: left; font-size: 10px; border-bottom: 2px solid #ddd; z-index: 5; }
@@ -27,25 +32,39 @@
         /* Tooltip Logic */
         .player-cell { display: flex; align-items: center; position: relative; cursor: help; }
         .tooltip { visibility: hidden; width: 180px; background-color: var(--dark); color: #fff; text-align: left; border-radius: 6px; padding: 10px; position: absolute; z-index: 100; bottom: 125%; left: 10%; opacity: 0; transition: opacity 0.3s; box-shadow: 0 4px 15px rgba(0,0,0,0.3); font-size: 11px; line-height: 1.4; }
-        .tooltip::after { content: ""; position: absolute; top: 100%; left: 20%; margin-left: -5px; border-width: 5px; border-style: solid; border-color: var(--dark) transparent transparent transparent; }
         .player-cell:hover .tooltip { visibility: visible; opacity: 1; }
 
+        /* Badges & Indicators */
         .county-badge { width: 35px; height: 35px; object-fit: contain; margin-right: 12px; }
         .result-badge { font-size: 9px; font-weight: bold; padding: 2px 5px; border-radius: 4px; display: inline-block; margin-top: 4px; border: 1px solid #ddd; }
         .res-win { background: #d4edda; color: #155724; }
         .res-loss { background: #f8d7da; color: #721c24; }
-        
         .trend-up { color: var(--green); font-weight: bold; }
         .trend-down { color: var(--red); font-weight: bold; }
 
+        /* Buttons */
         .btn-group { display: flex; gap: 2px; }
         .btn-pos { border: 1px solid #ddd; background: #f9f9f9; color: #555; padding: 6px 2px; border-radius: 4px; font-size: 9px; font-weight: normal; cursor: pointer; flex: 1; transition: 0.2s; }
         .btn-pos:hover { background: var(--orange); color: white; border-color: var(--orange); }
         .btn-pref { border: 2px solid var(--orange); color: var(--orange); font-weight: bold; background: #fff5ee; }
 
+        /* Squad Panel */
         .squad-slot { display: flex; justify-content: space-between; background: #f9f9f9; padding: 8px; margin-bottom: 5px; border-radius: 4px; border-left: 4px solid var(--orange); align-items: center; font-size: 12px; }
         .pos-tracker { font-size: 11px; background: #fff3cd; padding: 10px; border-radius: 5px; margin-bottom: 15px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; border: 1px solid #ffeeba; }
+        
+        /* Submissions Page */
+        .manager-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 15px; }
+        .manager-card { background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 15px; cursor: pointer; transition: 0.3s; }
+        .manager-card:hover { border-color: var(--orange); }
+        .manager-name { font-size: 1.1em; color: var(--orange); font-weight: bold; }
+        .mini-squad { margin-top: 10px; border-top: 1px solid #eee; padding-top: 10px; display: none; }
+        .manager-card.active .mini-squad { display: block; }
+        .mini-player-row { display: flex; justify-content: space-between; font-size: 11px; padding: 3px 0; border-bottom: 1px dashed #eee; }
+
         .hidden { display: none; }
+        .btn-main { width: 100%; padding: 12px; margin-top: 10px; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; }
+        .btn-submit { background: var(--green); color: white; }
+        .btn-reset { background: #eee; color: #333; }
     </style>
 </head>
 <body>
@@ -53,14 +72,15 @@
 <div class="header"><h1>ORCHARD FANS FANTASY GAA</h1></div>
 <nav>
     <button class="nav-link" onclick="showPage('rules')">RULES</button>
-    <button class="nav-link active" id="nav-market" onclick="showPage('market')">TRANSFER MARKET</button>
+    <button class="nav-link active" id="nav-market" onclick="showPage('market')">MARKET</button>
+    <button class="nav-link" id="nav-submissions" onclick="showPage('submissions')">SUBMISSIONS</button>
     <button class="nav-link" onclick="showPage('leaderboard')">LEADERBOARD</button>
 </nav>
 
 <div class="container">
     <div id="page-market" class="page">
         <div class="filter-bar">
-            <input type="text" id="search-name" placeholder="Search player name..." oninput="filterPlayers()">
+            <input type="text" id="search-name" placeholder="Search player..." oninput="filterPlayers()">
             <select id="filter-county" onchange="filterPlayers()"><option value="">All Counties</option></select>
             <select id="filter-pos" onchange="filterPlayers()">
                 <option value="">All Positions</option>
@@ -96,26 +116,53 @@
                 </div>
                 <div id="budget-val" style="font-weight:bold; margin-bottom:10px; font-size: 1.1em; color: var(--green);">Budget: 100.00m</div>
                 <div id="squad-list"></div>
-                <button onclick="resetSquad()" style="width:100%; margin-top:10px; padding:10px; cursor:pointer; background: #eee; border:1px solid #ccc; font-weight:bold;">RESET SQUAD</button>
+                <button class="btn-main btn-submit" onclick="submitTeam()">SUBMIT SQUAD</button>
+                <button class="btn-main btn-reset" onclick="resetSquad()">RESET SQUAD</button>
             </div>
         </div>
     </div>
 
-    <div id="page-rules" class="page hidden"><div class="panel"><h2>Rules</h2><p>Big Win: +5 | Win: +2 | Loss: -2 | Big Loss: -5</p></div></div>
-    <div id="page-leaderboard" class="page hidden"><div class="panel"><h2>Leaderboard</h2></div></div>
+    <div id="page-submissions" class="page hidden">
+        <div class="panel">
+            <h2>Manager Entries</h2>
+            <div id="submission-container" class="manager-grid">
+                <p>Ensure SUBMISSIONS_URL is set in the script to load data.</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="page-rules" class="page hidden">
+        <div class="panel">
+            <h2>Scoring Rules</h2>
+            <ul>
+                <li><strong>Base Price:</strong> 5.5m</li>
+                <li><strong>BIG WIN:</strong> +5 Points</li>
+                <li><strong>WIN:</strong> +2 Points</li>
+                <li><strong>LOSS:</strong> -2 Points</li>
+                <li><strong>BIG LOSS:</strong> -5 Points</li>
+            </ul>
+        </div>
+    </div>
+
+    <div id="page-leaderboard" class="page hidden"><div class="panel"><h2>Leaderboard</h2><p>Coming Soon...</p></div></div>
 </div>
 
 <script>
+    // --- URLs (Change SUBMISSIONS_URL to your Entries sheet CSV) ---
     const SCORERS_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTcdzjZ4zYlGgFe5acS8xOb1vHR9b8i98UudIOe-iC9Z1d6x6AY5zATgX217cNjcNtAGDLJ56y8Jr8N/pub?output=csv';
+    const SUBMISSIONS_URL = ''; 
+
     let allPlayers = [];
     let state = { budget: 100.0, squad: [] };
     const LIMITS = { GK: 1, DEF: 6, MID: 2, FWD: 6, SUB: 3 };
 
+    // Function to handle image links (Fixes UK/Drive issues)
     function getDirectImg(url) {
         if (!url) return '';
         let clean = url.trim();
-        if (clean.includes('imgur.com') && !clean.match(/\.(png|jpg|jpeg|gif)$/)) {
-            return clean.replace('imgur.com', 'i.imgur.com') + '.png';
+        if (clean.includes('drive.google.com')) {
+            let fileId = clean.split('/d/')[1]?.split('/')[0];
+            return `https://lh3.googleusercontent.com/u/0/d/${fileId}`;
         }
         return clean;
     }
@@ -168,29 +215,26 @@
             opt.value = opt.text = c;
             countySelect.add(opt);
         });
-
         filterPlayers();
     }
 
     function filterPlayers() {
-        const nameQuery = document.getElementById('search-name').value.toLowerCase();
-        const countyQuery = document.getElementById('filter-county').value;
-        const posQuery = document.getElementById('filter-pos').value;
+        const nameQ = document.getElementById('search-name').value.toLowerCase();
+        const countyQ = document.getElementById('filter-county').value;
+        const posQ = document.getElementById('filter-pos').value;
 
         const filtered = allPlayers.filter(p => {
-            const matchesName = p.name.toLowerCase().includes(nameQuery);
-            const matchesCounty = !countyQuery || p.county === countyQuery;
-            const matchesPos = !posQuery || p.prefPos === posQuery;
-            return matchesName && matchesCounty && matchesPos;
+            return p.name.toLowerCase().includes(nameQ) && 
+                   (!countyQ || p.county === countyQ) && 
+                   (!posQ || p.prefPos === posQ);
         });
-
         renderMarket(filtered);
     }
 
     function renderMarket(data) {
         document.getElementById('market-body').innerHTML = data.map(p => {
-            const ptSymbol = p.totalPts >= 0 ? '▲' : '▼';
-            const priceSymbol = p.price > 5.5 ? '▲' : (p.price < 5.5 ? '▼' : '');
+            const ptSym = p.totalPts >= 0 ? '▲' : '▼';
+            const prSym = p.price > 5.5 ? '▲' : (p.price < 5.5 ? '▼' : '');
             const resClass = p.result.includes('WIN') ? 'res-win' : 'res-loss';
 
             return `
@@ -205,32 +249,36 @@
                         <div class="tooltip">${p.statsHTML}</div>
                     </div>
                 </td>
-                <td><span class="${p.totalPts >= 0 ? 'trend-up' : 'trend-down'}">${ptSymbol} ${p.totalPts}</span></td>
-                <td><span class="${p.price > 5.5 ? 'trend-up' : 'trend-down'}">${priceSymbol} ${p.price.toFixed(2)}m</span></td>
+                <td><span class="${p.totalPts >= 0 ? 'trend-up' : 'trend-down'}">${ptSym} ${p.totalPts}</span></td>
+                <td><span class="${p.price > 5.5 ? 'trend-up' : 'trend-down'}">${prSym} ${p.price.toFixed(2)}m</span></td>
                 <td>
                     <div class="btn-group">
-                        <button class="btn-pos ${p.prefPos==='GK'?'btn-pref':''}" onclick="addPlayer(${p.id}, 'GK')">GK</button>
-                        <button class="btn-pos ${p.prefPos==='DEF'?'btn-pref':''}" onclick="addPlayer(${p.id}, 'DEF')">DEF</button>
-                        <button class="btn-pos ${p.prefPos==='MID'?'btn-pref':''}" onclick="addPlayer(${p.id}, 'MID')">MID</button>
-                        <button class="btn-pos ${p.prefPos==='FWD'?'btn-pref':''}" onclick="addPlayer(${p.id}, 'FWD')">FWD</button>
-                        <button class="btn-pos" onclick="addPlayer(${p.id}, 'SUB')">SUB</button>
+                        ${['GK','DEF','MID','FWD','SUB'].map(r => 
+                            `<button class="btn-pos ${p.prefPos===r?'btn-pref':''}" onclick="addPlayer(${p.id}, '${r}')">${r}</button>`
+                        ).join('')}
                     </div>
                 </td>
-            </tr>
-        `}).join('');
+            </tr>`;
+        }).join('');
     }
 
     function addPlayer(id, role) {
         const p = allPlayers.find(x => x.id === id);
-        const currentInRole = state.squad.filter(x => x.role === role).length;
+        const inRole = state.squad.filter(x => x.role === role).length;
 
         if (state.squad.length >= 18) return alert("Squad full!");
-        if (state.budget < p.price) return alert("Not enough cash!");
-        if (currentInRole >= LIMITS[role]) return alert(`Position ${role} is full!`);
-        if (state.squad.find(x => x.id === id)) return alert("Player already in squad!");
+        if (state.budget < p.price) return alert("Over budget!");
+        if (inRole >= LIMITS[role]) return alert(`${role} limit reached!`);
+        if (state.squad.find(x => x.id === id)) return alert("Already selected!");
 
         state.squad.push({ ...p, role });
         state.budget -= p.price;
+        updateUI();
+    }
+
+    function removePlayer(idx) {
+        state.budget += state.squad[idx].price;
+        state.squad.splice(idx, 1);
         updateUI();
     }
 
@@ -252,21 +300,51 @@
         `).join('');
     }
 
-    function removePlayer(idx) {
-        state.budget += state.squad[idx].price;
-        state.squad.splice(idx, 1);
-        updateUI();
-    }
-
     function showPage(id) {
         document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
         document.getElementById('page-' + id).classList.remove('hidden');
         document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
-        const activeBtn = Array.from(document.querySelectorAll('.nav-link')).find(b => b.textContent.toLowerCase().includes(id));
+        const activeBtn = Array.from(document.querySelectorAll('.nav-link')).find(b => b.textContent.toLowerCase().includes(id.substring(0,4)));
         if(activeBtn) activeBtn.classList.add('active');
+        if (id === 'submissions') loadSubmissions();
     }
 
-    function resetSquad() { if(confirm("Clear squad?")) { state.squad = []; state.budget = 100.0; updateUI(); } }
+    async function loadSubmissions() {
+        if (!SUBMISSIONS_URL) return;
+        try {
+            const res = await fetch(SUBMISSIONS_URL + '&t=' + new Date().getTime());
+            const text = await res.text();
+            const rows = text.split('\n').map(r => r.split(','));
+            const container = document.getElementById('submission-container');
+            container.innerHTML = '';
+
+            for (let i = 1; i < rows.length; i++) {
+                const col = rows[i];
+                if (!col[0]) continue;
+                let total = 0;
+                let list = col.slice(1, 19).map(n => {
+                    const p = allPlayers.find(pl => pl.name.trim() === n.trim());
+                    total += p ? p.totalPts : 0;
+                    return `<div class="mini-player-row"><span>${n}</span><b>${p ? p.totalPts : '-'}</b></div>`;
+                }).join('');
+
+                const card = document.createElement('div');
+                card.className = 'manager-card';
+                card.onclick = function() { this.classList.toggle('active'); };
+                card.innerHTML = `<div class="manager-name">${col[0]}</div><div>Total: ${total} pts</div><div class="mini-squad">${list}</div>`;
+                container.appendChild(card);
+            }
+        } catch (e) { console.error(e); }
+    }
+
+    function submitTeam() {
+        if (state.squad.length < 18) return alert("Select 18 players first!");
+        const teamList = state.squad.map(p => p.name).join(', ');
+        prompt("Copy your team to submit:", teamList);
+    }
+
+    function resetSquad() { if(confirm("Reset?")) { state.squad = []; state.budget = 100.0; updateUI(); } }
+    
     init();
 </script>
 </body>
