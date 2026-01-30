@@ -37,6 +37,7 @@
         .badge-loss { background: #ffebee; color: var(--red); border: 1px solid var(--red); }
         .badge-hloss { background: #721c24; color: white; border: 1px solid #f5c6cb; }
         .badge-red { background: #dc3545; color: white; border: 1px solid #a71d2a; }
+        .badge-clean { background: #007bff; color: white; border: 1px solid #0056b3; }
 
         .btn-group { display: flex; gap: 3px; }
         .btn-pos { border: 1px solid var(--orange); background: white; color: var(--orange); padding: 5px 2px; border-radius: 4px; font-size: 9px; font-weight: bold; cursor: pointer; flex: 1; }
@@ -66,10 +67,10 @@
             <h2>Rules & Value Scoring</h2>
             <ul>
                 <li><b>Base Price:</b> GKs 4.5m | Others 5.5m</li>
+                <li><b>Clean Sheet Bonus:</b> +5 Pts and +0.25m Market Value.</li>
                 <li><b>Red Card Penalty:</b> -5 Pts and -0.25m Market Value.</li>
                 <li><b>Loss Deduction:</b> -2 Pts | <b>Heavy Loss:</b> -5 Pts</li>
-                <li><b>Value Formula:</b> Every point adds/removes 0.05m.</li>
-                <li><b>Market Drop:</b> Extra -0.2m decrease for every 3pt team deduction.</li>
+                <li><b>Value Formula:</b> 0.05m change per point + specific market penalties.</li>
             </ul>
         </div>
     </div>
@@ -141,31 +142,29 @@
             let posRaw = (col[3] || "").trim().toUpperCase();
             let rawPts = parseInt(col[8]) || 0;
             let result = (col[9] || "").trim().toLowerCase();
-            let hasRedCard = (col[7] || "").trim() === "1"; // Column H: Red Card
+            let hasRedCard = (col[7] || "").trim() === "1"; 
+            let hasCleanSheet = (col[6] || "").trim() === "1"; // Column G: Clean Sheet
             
-            // 1. Determine Position
             let preferred = "FWD"; 
             if (posRaw.includes("GK") || posRaw === "1") preferred = "GK";
             else if (posRaw.includes("DEF") || (parseInt(posRaw) >= 2 && parseInt(posRaw) <= 7)) preferred = "DEF";
             else if (posRaw.includes("MID") || (parseInt(posRaw) >= 8 && parseInt(posRaw) <= 9)) preferred = "MID";
 
-            // 2. Point Deductions
+            // Calculation logic
             let teamDeduction = 0;
             if (result === "loss") teamDeduction = 2;
             else if (result === "heavy loss") teamDeduction = 5;
 
             let redCardDeduction = hasRedCard ? 5 : 0;
-            let adjustedPts = rawPts - teamDeduction - redCardDeduction;
+            let cleanSheetBonus = hasCleanSheet ? 5 : 0;
             
-            // 3. Set Base Price
+            // Total points displayed
+            let adjustedPts = rawPts - teamDeduction - redCardDeduction + cleanSheetBonus;
+            
             let basePrice = (preferred === "GK") ? 4.5 : 5.5;
-            
-            // 4. Market Drop Penalties
-            // -0.2m for every 3pt team deduction
             let marketPenalty = Math.floor(teamDeduction / 3) * 0.2;
             
-            // 5. Final Value Calculation
-            // Base + (Adjusted Pts * 0.05) - Market Penalty
+            // 0.05m per point rule
             let currentPrice = basePrice + (adjustedPts * 0.05) - marketPenalty;
             currentPrice = Math.max(3.0, currentPrice);
 
@@ -177,6 +176,7 @@
                 totalPts: adjustedPts,
                 result: result,
                 redCard: hasRedCard,
+                cleanSheet: hasCleanSheet,
                 price: currentPrice,
                 change: currentPrice - basePrice,
                 stats: `G:${col[4]||0} | 1p:${col[11]||0} | 2p:${col[12]||0} | CS:${col[6]||0}`
@@ -220,16 +220,17 @@
             else if (p.result === "heavy loss") badges += `<span class="result-badge badge-hloss">Heavy Loss (-5)</span>`;
             
             if (p.redCard) badges += `<span class="result-badge badge-red">RED CARD (-5)</span>`;
+            if (p.cleanSheet) badges += `<span class="result-badge badge-clean">CLEAN SHEET (+5)</span>`;
 
             let changeHtml = "";
-            if (p.change > 0) changeHtml = `<span class="val-change val-up">▲ +${p.change.toFixed(1)}m</span>`;
-            else if (p.change < 0) changeHtml = `<span class="val-change val-down">▼ ${Math.abs(p.change).toFixed(1)}m</span>`;
+            if (p.change > 0) changeHtml = `<span class="val-change val-up">▲ +${p.change.toFixed(2)}m</span>`;
+            else if (p.change < 0) changeHtml = `<span class="val-change val-down">▼ ${Math.abs(p.change).toFixed(2)}m</span>`;
 
             return `
             <tr>
                 <td><b>${p.name}</b> <small>(${p.county})</small><br><span style="font-size:11px;color:#777">${p.stats}</span><br>${badges}</td>
                 <td><b>${p.totalPts}</b></td>
-                <td><span style="color:var(--green); font-weight:bold;">${p.price.toFixed(1)}m</span>${changeHtml}</td>
+                <td><span style="color:var(--green); font-weight:bold;">${p.price.toFixed(2)}m</span>${changeHtml}</td>
                 <td>
                     <div class="btn-group">
                         <button class="btn-pos ${p.preferred === 'GK' ? 'pref-pos' : ''}" onclick="addPlayer(${p.id}, 'GK')">GK</button>
@@ -264,7 +265,7 @@
     }
 
     function updateUI() {
-        document.getElementById('budget-val').innerText = state.budget.toFixed(1);
+        document.getElementById('budget-val').innerText = state.budget.toFixed(2);
         const counts = { GK: 0, DEF: 0, MID: 0, FWD: 0, SUB: 0 };
         state.squad.forEach(p => counts[p.role]++);
         document.getElementById('pos-tracker').innerHTML = `
