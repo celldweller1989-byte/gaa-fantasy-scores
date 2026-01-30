@@ -9,8 +9,8 @@
         body { font-family: 'Segoe UI', sans-serif; background: var(--cream); margin: 0; padding: 0; color: var(--dark); }
         
         .header { background: var(--orange); color: white; padding: 20px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
-        nav { display: flex; justify-content: center; background: var(--dark); position: sticky; top: 0; z-index: 100; flex-wrap: wrap; }
-        .nav-link { color: white; padding: 15px 20px; text-decoration: none; font-weight: bold; cursor: pointer; border: none; background: none; font-size: 13px; text-transform: uppercase; }
+        nav { display: flex; justify-content: center; background: var(--dark); padding: 0; position: sticky; top: 0; z-index: 100; flex-wrap: wrap; }
+        .nav-link { color: white; padding: 15px 20px; text-decoration: none; font-weight: bold; cursor: pointer; transition: 0.3s; border: none; background: none; font-size: 13px; text-transform: uppercase; }
         .nav-link:hover { background: #333; }
         .nav-link.active { background: var(--orange); }
 
@@ -18,47 +18,41 @@
         .main-layout { display: grid; grid-template-columns: 1fr 360px; gap: 20px; }
         .panel { background: var(--white); border-radius: 8px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 20px; }
 
-        /* Status Banner */
-        #deadline-notice { padding: 10px; text-align: center; font-weight: bold; border-radius: 5px; margin-bottom: 15px; }
-        .open { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
-        .closed { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
-
-        /* Filter Styling */
         .filter-bar { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; align-items: center; }
         .filter-item { flex: 1; min-width: 150px; }
         select, input { padding: 10px; border-radius: 6px; border: 2px solid var(--orange); width: 100%; height: 45px; box-sizing: border-box; font-size: 14px; outline: none; }
         
-        /* Table Styling */
         .scroll-box { max-height: 650px; overflow-y: auto; border: 1px solid #eee; border-radius: 5px; background: #fff; }
         table { width: 100%; border-collapse: collapse; }
         th { position: sticky; top: 0; background: #f8f8f8; padding: 12px; text-align: left; font-size: 10px; border-bottom: 2px solid #ddd; z-index: 5; text-transform: uppercase; }
         td { padding: 12px; border-bottom: 1px solid #eee; font-size: 13px; vertical-align: top; }
 
+        .player-info b { color: var(--dark); font-size: 14px; }
         .stats-subtle { font-size: 11px; color: var(--grey); margin-top: 4px; line-height: 1.4; display: block; }
-        .val-up { color: var(--green); font-size: 10px; font-weight: bold; margin-top: 2px; display: block; }
-        .val-down { color: var(--red); font-size: 10px; font-weight: bold; margin-top: 2px; display: block; }
+        
+        .val-change { font-size: 10px; font-weight: bold; margin-top: 2px; display: block; }
+        .val-up { color: var(--green); }
+        .val-down { color: var(--red); }
 
         .result-badge { font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 4px; display: inline-block; margin-top: 6px; }
+        .badge-hwin { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
         .badge-win { background: #e8f5e9; color: var(--green); border: 1px solid var(--green); }
         .badge-loss { background: #ffebee; color: var(--red); border: 1px solid var(--red); }
+        .badge-hloss { background: #721c24; color: white; border: 1px solid #f5c6cb; }
 
         .btn-group { display: flex; gap: 3px; }
         .btn-pos { border: 1px solid var(--orange); background: white; color: var(--orange); padding: 5px 2px; border-radius: 4px; font-size: 9px; font-weight: bold; cursor: pointer; flex: 1; }
-        .btn-pos.pref-pos { background: #fff3cd; border: 2px solid var(--orange); }
-        .btn-pos:disabled { opacity: 0.3; cursor: not-allowed; }
+        .btn-pos:hover { background: var(--orange); color: white; }
+        
+        /* Preferred Position Highlighting */
+        .btn-pos.pref-pos { background: #fff3cd; border: 2px solid #f37021; box-shadow: inset 0 0 5px rgba(243, 112, 33, 0.2); }
 
-        /* Squad Panel */
         .pos-tracker { font-size: 11px; background: #fff3cd; padding: 10px; border-radius: 5px; margin-bottom: 15px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; border: 1px solid #ffeeba; }
         .squad-slot { display: flex; justify-content: space-between; background: #f9f9f9; padding: 8px; margin-bottom: 5px; border-radius: 4px; border-left: 4px solid var(--orange); align-items: center; font-size: 12px; }
         .btn-remove { color: var(--red); cursor: pointer; font-weight: bold; font-size: 18px; padding: 0 5px; }
 
-        .submit-btn { background: var(--green); color: white; border: none; padding: 15px; width: 100%; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 10px; }
-        .submit-btn:disabled { background: var(--grey); }
-
-        #submission-output { white-space: pre-wrap; background: #eee; padding: 15px; border-radius: 5px; font-size: 11px; margin-top: 20px; display: none; border: 1px solid #ccc; }
-
         .hidden { display: none; }
-        @media (max-width: 900px) { .main-layout { grid-template-columns: 1fr; } }
+        .loading { text-align: center; padding: 50px; color: var(--orange); font-weight: bold; }
     </style>
 </head>
 <body>
@@ -66,13 +60,24 @@
 <div class="header"><h1>ORCHARD FANS FANTASY GAA</h1></div>
 
 <nav>
-    <button class="nav-link active" id="nav-market" onclick="showPage('market')">Market</button>
-    <button class="nav-link" id="nav-rules" onclick="showPage('rules')">Rules</button>
-    <button class="nav-link" id="nav-leaderboard" onclick="showPage('leaderboard')">Leaderboard</button>
+    <button class="nav-link" id="nav-rules" onclick="showPage('rules')">RULES</button>
+    <button class="nav-link active" id="nav-market" onclick="showPage('market')">TRANSFER MARKET</button>
+    <button class="nav-link" id="nav-leaderboard" onclick="showPage('leaderboard')">LEADERBOARD</button>
 </nav>
 
 <div class="container">
-    <div id="deadline-notice">Syncing Market...</div>
+    
+    <div id="page-rules" class="page hidden">
+        <div class="panel">
+            <h2>Rules & Scoring</h2>
+            <p>Highlighted buttons in the market indicate the player's <b>Primary Position</b> from official team sheets.</p>
+            <ul>
+                <li>Goal: 3 pts | 1-pointer: 1 pt | 2-pointer: 2 pts</li>
+                <li>Clean Sheet (GK): 4 pts | Red Card: -5 pts</li>
+                <li>Budget: 100.0m | Squad Size: 18</li>
+            </ul>
+        </div>
+    </div>
 
     <div id="page-market" class="page">
         <div class="main-layout">
@@ -82,17 +87,15 @@
                     <div class="filter-item"><select id="filterCounty" onchange="applyFilters()"><option value="ALL">All Counties</option></select></div>
                     <div class="filter-item">
                         <select id="filterPos" onchange="applyFilters()">
-                            <option value="ALL">All Positions</option>
-                            <option value="GK">GK</option>
-                            <option value="DEF">DEF</option>
-                            <option value="MID">MID</option>
-                            <option value="FWD">FWD</option>
+                            <option value="ALL">All Categories</option>
+                            <option value="GK">GK</option><option value="DEF">DEF</option><option value="MID">MID</option><option value="FWD">FWD</option>
                         </select>
                     </div>
                 </div>
                 <div class="scroll-box">
-                    <table id="market-table">
-                        <thead><tr><th>Player & Stats</th><th>Pts</th><th>Value</th><th>Assign</th></tr></thead>
+                    <div id="loading-market" class="loading">Syncing Player Roles...</div>
+                    <table id="market-table" class="hidden">
+                        <thead><tr><th>Player & Stats</th><th>Pts</th><th>Value</th><th>Assign Slot</th></tr></thead>
                         <tbody id="market-body"></tbody>
                     </table>
                 </div>
@@ -100,72 +103,35 @@
 
             <div class="panel">
                 <h3 style="margin-top:0;">Your Squad</h3>
-                <input type="text" id="userName" placeholder="Your Name / ID" style="width:100%; padding:10px; margin-bottom:10px; border: 2px solid #ccc; border-radius: 6px;">
-                <div class="pos-tracker" id="pos-tracker"></div>
+                <div class="pos-tracker" id="pos-tracker">
+                    <div>GK: 0/1</div><div>DEF: 0/6</div><div>MID: 0/2</div>
+                    <div>FWD: 0/6</div><div>SUB: 0/3</div><div style="font-weight:bold;">Total: 0/18</div>
+                </div>
                 <div style="font-weight:bold; margin-bottom: 10px;">Budget: <span id="budget-val">100.0</span>m</div>
                 <div id="squad-list"></div>
-                <button id="submitTeamBtn" class="submit-btn" onclick="submitSquad()">SUBMIT TEAM</button>
-                <button onclick="resetSquad()" style="width:100%; margin-top:10px; padding:5px; background:none; border:1px solid #ccc; cursor:pointer;">Reset Squad</button>
-                <div id="submission-output"></div>
+                <button onclick="resetSquad()" style="width:100%; margin-top:10px; padding:8px; cursor:pointer;">Reset Squad</button>
             </div>
         </div>
     </div>
 
-    <div id="page-rules" class="page hidden">
-        <div class="panel">
-            <h2>Rules & Scoring</h2>
-            <hr>
-            <h3>Squad Selection</h3>
-            <ul>
-                <li><b>Total Players:</b> 18</li>
-                <li><b>Budget:</b> 100.0m</li>
-                <li><b>County Limit:</b> Max 2 players from any one county.</li>
-                <li><b>Formation:</b> 1 GK, 6 DEF, 2 MID, 6 FWD + 3 SUBS.</li>
-            </ul>
-            <h3>Deadlines</h3>
-            <p>The market is <b>OPEN</b> from Monday 13:00 until Friday 19:00. No changes can be made over the weekend while games are live.</p>
-        </div>
-    </div>
-
     <div id="page-leaderboard" class="page hidden">
-        <div class="panel">
-            <h2>Leaderboard</h2>
-            <p>Standings will be updated here after each round of fixtures.</p>
-            <table style="width:100%; text-align:left;">
-                <tr style="background:#eee;"><th>Rank</th><th>Manager</th><th>Total Points</th></tr>
-                <tr><td>1</td><td>Sample Manager</td><td>0</td></tr>
-            </table>
-        </div>
+        <div class="panel"><h2>Live Leaderboard</h2><div id="leaderboard-content">Standings update automatically.</div></div>
     </div>
 </div>
 
 <script>
     const SCORERS_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTcdzjZ4zYlGgFe5acS8xOb1vHR9b8i98UudIOe-iC9Z1d6x6AY5zATgX217cNjcNtAGDLJ56y8Jr8N/pub?output=csv';
-    const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxGLOfnr5NuaPelA9tgCPQfBcIREIFo3UyZ94XfQkOvq8tQ0jP9GMvpqzbOSPMHWVzGUw/exec';
-
+    
     let allPlayers = [];
     let state = { budget: 100.0, squad: [] };
     const LIMITS = { GK: 1, DEF: 6, MID: 2, FWD: 6, SUB: 3 };
-    let isMarketOpen = true;
 
     async function init() {
-        checkDeadline();
         try {
             const res = await fetch(SCORERS_URL + '&t=' + new Date().getTime());
             const text = await res.text();
             processScorers(text);
-            loadSaved();
-        } catch (e) { console.error("Load failed"); }
-    }
-
-    function checkDeadline() {
-        const now = new Date();
-        const day = now.getDay(), hr = now.getHours();
-        const closed = (day === 5 && hr >= 19) || (day === 6) || (day === 0) || (day === 1 && hr < 13);
-        isMarketOpen = !closed;
-        const banner = document.getElementById('deadline-notice');
-        banner.innerText = isMarketOpen ? "MARKET OPEN (Closes Fri 7pm)" : "MARKET CLOSED (Opens Mon 1pm)";
-        banner.className = isMarketOpen ? "open" : "closed";
+        } catch (e) { document.getElementById('loading-market').innerText = "Data Error."; }
     }
 
     function processScorers(csvText) {
@@ -176,25 +142,29 @@
         for (let i = 1; i < rows.length; i++) {
             const col = rows[i];
             if (!col[0] || col[0].trim() === "") continue;
-            let posRaw = (col[3] || "").trim().toUpperCase();
-            let pref = "FWD"; 
-            if (posRaw.includes("GK") || posRaw === "1") pref = "GK";
-            else if (posRaw.includes("DEF") || (parseInt(posRaw) >= 2 && parseInt(posRaw) <= 7)) pref = "DEF";
-            else if (posRaw.includes("MID") || (parseInt(posRaw) >= 8 && parseInt(posRaw) <= 9)) pref = "MID";
-
-            let pts = parseInt(col[8]) || 0;
-            let price = (pref === "GK" ? 4.5 : 5.5) + (pts / 20);
             
+            let posRaw = (col[3] || "").trim().toUpperCase();
+            let pts = parseInt(col[8]) || 0;
+            
+            // Logic to determine "Preferred" Pos based on Col D
+            let preferred = "FWD"; 
+            if (posRaw.includes("GK") || posRaw === "1") preferred = "GK";
+            else if (posRaw.includes("DEF") || (parseInt(posRaw) >= 2 && parseInt(posRaw) <= 7)) preferred = "DEF";
+            else if (posRaw.includes("MID") || (parseInt(posRaw) >= 8 && parseInt(posRaw) <= 9)) preferred = "MID";
+
+            let basePrice = (preferred === "GK") ? 4.5 : 5.5;
+            let currentPrice = basePrice + (pts / 20);
+
             allPlayers.push({
-                id: i.toString(),
+                id: i,
                 county: col[0].trim(),
                 name: (col[1] + " " + col[2]).trim(),
-                preferred: pref,
-                pts: pts,
-                price: price,
-                change: price - (pref === "GK" ? 4.5 : 5.5),
+                preferred: preferred, // This drives the button highlight
+                totalPts: pts,
                 result: (col[9] || "").trim().toLowerCase(),
-                stats: `G:${col[4]||0} | 1p:${col[11]||0} | CS:${col[6]||0}`
+                price: currentPrice,
+                change: currentPrice - basePrice,
+                stats: `G:${col[4]||0} | 1p:${col[11]||0} | 2p:${col[12]||0} | CS:${col[6]||0} | RC:${col[7]||0}`
             });
             countySet.add(col[0].trim());
         }
@@ -204,6 +174,9 @@
             const opt = document.createElement('option'); opt.value = c; opt.innerText = c;
             filter.appendChild(opt);
         });
+
+        document.getElementById('loading-market').classList.add('hidden');
+        document.getElementById('market-table').classList.remove('hidden');
         applyFilters();
     }
 
@@ -224,65 +197,59 @@
 
     function renderMarket(data) {
         document.getElementById('market-body').innerHTML = data.map(p => {
-            let badge = p.result === "win" ? '<span class="result-badge badge-win">WIN</span>' : 
-                        p.result === "loss" ? '<span class="result-badge badge-loss">LOSS</span>' : "";
-            let chg = p.change > 0 ? `<span class="val-up">▲ +${p.change.toFixed(1)}m</span>` : "";
+            let resBadge = "";
+            if (p.result === "heavy win") resBadge = `<span class="result-badge badge-hwin">Heavy Win (+5)</span>`;
+            else if (p.result === "win") resBadge = `<span class="result-badge badge-win">Win (+2)</span>`;
+            else if (p.result === "loss") resBadge = `<span class="result-badge badge-loss">Loss (-2)</span>`;
+            else if (p.result === "heavy loss") resBadge = `<span class="result-badge badge-hloss">Heavy Loss (-5)</span>`;
 
-            return `<tr>
-                <td><b>${p.name}</b> <small>(${p.county})</small><br><span class="stats-subtle">${p.stats}</span>${badge}</td>
-                <td><b>${p.pts}</b></td>
-                <td><b>${p.price.toFixed(1)}m</b>${chg}</td>
+            let changeHtml = p.change === 0 ? "" : 
+                p.change > 0 ? `<span class="val-change val-up">▲ +${p.change.toFixed(1)}m</span>` : 
+                `<span class="val-change val-down">▼ ${p.change.toFixed(1)}m</span>`;
+
+            return `
+            <tr>
+                <td>
+                    <b>${p.name}</b> <small>(${p.county})</small>
+                    <span class="stats-subtle">${p.stats}</span>
+                    ${resBadge}
+                </td>
+                <td><b>${p.totalPts}</b></td>
+                <td>
+                    <span style="color:var(--green); font-weight:bold;">${p.price.toFixed(1)}m</span>
+                    ${changeHtml}
+                </td>
                 <td>
                     <div class="btn-group">
-                        ${['GK','DEF','MID','FWD','SUB'].map(r => `
-                            <button class="btn-pos ${p.preferred===r?'pref-pos':''}" ${!isMarketOpen?'disabled':''} onclick="addP('${p.id}','${r}')">${r}</button>
-                        `).join('')}
+                        <button class="btn-pos ${p.preferred === 'GK' ? 'pref-pos' : ''}" onclick="addPlayer(${p.id}, 'GK')">GK</button>
+                        <button class="btn-pos ${p.preferred === 'DEF' ? 'pref-pos' : ''}" onclick="addPlayer(${p.id}, 'DEF')">DEF</button>
+                        <button class="btn-pos ${p.preferred === 'MID' ? 'pref-pos' : ''}" onclick="addPlayer(${p.id}, 'MID')">MID</button>
+                        <button class="btn-pos ${p.preferred === 'FWD' ? 'pref-pos' : ''}" onclick="addPlayer(${p.id}, 'FWD')">FWD</button>
+                        <button class="btn-pos" onclick="addPlayer(${p.id}, 'SUB')">SUB</button>
                     </div>
                 </td>
             </tr>`;
         }).join('');
     }
 
-    function addP(id, role) {
+    function addPlayer(id, role) {
         const p = allPlayers.find(x => x.id === id);
-        if (state.squad.length >= 18 || state.budget < p.price) return alert("Limit reached!");
+        if (state.squad.length >= 18) return alert("Squad full!");
+        if (state.budget < p.price) return alert("Budget low!");
         if (state.squad.filter(x => x.role === role).length >= LIMITS[role]) return alert(role + " full!");
         if (state.squad.filter(x => x.county === p.county).length >= 2) return alert("Max 2 per county!");
 
-        state.squad.push({...p, role});
+        state.squad.push({ ...p, role });
         state.budget -= p.price;
         updateUI();
+        applyFilters();
     }
 
-    function removeP(idx) {
-        if (!isMarketOpen) return;
+    function removePlayer(idx) {
         state.budget += state.squad[idx].price;
         state.squad.splice(idx, 1);
         updateUI();
-    }
-
-    async function submitSquad() {
-        const name = document.getElementById('userName').value;
-        if (!name || state.squad.length < 18) return alert("Complete squad and name!");
-
-        const payload = {
-            userName: name,
-            budget: state.budget.toFixed(1),
-            squadCode: btoa(state.squad.map(s => s.id + ":" + s.role).join(',')),
-            squadList: state.squad.map(p => `[${p.role}] ${p.name}`).join(', ')
-        };
-
-        const btn = document.getElementById('submitTeamBtn');
-        btn.disabled = true; btn.innerText = "SENDING...";
-
-        try {
-            await fetch(GOOGLE_SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) });
-            localStorage.setItem('fantasySquad', JSON.stringify(state.squad));
-            document.getElementById('submission-output').style.display = "block";
-            document.getElementById('submission-output').innerText = "SUCCESS: Team saved to master sheet!";
-            alert("Team Submitted!");
-        } catch (e) { alert("Error saving."); }
-        btn.disabled = false; btn.innerText = "SUBMIT TEAM";
+        applyFilters();
     }
 
     function updateUI() {
@@ -293,9 +260,7 @@
             <div>GK: ${counts.GK}/1</div><div>DEF: ${counts.DEF}/6</div><div>MID: ${counts.MID}/2</div>
             <div>FWD: ${counts.FWD}/6</div><div>SUB: ${counts.SUB}/3</div><div>Total: ${state.squad.length}/18</div>`;
         document.getElementById('squad-list').innerHTML = state.squad.map((p, i) => `
-            <div class="squad-slot"><span><b>[${p.role}]</b> ${p.name}</span>
-            <span class="btn-remove" onclick="removeP(${i})">×</span></div>`).join('');
-        applyFilters();
+            <div class="squad-slot"><span><b>[${p.role}]</b> ${p.name}</span><span class="btn-remove" onclick="removePlayer(${i})">×</span></div>`).join('');
     }
 
     function showPage(id) {
@@ -305,12 +270,10 @@
         document.getElementById('nav-' + id).classList.add('active');
     }
 
-    function resetSquad() { if(isMarketOpen) { state.squad=[]; state.budget=100.0; updateUI(); } }
-    function loadSaved() {
-        const s = localStorage.getItem('fantasySquad');
-        if (s) { state.squad = JSON.parse(s); updateUI(); }
-    }
+    function resetSquad() { state.squad = []; state.budget = 100.0; updateUI(); applyFilters(); }
+
     init();
 </script>
 </body>
 </html>
+
