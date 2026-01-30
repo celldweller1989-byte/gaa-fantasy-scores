@@ -50,8 +50,6 @@
         .btn-reset { width: 100%; padding: 8px; background: #eee; border: 1px solid #ccc; cursor: pointer; margin-top: 5px; font-size: 11px; }
         
         #market-status-msg { font-size: 12px; text-align: center; font-weight: bold; margin-top: 10px; }
-        .status-open { color: var(--green); }
-        .status-closed { color: var(--red); }
     </style>
 </head>
 <body>
@@ -102,8 +100,7 @@
                 </div>
                 <div id="budget-val" style="font-weight:bold; margin-bottom:10px; font-size: 1.1em; color: var(--green);">Budget: 100.00m</div>
                 <div id="squad-list"></div>
-                
-                <button id="btn-save-squad" class="btn-submit" onclick="saveTeamToSheet()">SAVE WEEKLY TEAM</button>
+                <button id="btn-save" class="btn-submit" onclick="saveTeamToSheet()">SAVE WEEKLY TEAM</button>
                 <button class="btn-reset" onclick="resetSquad()">RESET SQUAD</button>
                 <div id="market-status-msg"></div>
             </div>
@@ -120,7 +117,7 @@
     
     let allPlayers = [];
     let state = { budget: 100.0, squad: [] };
-    const LIMITS = { GK: 1, DEF: 6, MID: 2, FWD: 6, SUB: 3 };
+    const LIMITS = { GK: 1, DEF: 6, MID: 2, FWD: 6, SUB: 3, COUNTY: 2 };
 
     function getDirectImg(url) {
         if (!url) return '';
@@ -131,40 +128,38 @@
         return clean;
     }
 
-    // --- MARKET TIME LOGIC ---
-    function checkMarketStatus() {
-        const now = new Date();
-        const day = now.getDay(); 
-        const hour = now.getHours();
-        const msgEl = document.getElementById('market-status-msg');
-        const btn = document.getElementById('btn-save-squad');
-
-        // CLOSED: Friday 9pm (21:00) until Monday 7am (07:00)
-        let isOpen = true;
-        if (day === 5 && hour >= 21) isOpen = false; 
-        if (day === 6 || day === 0) isOpen = false;  
-        if (day === 1 && hour < 7) isOpen = false;   
-
-        if (isOpen) {
-            msgEl.innerHTML = "● Transfer Market Open";
-            msgEl.className = "status-open";
-            btn.disabled = false;
-        } else {
-            msgEl.innerHTML = "○ Market Closed (Opens Mon 7am)";
-            msgEl.className = "status-closed";
-            btn.disabled = true;
-        }
-        return isOpen;
-    }
-
     async function init() {
         checkMarketStatus();
         try {
             const res = await fetch(SCORERS_URL + '&t=' + new Date().getTime());
             const text = await res.text();
             processScorers(text);
-            loadSavedSquad(); // Load existing team from browser storage
         } catch (e) { console.error(e); }
+    }
+
+    function checkMarketStatus() {
+        const now = new Date();
+        const day = now.getDay(); 
+        const hour = now.getHours();
+        const btn = document.getElementById('btn-save');
+        const msg = document.getElementById('market-status-msg');
+
+        // Monday 7am to Friday 9pm
+        let isOpen = true;
+        if (day === 5 && hour >= 21) isOpen = false; 
+        if (day === 6 || day === 0) isOpen = false;  
+        if (day === 1 && hour < 7) isOpen = false;   
+
+        if (!isOpen) {
+            btn.disabled = true;
+            msg.innerText = "Market Closed (Opens Mon 7am)";
+            msg.style.color = "var(--red)";
+        } else {
+            btn.disabled = false;
+            msg.innerText = "Market Open - 2 Transfers Allowed";
+            msg.style.color = "var(--green)";
+        }
+        return isOpen;
     }
 
     function processScorers(csvText) {
@@ -240,11 +235,20 @@
 
     function addPlayer(id, role) {
         const p = allPlayers.find(x => x.id === id);
-        const currentInRole = state.squad.filter(x => x.role === role).length;
+        
+        // Validation Checks
         if (state.squad.length >= 18) return alert("Squad full!");
-        if (state.budget < p.price) return alert("Not enough cash!");
-        if (currentInRole >= LIMITS[role]) return alert(`Position ${role} is full!`);
+        if (state.budget < p.price) return alert("Insufficient budget!");
         if (state.squad.find(x => x.id === id)) return alert("Player already in squad!");
+        
+        // Position Limits
+        const currentInRole = state.squad.filter(x => x.role === role).length;
+        if (currentInRole >= LIMITS[role]) return alert(`${role} position is full!`);
+
+        // County Limits (Max 2)
+        const currentFromCounty = state.squad.filter(x => x.county === p.county).length;
+        if (currentFromCounty >= LIMITS.COUNTY) return alert(`Max 2 players per county! (${p.county} full)`);
+
         state.squad.push({ ...p, role });
         state.budget -= p.price;
         updateUI();
@@ -258,7 +262,7 @@
             <div>GK: ${counts.GK}/1</div><div>DEF: ${counts.DEF}/6</div><div>MID: ${counts.MID}/2</div>
             <div>FWD: ${counts.FWD}/6</div><div>SUB: ${counts.SUB}/3</div><div>Total: ${state.squad.length}/18</div>`;
         document.getElementById('squad-list').innerHTML = state.squad.map((p, i) => `
-            <div class="squad-slot"><span><b>[${p.role}]</b> ${p.name}</span><button onclick="removePlayer(${i})" style="border:none; background:none; color:red; cursor:pointer;">×</button></div>
+            <div class="squad-slot"><span><b>[${p.role}]</b> ${p.name} <small>(${p.county})</small></span><button onclick="removePlayer(${i})" style="border:none; background:none; color:red; cursor:pointer;">×</button></div>
         `).join('');
     }
 
@@ -268,76 +272,50 @@
         updateUI();
     }
 
-    // --- SAVE TEAM LOGIC (2 TRANSFERS / APPS SCRIPT) ---
     async function saveTeamToSheet() {
-        if (!checkMarketStatus()) return;
-        
-        let managerName = localStorage.getItem('fantasyManagerName');
+        if (!checkMarketStatus()) return alert("Market is currently closed.");
+        if (state.squad.length < 18) return alert("You need a full 18-man squad to save.");
+
+        let managerName = localStorage.getItem('fantasy_manager');
         if (!managerName) {
-            managerName = prompt("Enter Manager Name (Must be exact same every week):");
+            managerName = prompt("Enter your Manager Name:");
             if (!managerName) return;
-            localStorage.setItem('fantasyManagerName', managerName);
+            localStorage.setItem('fantasy_manager', managerName);
         }
 
-        if (state.squad.length < 18) return alert("You must have a full 18-man squad!");
-
-        // 2 Change Limit Logic
-        const lastSavedNames = JSON.parse(localStorage.getItem('savedSquadNames') || "[]");
-        if (lastSavedNames.length > 0) {
+        // --- 2 TRANSFER LIMIT LOGIC ---
+        const lastSaved = JSON.parse(localStorage.getItem('last_saved_squad') || "[]");
+        if (lastSaved.length > 0) {
             const currentNames = state.squad.map(p => p.name);
-            const changes = currentNames.filter(name => !lastSavedNames.includes(name)).length;
-            if (changes > 2) {
-                return alert(`Weekly Transfer Limit reached! You've changed ${changes} players. Only 2 allowed per week.`);
-            }
+            const changes = currentNames.filter(name => !lastSaved.includes(name)).length;
+            if (changes > 2) return alert(`Limit exceeded: You have made ${changes} changes. Only 2 allowed per week.`);
         }
 
-        const squadToSave = state.squad.map(p => p.name);
+        const squadNames = state.squad.map(p => p.name);
 
         try {
-            // Using fetch with no-cors for Google Apps Script Web App
             await fetch(APPS_SCRIPT_URL, {
                 method: 'POST',
                 mode: 'no-cors',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    manager: managerName,
-                    squad: squadToSave
-                })
+                body: JSON.stringify({ manager: managerName, squad: squadNames })
             });
-
-            localStorage.setItem('savedSquadNames', JSON.stringify(squadToSave));
-            alert("Team successfully saved to Leaderboard!");
+            
+            localStorage.setItem('last_saved_squad', JSON.stringify(squadNames));
+            alert("Team saved successfully!");
         } catch (e) {
-            console.error(e);
-            alert("Error connecting to server. Please try again.");
+            alert("Save failed. Check your internet connection.");
         }
-    }
-
-    function loadSavedSquad() {
-        const savedNames = JSON.parse(localStorage.getItem('savedSquadNames') || "[]");
-        if (savedNames.length === 0) return;
-        
-        // Wait for allPlayers to be populated by processScorers
-        const interval = setInterval(() => {
-            if (allPlayers.length > 0) {
-                clearInterval(interval);
-                // Attempt to rebuild squad based on saved names
-                // This is a basic rebuild, roles aren't stored in savedNames currently
-                // Ideally, savedNames would be objects {name, role}
-            }
-        }, 100);
     }
 
     function showPage(id) {
         document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
         document.getElementById('page-' + id).classList.remove('hidden');
         document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
-        const activeBtn = Array.from(document.querySelectorAll('.nav-link')).find(b => b.textContent.toLowerCase().includes(id.toUpperCase()));
+        const activeBtn = Array.from(document.querySelectorAll('.nav-link')).find(b => b.textContent.toLowerCase().includes(id));
         if(activeBtn) activeBtn.classList.add('active');
     }
 
     function resetSquad() { if(confirm("Clear squad?")) { state.squad = []; state.budget = 100.0; updateUI(); } }
-    
     init();
 </script>
 </body>
