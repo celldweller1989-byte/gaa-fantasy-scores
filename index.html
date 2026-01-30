@@ -8,7 +8,6 @@
         :root { --orange: #f37021; --dark: #1a1a1a; --cream: #f4f1de; --white: #ffffff; --green: #28a745; --red: #dc3545; --grey: #777; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--cream); margin: 0; padding: 0; color: var(--dark); }
         
-        /* Layout & Navigation */
         .header { background: var(--orange); color: white; padding: 20px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
         nav { display: flex; justify-content: center; background: var(--dark); padding: 0; position: sticky; top: 0; z-index: 100; flex-wrap: wrap; }
         .nav-link { color: white; padding: 15px 20px; text-decoration: none; font-weight: bold; cursor: pointer; transition: 0.3s; border: none; background: none; font-size: 13px; text-transform: uppercase; }
@@ -19,7 +18,6 @@
         .main-layout { display: grid; grid-template-columns: 1fr 360px; gap: 20px; }
         .panel { background: var(--white); border-radius: 8px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 20px; }
 
-        /* Market Styles */
         .filter-bar { display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 20px; align-items: center; }
         .filter-item { flex: 1; min-width: 180px; }
         select, input { padding: 10px; border-radius: 6px; border: 2px solid var(--orange); width: 100%; height: 48px; box-sizing: border-box; font-size: 14px; outline: none; }
@@ -29,18 +27,11 @@
         th { position: sticky; top: 0; background: #f8f8f8; padding: 12px; text-align: left; font-size: 10px; border-bottom: 2px solid #ddd; z-index: 5; text-transform: uppercase; }
         td { padding: 12px; border-bottom: 1px solid #eee; font-size: 14px; vertical-align: top; }
 
-        /* Player Cards & Badges */
         .player-info b { color: var(--dark); font-size: 15px; }
         .stats-subtle { font-size: 11px; color: var(--grey); margin-top: 4px; line-height: 1.4; display: block; }
-        .result-badge { font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 4px; display: inline-block; margin-top: 4px; }
-        .badge-hwin { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
-        .badge-win { background: #e8f5e9; color: var(--green); border: 1px solid var(--green); }
-        .badge-loss { background: #ffebee; color: var(--red); border: 1px solid var(--red); }
-        .badge-hloss { background: #721c24; color: white; border: 1px solid #f5c6cb; }
-
-        /* Squad Panel */
+        
         .btn-group { display: flex; gap: 4px; }
-        .btn-pos { border: 1px solid var(--orange); background: white; color: var(--orange); padding: 6px 4px; border-radius: 4px; font-size: 10px; font-weight: bold; cursor: pointer; flex: 1; min-width: 40px; }
+        .btn-pos { border: 1px solid var(--orange); background: white; color: var(--orange); padding: 6px 4px; border-radius: 4px; font-size: 10px; font-weight: bold; cursor: pointer; flex: 1; }
         .btn-pos:hover { background: var(--orange); color: white; }
 
         .pos-tracker { font-size: 11px; background: #fff3cd; padding: 10px; border-radius: 5px; margin-bottom: 15px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; border: 1px solid #ffeeba; }
@@ -49,8 +40,6 @@
 
         .hidden { display: none; }
         .loading { text-align: center; padding: 50px; color: var(--orange); font-weight: bold; }
-
-        @media (max-width: 900px) { .main-layout { grid-template-columns: 1fr; } }
     </style>
 </head>
 <body>
@@ -59,37 +48,21 @@
 
 <nav>
     <button class="nav-link" id="nav-rules" onclick="showPage('rules')">RULES</button>
-    <button class="nav-link active" id="nav-market" onclick="showPage('market')">SQUAD SELECTOR</button>
+    <button class="nav-link active" id="nav-market" onclick="showPage('market')">TRANSFER MARKET</button>
     <button class="nav-link" id="nav-leaderboard" onclick="showPage('leaderboard')">LEADERBOARD</button>
-    <a href="http://orchardfans.com/index.php" target="_blank" class="nav-link">FORUM ↗</a>
 </nav>
 
 <div class="container">
-    
     <div id="page-rules" class="page hidden">
         <div class="panel">
-            <h2 style="color:var(--orange)">Fantasy League Rules</h2>
-            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap:20px;">
-                <div>
-                    <h3>Match Result Modifiers</h3>
-                    <ul>
-                        <li>🏆 Heavy Win (6+ pts): <b>+5</b></li>
-                        <li>✅ Win: <b>+2</b></li>
-                        <li>🤝 Draw: <b>0</b></li>
-                        <li>❌ Loss: <b>-2</b></li>
-                        <li>💀 Heavy Loss (6+ pts): <b>-5</b></li>
-                    </ul>
-                </div>
-                <div>
-                    <h3>Selection Rules</h3>
-                    <ul>
-                        <li>Total Squad: 18 Players</li>
-                        <li>Max 2 Players per County</li>
-                        <li>Positions: 1 GK, 6 DEF, 2 MID, 6 FWD, 3 SUBS</li>
-                        <li>Budget: 100.0m</li>
-                    </ul>
-                </div>
-            </div>
+            <h2>Rules & Scoring</h2>
+            <ul>
+                <li><b>G:</b> Goals scored (Col E)</li>
+                <li><b>P:</b> Points scored (Col F)</li>
+                <li><b>CS:</b> Clean Sheets (Col G - GK only)</li>
+                <li><b>RC:</b> Red Cards (Col H)</li>
+                <li><b>1pt / 2pt:</b> Points breakdown from Col L and M</li>
+            </ul>
         </div>
     </div>
 
@@ -101,7 +74,7 @@
                     <div class="filter-item"><select id="filterCounty" onchange="applyFilters()"><option value="ALL">All Counties</option></select></div>
                 </div>
                 <div class="scroll-box">
-                    <div id="loading-market" class="loading">Syncing Live Player Data...</div>
+                    <div id="loading-market" class="loading">Loading Players...</div>
                     <table id="market-table" class="hidden">
                         <thead><tr><th>Player & Stats</th><th>Pts</th><th>Value</th><th>Assign</th></tr></thead>
                         <tbody id="market-body"></tbody>
@@ -110,39 +83,28 @@
             </div>
 
             <div class="panel">
-                <h3 style="margin-top:0;">Your 18-Man Squad</h3>
+                <h3 style="margin-top:0;">Your Squad</h3>
                 <div class="pos-tracker" id="pos-tracker">
                     <div>GK: 0/1</div><div>DEF: 0/6</div><div>MID: 0/2</div>
-                    <div>FWD: 0/6</div><div>SUB: 0/3</div><div style="color:var(--orange)">TOTAL: 0/18</div>
+                    <div>FWD: 0/6</div><div>SUB: 0/3</div><div>Total: 0/18</div>
                 </div>
-                <div style="font-weight:bold; margin-bottom: 10px; font-size:14px;">Budget: <span id="budget-val">100.0</span>m</div>
                 <div id="squad-list"></div>
-                <div id="submission-area" class="hidden" style="margin-top:15px; border-top: 1px solid #eee; padding-top:15px;">
-                    <input type="text" id="team-name" placeholder="Enter Team Name" style="margin-bottom:10px;">
-                    <button style="background:var(--green); color:white; border:none; width:100%; padding:12px; cursor:pointer; font-weight:bold; border-radius:4px;" onclick="submitTeam()">SUBMIT SQUAD</button>
-                </div>
-                <button onclick="resetSquad()" style="width:100%; margin-top:10px; padding:8px; background:#f0f0f0; border:1px solid #ccc; cursor:pointer; border-radius:4px;">Reset All</button>
+                <button onclick="resetSquad()" style="width:100%; margin-top:10px; padding:8px;">Reset Squad</button>
             </div>
         </div>
     </div>
 
     <div id="page-leaderboard" class="page hidden">
         <div class="panel">
-            <h2 style="text-align:center;">🏆 Standings</h2>
-            <div id="loading-leaderboard" class="loading">Calculating Scores...</div>
-            <table id="leaderboard-table" class="hidden">
-                <thead><tr><th>Pos</th><th>Team Name</th><th style="text-align:right;">Total Points</th></tr></thead>
-                <tbody id="leaderboard-body"></tbody>
-            </table>
+            <h2>Leaderboard</h2>
+            <div id="leaderboard-content">Rankings will appear here based on entry data.</div>
         </div>
     </div>
-
 </div>
 
 <script>
     const SCORERS_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTcdzjZ4zYlGgFe5acS8xOb1vHR9b8i98UudIOe-iC9Z1d6x6AY5zATgX217cNjcNtAGDLJ56y8Jr8N/pub?output=csv';
-    const ENTRIES_URL = 'PASTE_YOUR_ENTRIES_CSV_HERE';
-
+    
     let allPlayers = [];
     let state = { budget: 100.0, squad: [] };
     const LIMITS = { GK: 1, DEF: 6, MID: 2, FWD: 6, SUB: 3 };
@@ -152,69 +114,47 @@
             const res = await fetch(SCORERS_URL + '&t=' + new Date().getTime());
             const text = await res.text();
             processScorers(text);
-        } catch (e) { document.getElementById('loading-market').innerText = "Sync Error."; }
+        } catch (e) { document.getElementById('loading-market').innerText = "Data Error."; }
     }
 
     function parseCSV(text) {
-        const rows = []; let row = []; let field = ''; let inQuotes = false;
-        for (let i = 0; i < text.length; i++) {
-            const char = text[i]; const next = text[i+1];
-            if (inQuotes) {
-                if (char === '"' && next === '"') { field += '"'; i++; }
-                else if (char === '"') inQuotes = false;
-                else field += char;
-            } else {
-                if (char === '"') inQuotes = true;
-                else if (char === ',') { row.push(field); field = ''; }
-                else if (char === '\n' || char === '\r') {
-                    if (field || row.length) { row.push(field); rows.push(row); row = []; field = ''; }
-                    if (char === '\r' && next === '\n') i++;
-                } else field += char;
-            }
-        }
-        if (field || row.length) { row.push(field); rows.push(row); }
-        return rows;
+        return text.split('\n').map(row => row.split(','));
     }
 
     function processScorers(csvText) {
         const data = parseCSV(csvText);
         const countySet = new Set();
         allPlayers = [];
+
         for (let i = 1; i < data.length; i++) {
             const col = data[i];
-            if (!col[0] || col[0].trim() === "") continue;
+            if (!col[0]) continue;
             
-            const county = col[0].trim();
-            const name = ((col[1] || "") + " " + (col[2] || "")).trim();
-            const rawPos = (col[3] || "").toLowerCase();
-            
-            const stats = {
-                goals: col[4] || 0,     // E
-                played: col[5] || 0,    // F
-                cleansheet: col[6] || 0,// G
-                red: col[7] || 0,       // H
-                onePts: col[11] || 0,   // L
-                twoPts: col[12] || 0    // M
+            const player = {
+                id: i,
+                county: col[0].trim(),
+                name: (col[1] + " " + col[2]).trim(),
+                rawPos: col[3],
+                goals: col[4],        // E
+                points: col[5],       // F
+                cleansheet: col[6],   // G
+                red: col[7],          // H
+                totalPts: parseInt(col[8]) || 0, // I
+                onePt: col[11],       // L
+                twoPt: col[12],       // M
+                price: 5.0 + (parseInt(col[8]) / 20 || 0)
             };
 
-            let pts = parseInt(col[8]) || 0; // I
-            const result = (col[9] || "").trim().toLowerCase(); // J
-            if (result === "heavy win") pts += 5;
-            else if (result === "win") pts += 2;
-            else if (result === "loss") pts -= 2;
-            else if (result === "heavy loss") pts -= 5;
-
-            let base = (rawPos.includes("gk") || parseInt(rawPos) === 1) ? 4.5 : 5.5;
-            let price = base + (pts / 20);
-
-            allPlayers.push({ id: i, county, name, points: pts, price, result, stats, rawPos });
-            countySet.add(county);
+            allPlayers.push(player);
+            countySet.add(player.county);
         }
+
         const filter = document.getElementById('filterCounty');
         Array.from(countySet).sort().forEach(c => {
             const opt = document.createElement('option'); opt.value = c; opt.innerText = c;
             filter.appendChild(opt);
         });
+
         document.getElementById('loading-market').classList.add('hidden');
         document.getElementById('market-table').classList.remove('hidden');
         applyFilters();
@@ -224,31 +164,24 @@
         const nameQ = document.getElementById('searchName').value.toLowerCase();
         const countyQ = document.getElementById('filterCounty').value;
         const squadIds = state.squad.map(p => p.id);
-        const filtered = allPlayers.filter(p => !squadIds.includes(p.id) && (p.name.toLowerCase().includes(nameQ)) && (countyQ === "ALL" || p.county === countyQ));
+
+        const filtered = allPlayers.filter(p => 
+            !squadIds.includes(p.id) &&
+            p.name.toLowerCase().includes(nameQ) &&
+            (countyQ === "ALL" || p.county === countyQ)
+        );
         renderMarket(filtered);
     }
 
     function renderMarket(data) {
-        document.getElementById('market-body').innerHTML = data.map(p => {
-            let resultBadge = "";
-            if (p.result === "heavy win") resultBadge = `<span class="result-badge badge-hwin">Heavy Win (+5)</span>`;
-            else if (p.result === "win") resultBadge = `<span class="result-badge badge-win">Win (+2)</span>`;
-            else if (p.result === "loss") resultBadge = `<span class="result-badge badge-loss">Loss (-2)</span>`;
-            else if (p.result === "heavy loss") resultBadge = `<span class="result-badge badge-hloss">Heavy Loss (-5)</span>`;
-
-            return `
+        document.getElementById('market-body').innerHTML = data.map(p => `
             <tr>
                 <td>
-                    <div class="player-info">
-                        <b>${p.name}</b> <small>(${p.county})</small>
-                        <span class="stats-subtle">
-                            G:${p.stats.goals} | 1p:${p.stats.onePts} | 2p:${p.stats.twoPts} | RC:${p.stats.red}
-                        </span>
-                        ${resultBadge}
-                    </div>
+                    <b>${p.name}</b> <small>(${p.county})</small>
+                    <span class="stats-subtle">G:${p.goals} | P:${p.points} | 1p:${p.onePt} | 2p:${p.twoPt} | RC:${p.red}</span>
                 </td>
-                <td style="font-weight:bold;">${p.points}</td>
-                <td><span style="color:var(--green); font-weight:bold;">${p.price.toFixed(1)}m</span></td>
+                <td>${p.totalPts}</td>
+                <td>${p.price.toFixed(1)}m</td>
                 <td>
                     <div class="btn-group">
                         <button class="btn-pos" onclick="addPlayer(${p.id}, 'GK')">GK</button>
@@ -258,56 +191,50 @@
                         <button class="btn-pos" onclick="addPlayer(${p.id}, 'SUB')">SUB</button>
                     </div>
                 </td>
-            </tr>`;
-        }).join('');
+            </tr>`).join('');
     }
 
     function addPlayer(id, role) {
-        const player = allPlayers.find(p => p.id === id);
+        const p = allPlayers.find(x => x.id === id);
         if (state.squad.length >= 18) return alert("Squad full!");
-        if (state.budget < player.price) return alert("Insufficient budget!");
-        if (state.squad.filter(p => p.role === role).length >= LIMITS[role]) return alert(role + " slots full!");
-        if (state.squad.filter(p => p.county === player.county).length >= 2) return alert("Max 2 per county!");
+        if (state.squad.filter(x => x.role === role).length >= LIMITS[role]) return alert(role + " full!");
+        if (state.squad.filter(x => x.county === p.county).length >= 2) return alert("Max 2 per county!");
 
-        state.squad.push({ ...player, role });
-        state.budget -= player.price;
+        state.squad.push({ ...p, role });
         updateUI();
         applyFilters();
     }
 
-    function removePlayer(index) {
-        state.budget += state.squad[index].price;
-        state.squad.splice(index, 1);
+    function removePlayer(idx) {
+        state.squad.splice(idx, 1);
         updateUI();
         applyFilters();
     }
 
     function updateUI() {
-        document.getElementById('budget-val').innerText = state.budget.toFixed(1);
-        document.getElementById('count-val').innerText = state.squad.length;
         const counts = { GK: 0, DEF: 0, MID: 0, FWD: 0, SUB: 0 };
         state.squad.forEach(p => counts[p.role]++);
         document.getElementById('pos-tracker').innerHTML = `
             <div>GK: ${counts.GK}/1</div><div>DEF: ${counts.DEF}/6</div><div>MID: ${counts.MID}/2</div>
-            <div>FWD: ${counts.FWD}/6</div><div>SUB: ${counts.SUB}/3</div><div style="color:var(--orange)">TOTAL: ${state.squad.length}/18</div>`;
+            <div>FWD: ${counts.FWD}/6</div><div>SUB: ${counts.SUB}/3</div><div>Total: ${state.squad.length}/18</div>`;
+        
         document.getElementById('squad-list').innerHTML = state.squad.map((p, i) => `
             <div class="squad-slot">
-                <span><b>[${p.role}]</b> ${p.name} <small>(${p.county})</small></span>
+                <span><b>[${p.role}]</b> ${p.name}</span>
                 <span class="btn-remove" onclick="removePlayer(${i})">×</span>
             </div>`).join('');
-        document.getElementById('submission-area').classList.toggle('hidden', state.squad.length !== 18);
     }
 
-    function resetSquad() { state.squad = []; state.budget = 100.0; updateUI(); applyFilters(); }
-    
-    function showPage(pageId) {
+    function showPage(id) {
         document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
         document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
-        document.getElementById('page-' + pageId).classList.remove('hidden');
-        document.getElementById('nav-' + pageId).classList.add('active');
-        if(pageId === 'leaderboard') loadLeaderboard();
+        document.getElementById('page-' + id).classList.remove('hidden');
+        document.getElementById('nav-' + id).classList.add('active');
     }
 
-    async function loadLeaderboard() {
-        try {
-            const res = await fetch(ENTRIES_URL + '&t=' + new Date().getTime
+    function resetSquad() { state.squad = []; updateUI(); applyFilters(); }
+
+    init();
+</script>
+</body>
+</html>
