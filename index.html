@@ -18,15 +18,20 @@
         table { width: 100%; border-collapse: collapse; }
         th { position: sticky; top: 0; background: #f8f8f8; padding: 12px; text-align: left; font-size: 10px; border-bottom: 2px solid #ddd; z-index: 5; }
         td { padding: 12px; border-bottom: 1px solid #eee; font-size: 13px; vertical-align: middle; }
-        .county-badge { width: 30px; height: 30px; object-fit: contain; margin-right: 10px; }
+        .county-badge { width: 35px; height: 35px; object-fit: contain; margin-right: 12px; }
         .player-cell { display: flex; align-items: center; }
+        .stats-text { font-size: 11px; color: var(--grey); margin-top: 2px; }
         .result-badge { font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 4px; display: inline-block; margin-top: 4px; }
         .badge-bwin { background: #d4edda; color: #155724; }
         .badge-win { background: #e8f5e9; color: var(--green); }
         .badge-loss { background: #ffebee; color: var(--red); }
-        .badge-hloss { background: #721c24; color: white; }
-        .btn-pos { border: 1px solid var(--orange); background: white; color: var(--orange); padding: 5px 2px; border-radius: 4px; font-size: 9px; font-weight: bold; cursor: pointer; flex: 1; }
-        .squad-slot { display: flex; justify-content: space-between; background: #f9f9f9; padding: 8px; margin-bottom: 5px; border-radius: 4px; border-left: 4px solid var(--orange); align-items: center; }
+        
+        .btn-group { display: flex; gap: 2px; }
+        .btn-pos { border: 1px solid var(--orange); background: white; color: var(--orange); padding: 5px 3px; border-radius: 4px; font-size: 9px; font-weight: bold; cursor: pointer; flex: 1; transition: 0.2s; }
+        .btn-pos:hover { background: var(--orange); color: white; }
+        
+        .squad-slot { display: flex; justify-content: space-between; background: #f9f9f9; padding: 8px; margin-bottom: 5px; border-radius: 4px; border-left: 4px solid var(--orange); align-items: center; font-size: 12px; }
+        .pos-tracker { font-size: 11px; background: #fff3cd; padding: 10px; border-radius: 5px; margin-bottom: 15px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; border: 1px solid #ffeeba; }
         .hidden { display: none; }
     </style>
 </head>
@@ -47,10 +52,10 @@
                     <table id="market-table">
                         <thead>
                             <tr>
-                                <th colspan="1">Player & Team Info</th>
-                                <th style="padding-left: 20px;">Pts</th>
+                                <th>Player & Team Info</th>
+                                <th>Pts</th>
                                 <th>Value</th>
-                                <th>Action</th>
+                                <th style="width: 180px;">Assign Position</th>
                             </tr>
                         </thead>
                         <tbody id="market-body"></tbody>
@@ -60,9 +65,13 @@
 
             <div class="panel">
                 <h3>Your Squad</h3>
-                <div id="budget-val" style="font-weight:bold; margin-bottom:10px;">Budget: 100.0m</div>
+                <div class="pos-tracker" id="pos-tracker">
+                    <div>GK: 0/1</div><div>DEF: 0/6</div><div>MID: 0/2</div>
+                    <div>FWD: 0/6</div><div>SUB: 0/3</div><div>Total: 0/18</div>
+                </div>
+                <div id="budget-val" style="font-weight:bold; margin-bottom:10px; font-size: 1.1em;">Budget: 100.0m</div>
                 <div id="squad-list"></div>
-                <button onclick="resetSquad()" style="width:100%; margin-top:10px; padding:10px;">Reset Squad</button>
+                <button onclick="resetSquad()" style="width:100%; margin-top:10px; padding:10px; cursor:pointer;">Reset Squad</button>
             </div>
         </div>
     </div>
@@ -75,10 +84,10 @@
     const SCORERS_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTcdzjZ4zYlGgFe5acS8xOb1vHR9b8i98UudIOe-iC9Z1d6x6AY5zATgX217cNjcNtAGDLJ56y8Jr8N/pub?output=csv';
     let allPlayers = [];
     let state = { budget: 100.0, squad: [] };
+    const LIMITS = { GK: 1, DEF: 6, MID: 2, FWD: 6, SUB: 3 };
 
     function getDirectImg(url) {
         if (!url) return '';
-        // Handles Imgur direct links specifically if the user forgets the extension
         if (url.includes('imgur.com') && !url.match(/\.(png|jpg|jpeg|gif)$/)) {
             return url.replace('imgur.com', 'i.imgur.com') + '.png';
         }
@@ -115,7 +124,8 @@
                 badge: getDirectImg(col[14]), 
                 totalPts: totalPts,
                 price: Math.max(3.0, price),
-                result: result
+                result: result,
+                stats: `G: ${col[4]||0} | 1pt: ${col[11]||0} | 2pt: ${col[12]||0}`
             });
         }
         renderMarket();
@@ -129,30 +139,56 @@
                         <img src="${p.badge}" class="county-badge" onerror="this.src='https://ui-avatars.com/api/?name=${p.county[0]}&background=f37021&color=fff'">
                         <div>
                             <b>${p.name}</b> <small style="color:#777;">(${p.county})</small><br>
-                            <span class="result-badge ${p.result.includes('win')?'badge-bwin':'badge-loss'}">${p.result.toUpperCase()}</span>
+                            <div class="stats-text">${p.stats}</div>
+                            <span class="result-badge ${p.result.includes('win')?'badge-bwin':'badge-loss'}">${p.result.toUpperCase() || 'NO DATA'}</span>
                         </div>
                     </div>
                 </td>
-                <td style="padding-left: 20px;"><b>${p.totalPts}</b></td>
+                <td><b>${p.totalPts}</b></td>
                 <td><b>${p.price.toFixed(2)}m</b></td>
-                <td><button class="btn-pos" onclick="addPlayer(${p.id})">ADD</button></td>
+                <td>
+                    <div class="btn-group">
+                        <button class="btn-pos" onclick="addPlayer(${p.id}, 'GK')">GK</button>
+                        <button class="btn-pos" onclick="addPlayer(${p.id}, 'DEF')">DEF</button>
+                        <button class="btn-pos" onclick="addPlayer(${p.id}, 'MID')">MID</button>
+                        <button class="btn-pos" onclick="addPlayer(${p.id}, 'FWD')">FWD</button>
+                        <button class="btn-pos" onclick="addPlayer(${p.id}, 'SUB')">SUB</button>
+                    </div>
+                </td>
             </tr>
         `).join('');
     }
 
-    function addPlayer(id) {
+    function addPlayer(id, role) {
         const p = allPlayers.find(x => x.id === id);
-        if (state.squad.length < 18 && state.budget >= p.price) {
-            state.squad.push(p);
-            state.budget -= p.price;
-            updateUI();
-        }
+        const currentInRole = state.squad.filter(x => x.role === role).length;
+
+        if (state.squad.length >= 18) return alert("Squad full (max 18)!");
+        if (state.budget < p.price) return alert("Insufficient budget!");
+        if (currentInRole >= LIMITS[role]) return alert(`Position ${role} is full!`);
+        if (state.squad.find(x => x.id === id)) return alert("Player already in squad!");
+
+        state.squad.push({ ...p, role });
+        state.budget -= p.price;
+        updateUI();
     }
 
     function updateUI() {
         document.getElementById('budget-val').innerText = `Budget: ${state.budget.toFixed(2)}m`;
+        
+        const counts = { GK: 0, DEF: 0, MID: 0, FWD: 0, SUB: 0 };
+        state.squad.forEach(p => counts[p.role]++);
+        
+        document.getElementById('pos-tracker').innerHTML = `
+            <div>GK: ${counts.GK}/1</div><div>DEF: ${counts.DEF}/6</div><div>MID: ${counts.MID}/2</div>
+            <div>FWD: ${counts.FWD}/6</div><div>SUB: ${counts.SUB}/3</div><div>Total: ${state.squad.length}/18</div>
+        `;
+
         document.getElementById('squad-list').innerHTML = state.squad.map((p, i) => `
-            <div class="squad-slot"><span>${p.name}</span><button onclick="removePlayer(${i})" style="border:none; background:none; color:red; cursor:pointer;">×</button></div>
+            <div class="squad-slot">
+                <span><small><b>[${p.role}]</b></small> ${p.name}</span>
+                <button onclick="removePlayer(${i})" style="border:none; background:none; color:red; cursor:pointer; font-weight:bold;">×</button>
+            </div>
         `).join('');
     }
 
@@ -166,7 +202,8 @@
         document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
         document.getElementById('page-' + id).classList.remove('hidden');
         document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
-        if(event) event.target.classList.add('active');
+        const activeBtn = Array.from(document.querySelectorAll('.nav-link')).find(b => b.textContent.toLowerCase().includes(id));
+        if(activeBtn) activeBtn.classList.add('active');
     }
 
     function resetSquad() { if(confirm("Reset squad?")) { state.squad = []; state.budget = 100; updateUI(); } }
