@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Orchard Fans Fantasy GAA</title>
     <style>
-        :root { --orange: #f37021; --dark: #1a1a1a; --cream: #f4f1de; --white: #ffffff; --green: #28a745; --red: #dc3545; --blue: #007bff; --grey: #666; }
+        :root { --orange: #f37021; --dark: #1a1a1a; --cream: #f4f1de; --white: #ffffff; --green: #28a745; --red: #dc3545; --blue: #007bff; --grey: #777; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--cream); margin: 0; padding: 0; color: var(--dark); }
         
         .header { background: var(--orange); color: white; padding: 20px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
@@ -14,7 +14,7 @@
         .nav-link:hover { background: #333; }
         .nav-link.active { background: var(--orange); }
 
-        .container { padding: 15px; max-width: 1200px; margin: auto; }
+        .container { padding: 15px; max-width: 1300px; margin: auto; }
         .main-layout { display: grid; grid-template-columns: 1fr 340px; gap: 20px; }
         .panel { background: var(--white); border-radius: 8px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 20px; }
 
@@ -22,29 +22,24 @@
         .filter-item { flex: 1; min-width: 180px; }
         select, input { padding: 10px; border-radius: 6px; border: 2px solid var(--orange); width: 100%; height: 48px; box-sizing: border-box; font-size: 14px; outline: none; }
         
-        .scroll-box { max-height: 600px; overflow-y: auto; border: 1px solid #eee; border-radius: 5px; background: #fff; }
+        .scroll-box { max-height: 700px; overflow-y: auto; border: 1px solid #eee; border-radius: 5px; background: #fff; }
         table { width: 100%; border-collapse: collapse; }
-        th { position: sticky; top: 0; background: #f8f8f8; padding: 12px; text-align: left; font-size: 11px; border-bottom: 2px solid #ddd; z-index: 5; text-transform: uppercase; }
-        td { padding: 12px; border-bottom: 1px solid #eee; font-size: 14px; }
+        th { position: sticky; top: 0; background: #f8f8f8; padding: 12px; text-align: left; font-size: 10px; border-bottom: 2px solid #ddd; z-index: 5; text-transform: uppercase; }
+        td { padding: 12px; border-bottom: 1px solid #eee; font-size: 14px; vertical-align: top; }
 
+        .player-info b { color: var(--dark); font-size: 15px; }
+        .stats-subtle { font-size: 11px; color: var(--grey); margin-top: 4px; line-height: 1.4; display: block; }
         .result-badge { font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 4px; display: inline-block; margin-top: 4px; }
         .badge-hwin { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
         .badge-win { background: #e8f5e9; color: var(--green); border: 1px solid var(--green); }
         .badge-loss { background: #ffebee; color: var(--red); border: 1px solid var(--red); }
         .badge-hloss { background: #721c24; color: white; border: 1px solid #f5c6cb; }
-        .badge-draw { background: #e2e3e5; color: #383d41; border: 1px solid #d6d8db; }
 
         .price-tag { font-weight: bold; color: var(--green); }
         .price-change { font-size: 10px; font-weight: normal; margin-left: 4px; }
 
-        .rules-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; }
-        .rule-card { border-left: 4px solid var(--orange); padding-left: 15px; }
-        .rule-card h3 { color: var(--orange); margin-top: 0; }
-        .rule-card li { margin-bottom: 8px; font-size: 14px; }
-
         .pos-tracker { font-size: 12px; background: #fff3cd; padding: 12px; border-radius: 5px; margin-bottom: 15px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; border: 1px solid #ffeeba; }
         .squad-slot { display: flex; justify-content: space-between; background: #f9f9f9; padding: 8px; margin-bottom: 5px; border-radius: 4px; border-left: 4px solid var(--orange); align-items: center; font-size: 13px; }
-        .btn-group { display: flex; gap: 4px; }
         .btn-pos { border: 1px solid var(--orange); background: white; color: var(--orange); padding: 5px 8px; border-radius: 4px; font-size: 10px; font-weight: bold; cursor: pointer; min-width: 38px; }
         .btn-pos:hover { background: var(--orange); color: white; }
         .btn-remove { color: var(--red); cursor: pointer; font-weight: bold; font-size: 18px; padding: 0 5px; }
@@ -52,7 +47,7 @@
         .hidden { display: none; }
         .loading { text-align: center; padding: 50px; color: var(--orange); font-weight: bold; }
 
-        @media (max-width: 900px) { .main-layout { grid-template-columns: 1fr; } .filter-item { min-width: 100%; } }
+        @media (max-width: 900px) { .main-layout { grid-template-columns: 1fr; } }
     </style>
 </head>
 <body>
@@ -69,29 +64,15 @@
 <div class="container">
     <div id="page-rules" class="page hidden">
         <div class="panel">
-            <h2 style="color:var(--orange);">Fantasy League Rules</h2>
-            <div class="rules-grid">
-                <div class="rule-card">
-                    <h3>Match Result Adjustments</h3>
-                    <p style="font-size:14px; margin-bottom:5px;">Points are adjusted based on the County's result:</p>
-                    <ul style="list-style-type:none; padding-left:0;">
-                        <li>🏆 <b>Heavy Win (6+ pts):</b> <b style="color:var(--green)">+5 pts</b></li>
-                        <li>✅ <b>Win:</b> <b style="color:var(--green)">+2 pts</b></li>
-                        <li>🤝 <b>Draw:</b> <b>0 pts</b></li>
-                        <li>❌ <b>Loss:</b> <b style="color:var(--red)">-2 pts</b></li>
-                        <li>💀 <b>Heavy Loss (6+ pts):</b> <b style="color:var(--red); background:#721c24; padding:0 3px;">-5 pts</b></li>
-                    </ul>
-                </div>
-                <div class="rule-card">
-                    <h3>Squad & Budget</h3>
-                    <ul>
-                        <li>Total Budget: <b>100.0m</b></li>
-                        <li>Squad Size: <b>18 Players</b></li>
-                        <li>Max <b>2 Players</b> per County.</li>
-                        <li>Prices update dynamically with points.</li>
-                    </ul>
-                </div>
-            </div>
+            <h2>Scoring System</h2>
+            <p>Your squad earns points based on real-world match performance and county results.</p>
+            <ul>
+                <li><b>G:</b> Goals scored (Col E)</li>
+                <li><b>1pt:</b> Over the bar (Col L) | <b>2pt:</b> Long range/Special (Col M)</li>
+                <li><b>CS:</b> Clean Sheet (Goalkeepers only, Col G)</li>
+                <li><b>RC:</b> Red Card penalty (Col H)</li>
+                <li><b>Result Bonus:</b> Heavy Win (+5), Win (+2), Loss (-2), Heavy Loss (-5) based on Col J.</li>
+            </ul>
         </div>
     </div>
 
@@ -110,9 +91,9 @@
                     </div>
                 </div>
                 <div class="scroll-box">
-                    <div id="loading-market" class="loading">Fetching Player Data...</div>
+                    <div id="loading-market" class="loading">Syncing Live Data...</div>
                     <table id="market-table" class="hidden">
-                        <thead><tr><th>Player</th><th>Pts</th><th>Market Value</th><th>Add to Squad</th></tr></thead>
+                        <thead><tr><th>Player & Stats</th><th>Pts</th><th>Value</th><th>Add</th></tr></thead>
                         <tbody id="market-body"></tbody>
                     </table>
                 </div>
@@ -121,33 +102,25 @@
                 <div class="pos-tracker" id="pos-tracker">
                     <div>GK: 0/1</div><div>DEF: 0/6</div><div>MID: 0/2</div><div>FWD: 0/6</div><div style="color:var(--orange)">SUBS: 0/3</div>
                 </div>
-                <div style="font-weight:bold; margin-bottom: 15px; font-size: 15px;">Budget: <span id="budget-val">100.0</span>m | Squad: <span id="count-val">0</span>/18</div>
+                <div style="font-weight:bold; margin-bottom: 15px;">Budget: <span id="budget-val">100.0</span>m | <span id="count-val">0</span>/18</div>
                 <div id="squad-list"></div>
-                <div id="submission-area" class="hidden" style="margin-top:15px; border-top: 2px solid var(--green); padding-top:15px;">
-                    <input type="text" id="team-name" placeholder="Enter Team Name" style="margin-bottom:10px; padding:10px; width:100%; box-sizing:border-box; border:2px solid var(--orange); border-radius:6px;">
+                <div id="submission-area" class="hidden">
+                    <input type="text" id="team-name" placeholder="Team Name" style="margin: 10px 0;">
                     <button style="background:var(--green); color:white; border:none; width:100%; padding:15px; cursor:pointer; font-weight:bold; border-radius:4px;" onclick="submitTeam()">SUBMIT TEAM</button>
                 </div>
-                <button onclick="resetSquad()" style="width:100%; margin-top:10px; padding:8px; background:#f0f0f0; border:1px solid #ccc; border-radius:4px; cursor:pointer;">Reset Squad</button>
+                <button onclick="resetSquad()" style="width:100%; margin-top:10px; padding:8px;">Clear Squad</button>
             </div>
         </div>
     </div>
 
     <div id="page-leaderboard" class="page hidden">
-        <div class="panel" style="max-width: 800px; margin: auto;">
-            <h2 style="text-align:center; color: var(--orange);">🏆 STANDINGS</h2>
-            <div id="loading-leaderboard" class="loading">Calculating...</div>
-            <table id="leaderboard-table" class="hidden">
-                <thead><tr><th>#</th><th>Team Name</th><th style="text-align:right;">Score</th></tr></thead>
-                <tbody id="leaderboard-body"></tbody>
-            </table>
-        </div>
+        <div class="panel">Leaderboard syncing...</div>
     </div>
 </div>
 
 <script>
     const SCORERS_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTcdzjZ4zYlGgFe5acS8xOb1vHR9b8i98UudIOe-iC9Z1d6x6AY5zATgX217cNjcNtAGDLJ56y8Jr8N/pub?output=csv';
-    const ENTRIES_URL = 'PASTE_YOUR_ENTRIES_CSV_LINK_HERE';
-
+    
     let allPlayers = [];
     let state = { budget: 100.0, squad: [] };
     const LIMITS = { GK: 1, DEF: 6, MID: 2, FWD: 6, SUB: 3 };
@@ -157,7 +130,7 @@
             const res = await fetch(SCORERS_URL + '&t=' + new Date().getTime());
             const text = await res.text();
             processScorers(text);
-        } catch (e) { document.getElementById('loading-market').innerText = "Sync Error."; }
+        } catch (e) { document.getElementById('loading-market').innerText = "Data Sync Error."; }
     }
 
     function parseCSV(text) {
@@ -190,17 +163,26 @@
             if (!col[0] || col[0].trim() === "") continue;
             
             const county = col[0].trim();
-            const fullName = ((col[1] || "") + " " + (col[2] || "")).trim();
+            const name = ((col[1] || "") + " " + (col[2] || "")).trim();
             const rawPos = (col[3] || "").toLowerCase();
-            let pts = parseInt(col[8]) || 0;
             
-            // Complex Result Logic from Column J (Index 9)
-            const result = (col[9] || "").trim().toLowerCase();
+            // Map the stats based on your updated columns
+            const stats = {
+                goals: col[4] || 0,     // Column E
+                played: col[5] || 0,    // Column F
+                cleansheet: col[6] || 0,// Column G
+                red: col[7] || 0,       // Column H
+                onePts: col[11] || 0,   // Column L
+                twoPts: col[12] || 0    // Column M
+            };
+
+            let pts = parseInt(col[8]) || 0; // Total Points (Column I)
+            
+            const result = (col[9] || "").trim().toLowerCase(); // Result (Column J)
             if (result === "heavy win") pts += 5;
             else if (result === "win") pts += 2;
             else if (result === "loss") pts -= 2;
             else if (result === "heavy loss") pts -= 5;
-            // Draw is 0, so no change needed
 
             let pos = "FWD";
             const pNum = parseInt(rawPos.replace(/\D/g, ''));
@@ -211,7 +193,7 @@
             let base = (pos === "GK" ? 4.5 : (pos === "DEF" || pos === "MID" ? 5.0 : 6.0));
             let price = base + (pts / 20);
 
-            allPlayers.push({ county, name: fullName, pos, points: pts, price, base, result });
+            allPlayers.push({ county, name, pos, points: pts, price, base, result, stats });
             countySet.add(county);
         }
         const filter = document.getElementById('filterCounty');
@@ -238,29 +220,32 @@
             let priceDiff = p.price - p.base;
             let resultBadge = "";
             if (p.result === "heavy win") resultBadge = `<span class="result-badge badge-hwin">Heavy Win (+5)</span>`;
-            else if (p.result === "win") resultBadge = `<span class="result-badge badge-win">Win Bonus (+2)</span>`;
-            else if (p.result === "draw") resultBadge = `<span class="result-badge badge-draw">Draw (0)</span>`;
-            else if (p.result === "loss") resultBadge = `<span class="result-badge badge-loss">Loss Penalty (-2)</span>`;
+            else if (p.result === "win") resultBadge = `<span class="result-badge badge-win">Win (+2)</span>`;
+            else if (p.result === "loss") resultBadge = `<span class="result-badge badge-loss">Loss (-2)</span>`;
             else if (p.result === "heavy loss") resultBadge = `<span class="result-badge badge-hloss">Heavy Loss (-5)</span>`;
+
+            // Only show Clean Sheets if player is a GK
+            const csDisplay = p.pos === "GK" ? ` | CS:${p.stats.cleansheet}` : "";
 
             return `
             <tr>
                 <td>
-                    <b>${p.name}</b><br><small>${p.county}</small><br>
-                    ${resultBadge}
+                    <div class="player-info">
+                        <b>${p.name}</b> <small>(${p.pos})</small><br>
+                        <small>${p.county}</small>
+                        <span class="stats-subtle">
+                            G:${p.stats.goals} | 1pt:${p.stats.onePts} | 2pt:${p.stats.twoPts}${csDisplay} | RC:${p.stats.red}
+                        </span>
+                        ${resultBadge}
+                    </div>
                 </td>
-                <td>${p.points}</td>
+                <td style="font-weight:bold;">${p.points}</td>
                 <td>
                     <span class="price-tag">${p.price.toFixed(1)}m</span>
                     ${priceDiff !== 0 ? `<span class="price-change" style="color:${priceDiff > 0 ? 'var(--green)' : 'var(--red)'}">${priceDiff > 0 ? '▲' : '▼'}${Math.abs(priceDiff).toFixed(1)}</span>` : ''}
                 </td>
                 <td>
-                    <div class="btn-group">
-                        <button class="btn-pos" onclick="addPlayer('${p.name.replace(/'/g, "\\'")}', '${p.county.replace(/'/g, "\\'")}', 'GK', ${p.price})">GK</button>
-                        <button class="btn-pos" onclick="addPlayer('${p.name.replace(/'/g, "\\'")}', '${p.county.replace(/'/g, "\\'")}', 'DEF', ${p.price})">DEF</button>
-                        <button class="btn-pos" onclick="addPlayer('${p.name.replace(/'/g, "\\'")}', '${p.county.replace(/'/g, "\\'")}', 'MID', ${p.price})">MID</button>
-                        <button class="btn-pos" onclick="addPlayer('${p.name.replace(/'/g, "\\'")}', '${p.county.replace(/'/g, "\\'")}', 'FWD', ${p.price})">FWD</button>
-                    </div>
+                    <button class="btn-pos" onclick="addPlayer('${p.name.replace(/'/g, "\\'")}', '${p.county.replace(/'/g, "\\'")}', '${p.pos}', ${p.price})">ADD</button>
                 </td>
             </tr>`;
         }).join('') || '<tr><td colspan="4" style="text-align:center;">No players found.</td></tr>';
@@ -271,15 +256,16 @@
         document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
         document.getElementById('page-' + page).classList.remove('hidden');
         document.getElementById('btn-' + page).classList.add('active');
-        if (page === 'leaderboard') loadLeaderboard();
     }
 
     function addPlayer(name, county, role, price) {
         if (state.squad.length >= 18) return alert("Squad full!");
-        if (state.budget < price) return alert("Insufficient budget!");
+        if (state.budget < price) return alert("Budget low!");
         if (state.squad.filter(p => p.county === county).length >= 2) return alert("Max 2 per county!");
+        
         let finalRole = (state.squad.filter(p => p.role === role).length < LIMITS[role]) ? role : (state.squad.filter(p => p.role === 'SUB').length < LIMITS.SUB ? 'SUB' : null);
-        if (!finalRole) return alert(role + " slots full.");
+        if (!finalRole) return alert("Position slots and Sub slots are full.");
+        
         state.squad.push({name, county, price, role: finalRole});
         state.budget -= price;
         updateUI();
@@ -301,27 +287,8 @@
         document.getElementById('submission-area').classList.toggle('hidden', state.squad.length !== 18);
     }
 
-    async function loadLeaderboard() {
-        try {
-            const res = await fetch(ENTRIES_URL + '&t=' + new Date().getTime());
-            const text = await res.text();
-            const data = parseCSV(text).slice(1);
-            const playerPoints = {};
-            allPlayers.forEach(p => playerPoints[p.name] = p.points);
-            const teams = data.map(col => {
-                if (col.length < 2) return null;
-                const teamName = col[0]; const squadStr = col[1]; let total = 0;
-                Object.keys(playerPoints).forEach(pName => { if (squadStr.includes(pName)) total += playerPoints[pName]; });
-                return { teamName, total };
-            }).filter(x => x).sort((a,b) => b.total - a.total);
-            document.getElementById('leaderboard-body').innerHTML = teams.map((t, i) => `<tr><td>${i+1}</td><td>${t.teamName}</td><td style="text-align:right; font-weight:bold;">${t.total}</td></tr>`).join('');
-            document.getElementById('loading-leaderboard').classList.add('hidden');
-            document.getElementById('leaderboard-table').classList.remove('hidden');
-        } catch (e) { document.getElementById('loading-leaderboard').innerText = "Leaderboard error."; }
-    }
-
     function resetSquad() { state.squad = []; state.budget = 100.0; updateUI(); }
-    function submitTeam() { alert("Submitted!"); location.reload(); }
+    function submitTeam() { alert("Team Submitted!"); }
 
     init();
 </script>
