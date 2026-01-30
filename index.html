@@ -174,3 +174,52 @@
             <div class="squad-slot"><span><b>[${p.role}]</b> ${p.name}</span><button onclick="removePlayer(${i})" style="color:red; border:none; background:none; cursor:pointer;">×</button></div>
         `).join('');
     }
+
+    function removePlayer(i) {
+        state.budget += state.squad[i].price;
+        state.squad.splice(i,1);
+        updateUI();
+    }
+
+    async function loadSubmissions() {
+        const res = await fetch(SUBMISSIONS_URL + '&t=' + Date.now());
+        const text = await res.text();
+        const rows = text.split('\n').map(r => r.split(','));
+        const container = document.getElementById('submission-container');
+        
+        let managers = rows.slice(1).map(col => {
+            if(!col[0]) return null;
+            let total = 0;
+            let squad = col.slice(1,19).map(name => {
+                const p = allPlayers.find(pl => pl.name.toLowerCase() === name.trim().toLowerCase());
+                total += p ? p.totalPts : 0;
+                return { name: name.trim(), pts: p ? p.totalPts : '?' };
+            });
+            return { name: col[0], total, squad };
+        }).filter(m => m !== null).sort((a,b) => b.total - a.total);
+
+        container.innerHTML = managers.map(m => `
+            <div class="manager-card" onclick="this.classList.toggle('active')">
+                <div class="manager-name">${m.name}</div>
+                <div>Points: <b>${m.total}</b></div>
+                <div class="mini-squad">
+                    ${m.squad.map(p => `<div class="mini-player-row"><span>${p.name}</span><b>${p.pts}</b></div>`).join('')}
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function showPage(id) {
+        document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
+        document.getElementById('page-' + id).classList.remove('hidden');
+        document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+        document.getElementById('nav-' + id)?.classList.add('active');
+        if(id === 'submissions') loadSubmissions();
+    }
+
+    function submitTeam() { alert("Team Copied! Paste this into the entry form:\n\n" + state.squad.map(p => p.name).join(', ')); }
+    function resetSquad() { state.squad = []; state.budget = 100.0; updateUI(); }
+    init();
+</script>
+</body>
+</html>
