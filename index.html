@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Orchard Fans Fantasy GAA</title>
     <style>
-        :root { --orange: #f37021; --dark: #1a1a1a; --cream: #f4f1de; --white: #ffffff; --green: #28a745; --red: #dc3545; --grey: #777; }
+        :root { --orange: #f37021; --dark: #1a1a1a; --cream: #f4f1de; --white: #ffffff; --green: #28a745; --red: #dc3545; --grey: #777; --blue: #007bff; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--cream); margin: 0; padding: 0; color: var(--dark); }
         
         .header { background: var(--orange); color: white; padding: 20px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
@@ -32,12 +32,12 @@
         .val-down { color: var(--red); }
 
         .result-badge { font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 4px; display: inline-block; margin-top: 6px; margin-right: 4px; }
-        .badge-hwin { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .badge-bwin { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
         .badge-win { background: #e8f5e9; color: var(--green); border: 1px solid var(--green); }
         .badge-loss { background: #ffebee; color: var(--red); border: 1px solid var(--red); }
         .badge-hloss { background: #721c24; color: white; border: 1px solid #f5c6cb; }
         .badge-red { background: #dc3545; color: white; border: 1px solid #a71d2a; }
-        .badge-clean { background: #007bff; color: white; border: 1px solid #0056b3; }
+        .badge-clean { background: var(--blue); color: white; border: 1px solid #0056b3; }
 
         .btn-group { display: flex; gap: 3px; }
         .btn-pos { border: 1px solid var(--orange); background: white; color: var(--orange); padding: 5px 2px; border-radius: 4px; font-size: 9px; font-weight: bold; cursor: pointer; flex: 1; }
@@ -58,19 +58,17 @@
 <nav>
     <button class="nav-link" id="nav-rules" onclick="showPage('rules')">RULES</button>
     <button class="nav-link active" id="nav-market" onclick="showPage('market')">TRANSFER MARKET</button>
-    <button class="nav-link" id="nav-leaderboard" onclick="showPage('leaderboard')">LEADERBOARD</button>
 </nav>
 
 <div class="container">
     <div id="page-rules" class="page hidden">
         <div class="panel">
-            <h2>Rules & Value Scoring</h2>
+            <h2>Scoring & Market Mechanics</h2>
             <ul>
-                <li><b>Base Price:</b> GKs 4.5m | Others 5.5m</li>
-                <li><b>Clean Sheet Bonus:</b> +5 Pts and +0.25m Market Value.</li>
-                <li><b>Red Card Penalty:</b> -5 Pts and -0.25m Market Value.</li>
-                <li><b>Loss Deduction:</b> -2 Pts | <b>Heavy Loss:</b> -5 Pts</li>
-                <li><b>Value Formula:</b> 0.05m change per point + specific market penalties.</li>
+                <li><b>Bonuses:</b> Big Win (+5), Win (+2), Clean Sheet (+5).</li>
+                <li><b>Penalties:</b> Red Card (-5), Loss (-2), Heavy Loss (-5).</li>
+                <li><b>Market Value:</b> Every 1 point = 0.05m change.</li>
+                <li><b>Extra Penalty:</b> -0.2m drop for any team deduction of 3+ points (Heavy Loss).</li>
             </ul>
         </div>
     </div>
@@ -89,7 +87,7 @@
                     </div>
                 </div>
                 <div class="scroll-box">
-                    <div id="loading-market" class="loading">Syncing Player Stats...</div>
+                    <div id="loading-market" class="loading">Loading Market Data...</div>
                     <table id="market-table" class="hidden">
                         <thead><tr><th>Player & Stats</th><th>Pts</th><th>Value</th><th>Assign Slot</th></tr></thead>
                         <tbody id="market-body"></tbody>
@@ -109,10 +107,6 @@
             </div>
         </div>
     </div>
-
-    <div id="page-leaderboard" class="page hidden">
-        <div class="panel"><h2>Live Leaderboard</h2><div id="leaderboard-content">Standings update automatically.</div></div>
-    </div>
 </div>
 
 <script>
@@ -127,7 +121,7 @@
             const res = await fetch(SCORERS_URL + '&t=' + new Date().getTime());
             const text = await res.text();
             processScorers(text);
-        } catch (e) { document.getElementById('loading-market').innerText = "Data Error."; }
+        } catch (e) { document.getElementById('loading-market').innerText = "Data Sync Failed."; }
     }
 
     function processScorers(csvText) {
@@ -143,28 +137,30 @@
             let rawPts = parseInt(col[8]) || 0;
             let result = (col[9] || "").trim().toLowerCase();
             let hasRedCard = (col[7] || "").trim() === "1"; 
-            let hasCleanSheet = (col[6] || "").trim() === "1"; // Column G: Clean Sheet
-            
+            let hasCleanSheet = (col[6] || "").trim() === "1"; 
+
             let preferred = "FWD"; 
             if (posRaw.includes("GK") || posRaw === "1") preferred = "GK";
             else if (posRaw.includes("DEF") || (parseInt(posRaw) >= 2 && parseInt(posRaw) <= 7)) preferred = "DEF";
             else if (posRaw.includes("MID") || (parseInt(posRaw) >= 8 && parseInt(posRaw) <= 9)) preferred = "MID";
 
             // Calculation logic
+            let teamPoints = 0;
             let teamDeduction = 0;
-            if (result === "loss") teamDeduction = 2;
+
+            if (result === "big win" || result === "heavy win") teamPoints = 5;
+            else if (result === "win") teamPoints = 2;
+            else if (result === "loss") teamDeduction = 2;
             else if (result === "heavy loss") teamDeduction = 5;
 
             let redCardDeduction = hasRedCard ? 5 : 0;
             let cleanSheetBonus = hasCleanSheet ? 5 : 0;
             
-            // Total points displayed
-            let adjustedPts = rawPts - teamDeduction - redCardDeduction + cleanSheetBonus;
+            let adjustedPts = rawPts + teamPoints + cleanSheetBonus - teamDeduction - redCardDeduction;
             
             let basePrice = (preferred === "GK") ? 4.5 : 5.5;
             let marketPenalty = Math.floor(teamDeduction / 3) * 0.2;
             
-            // 0.05m per point rule
             let currentPrice = basePrice + (adjustedPts * 0.05) - marketPenalty;
             currentPrice = Math.max(3.0, currentPrice);
 
@@ -214,11 +210,10 @@
     function renderMarket(data) {
         document.getElementById('market-body').innerHTML = data.map(p => {
             let badges = "";
-            if (p.result === "heavy win") badges += `<span class="result-badge badge-hwin">Heavy Win (+5)</span>`;
+            if (p.result === "big win" || p.result === "heavy win") badges += `<span class="result-badge badge-bwin">Big Win (+5)</span>`;
             else if (p.result === "win") badges += `<span class="result-badge badge-win">Win (+2)</span>`;
             else if (p.result === "loss") badges += `<span class="result-badge badge-loss">Loss (-2)</span>`;
             else if (p.result === "heavy loss") badges += `<span class="result-badge badge-hloss">Heavy Loss (-5)</span>`;
-            
             if (p.redCard) badges += `<span class="result-badge badge-red">RED CARD (-5)</span>`;
             if (p.cleanSheet) badges += `<span class="result-badge badge-clean">CLEAN SHEET (+5)</span>`;
 
