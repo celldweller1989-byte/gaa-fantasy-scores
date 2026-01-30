@@ -6,20 +6,20 @@
     <title>Orchard Fans Fantasy GAA</title>
     <style>
         :root { --orange: #f37021; --dark: #1a1a1a; --cream: #f4f1de; --white: #ffffff; --green: #28a745; }
-        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--cream); margin: 0; padding: 15px; color: var(--dark); }
-        .header { background: var(--orange); color: white; padding: 20px; border-radius: 10px; text-align: center; margin-bottom: 20px; box-shadow: 0 4px var(--dark); }
-        .nav-tabs { display: flex; gap: 8px; margin-bottom: 20px; justify-content: center; }
-        .tab-btn { padding: 12px; border: none; border-radius: 5px; cursor: pointer; background: #ddd; font-weight: bold; flex: 1; max-width: 150px; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--cream); margin: 0; padding: 10px; color: var(--dark); }
+        .header { background: var(--orange); color: white; padding: 15px; border-radius: 10px; text-align: center; margin-bottom: 15px; box-shadow: 0 4px var(--dark); }
+        .nav-tabs { display: flex; gap: 5px; margin-bottom: 15px; justify-content: center; }
+        .tab-btn { padding: 10px; border: none; border-radius: 5px; cursor: pointer; background: #ddd; font-weight: bold; flex: 1; max-width: 120px; font-size: 0.9em; }
         .tab-btn.active { background: var(--orange); color: white; }
-        .panel { background: var(--white); border-radius: 8px; padding: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 20px; }
-        .main-layout { display: grid; grid-template-columns: 1fr 350px; gap: 20px; }
+        .panel { background: var(--white); border-radius: 8px; padding: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 15px; }
+        .main-layout { display: grid; grid-template-columns: 1fr 340px; gap: 15px; }
         .scroll-box { max-height: 500px; overflow-y: auto; border: 1px solid #eee; border-radius: 5px; background: #fff; }
         table { width: 100%; border-collapse: collapse; }
-        th { position: sticky; top: 0; background: #f8f8f8; padding: 10px; text-align: left; border-bottom: 2px solid #ddd; z-index: 10; }
+        th { position: sticky; top: 0; background: #f8f8f8; padding: 10px; text-align: left; border-bottom: 2px solid #ddd; z-index: 10; font-size: 0.85em; }
         td { padding: 10px; border-bottom: 1px solid #eee; font-size: 0.85em; }
         .squad-slot { display: flex; justify-content: space-between; background: #f9f9f9; padding: 8px; margin-bottom: 6px; border-radius: 4px; border-left: 4px solid var(--orange); font-size: 0.85em; align-items: center; }
-        .pos-tracker { font-size: 0.8em; background: #fff3cd; padding: 12px; border-radius: 5px; margin-bottom: 15px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; border: 1px solid #ffeeba; }
-        .btn-add { background: var(--orange); color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        .pos-tracker { font-size: 0.75em; background: #fff3cd; padding: 10px; border-radius: 5px; margin-bottom: 10px; display: grid; grid-template-columns: 1fr 1fr; gap: 5px; border: 1px solid #ffeeba; }
+        .btn-add { background: var(--orange); color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; }
         input, select { padding: 10px; border-radius: 5px; border: 1px solid #ccc; width: 100%; box-sizing: border-box; margin-bottom: 10px; }
         @media (max-width: 900px) { .main-layout { grid-template-columns: 1fr; } }
     </style>
@@ -27,7 +27,7 @@
 <body>
 
 <div class="header">
-    <h1 style="margin:0;">ORCHARD FANS FANTASY GAA</h1>
+    <h2 style="margin:0;">ORCHARD FANS FANTASY GAA</h2>
 </div>
 
 <div class="nav-tabs">
@@ -38,30 +38,27 @@
 
 <div id="rules" class="tab-content panel" style="display:none;">
     <h3>Squad Rules</h3>
-    <p>Select 18 players: 1 GK, 6 DEF, 2 MID, 6 FWD. Your last 3 picks automatically become Subs.</p>
+    <p>Select 18 players: 1 GK, 6 DEF, 2 MID, 6 FWD + 3 Subs.</p>
     <ul>
         <li>Budget: 50.0m</li>
-        <li>Max 2 players per County</li>
+        <li>Max 2 per County</li>
     </ul>
 </div>
 
 <div id="leaderboard" class="tab-content panel" style="display:none;">
     <h3>Standings</h3>
-    <table id="leader-table">
-        <thead><tr><th>Rank</th><th>Manager</th><th>Team</th><th>Pts</th></tr></thead>
-        <tbody id="leaderboard-body"><tr><td colspan="4" style="text-align:center;">Updates coming soon...</td></tr></tbody>
-    </table>
+    <tbody id="leaderboard-body"><tr><td colspan="4" style="text-align:center;">Loading standings...</td></tr></tbody>
 </div>
 
 <div id="market" class="tab-content">
     <div class="main-layout">
         <div class="panel">
-            <input type="text" id="searchName" placeholder="Search by name..." onkeyup="applyFilters()">
+            <input type="text" id="searchName" placeholder="Search name or county..." onkeyup="applyFilters()">
             <div class="scroll-box">
                 <table>
                     <thead><tr><th>Player</th><th>Pts</th><th>Price</th><th>Add</th></tr></thead>
                     <tbody id="market-body">
-                        <tr><td colspan="4" style="text-align:center;">Loading player list...</td></tr>
+                        <tr><td colspan="4" style="text-align:center; padding:20px;">Fetching players from Google Sheets...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -72,25 +69,26 @@
                 <div>GK: 0/1</div><div>DEF: 0/6</div><div>MID: 0/2</div>
                 <div>FWD: 0/6</div><div style="color:var(--orange); font-weight:bold;">SUBS: 0/3</div>
             </div>
-            <div style="margin-bottom:10px; font-weight:bold;">
+            <div style="margin-bottom:10px; font-weight:bold; font-size: 0.9em;">
                 Budget: <span id="budget-val">50.0</span>m | Squad: <span id="count-val">0</span>/18
             </div>
             <div id="squad-list"></div>
-            <button onclick="resetSquad()" style="width:100%; margin-top:10px; padding:10px; cursor:pointer; background:#eee; border:1px solid #ccc; border-radius:5px;">Clear Team</button>
+            <button onclick="resetSquad()" style="width:100%; margin-top:10px; padding:10px; cursor:pointer; background:#f0f0f0; border:1px solid #ccc; border-radius:5px;">Clear Team</button>
             
             <div id="submission-form" style="display:none; margin-top:15px; border-top: 2px solid var(--green); padding-top:15px;">
                 <input type="text" id="mgr-name" placeholder="Manager Name">
                 <input type="text" id="team-name" placeholder="Team Name">
-                <button class="btn-add" style="background:var(--green); padding:15px; width:100%;" onclick="sendTeam()">SUBMIT SQUAD</button>
+                <button class="btn-add" style="background:var(--green); padding:15px; width:100%; font-size:1.1em;" onclick="sendTeam()">SUBMIT SQUAD</button>
             </div>
         </div>
     </div>
 </div>
 
 <script>
-    // CACHE BUSTER ADDED HERE
+    // UPDATED DATA LOGIC
     const SHEET_ID = '1vTcdzjZ4zYlGgFe5acS8xOb1vHR9b8i98UudIOe-iC9Z1d6x6AY5zATgX217cNjcNtAGDLJ56y8Jr8N';
-    const playersUrl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&t=${new Date().getTime()}`;
+    // Using the visualization API is 10x more stable than the direct CSV export link
+    const playersUrl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=Players&t=${new Date().getTime()}`;
     const scriptURL = 'https://script.google.com/macros/s/AKfycbyVpULAmK_3FrHRSod9UUqnhQ2uR0pCGOXbKOWdVjJLgtp-bU5zHbEFqWSKKiXpTK8sZw/exec';
 
     let state = { budget: 50.0, squad: [] };
@@ -101,10 +99,9 @@
         const body = document.getElementById('market-body');
         try {
             const res = await fetch(playersUrl);
-            if (!res.ok) throw new Error('Sheet not reachable');
+            if (!res.ok) throw new Error();
             const text = await res.text();
             
-            // Smarter CSV Split
             const rows = text.split(/\r?\n/).slice(1);
             masterData = rows.map(r => {
                 const c = r.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
@@ -118,13 +115,10 @@
                 };
             }).filter(p => p && p.name.length > 2);
 
-            if (masterData.length === 0) {
-                body.innerHTML = '<tr><td colspan="4" style="text-align:center; color:orange;">⚠️ Sheet is empty or private.</td></tr>';
-            } else {
-                renderMarket(masterData);
-            }
+            if (masterData.length === 0) throw new Error('Empty');
+            renderMarket(masterData);
         } catch (e) {
-            body.innerHTML = '<tr><td colspan="4" style="text-align:center; color:red;">❌ Error loading list. Please refresh the page.</td></tr>';
+            body.innerHTML = '<tr><td colspan="4" style="text-align:center; color:red; padding:20px;"><b>Connection Error</b><br>Please go to your Google Sheet > File > Share > Publish to Web and ensure it is active as a CSV.</td></tr>';
         }
     }
 
@@ -137,7 +131,7 @@
 
     function applyFilters() {
         const n = document.getElementById('searchName').value.toLowerCase();
-        const filtered = masterData.filter(i => i.name.toLowerCase().includes(n));
+        const filtered = masterData.filter(i => i.name.toLowerCase().includes(n) || i.county.toLowerCase().includes(n));
         renderMarket(filtered);
     }
 
@@ -155,52 +149,4 @@
     function addPlayer(name, county, pos, price) {
         if (state.squad.length >= 18) return alert("Squad full!");
         if (state.budget < price) return alert("Not enough budget!");
-        if (state.squad.filter(p => p.county === county).length >= 2) return alert("Max 2 per county!");
-        
-        let role = (state.squad.filter(p => p.role === pos).length < LIMITS[pos]) ? pos : 
-                   (state.squad.filter(p => p.role === 'SUB').length < LIMITS.SUB ? 'SUB' : null);
-        
-        if (!role) return alert(`Starting slots for ${pos} and Sub slots are full!`);
-        
-        state.squad.push({name, county, pos, price, role});
-        state.budget -= price;
-        updateUI();
-    }
-
-    function removePlayer(i) {
-        state.budget += state.squad[i].price;
-        state.squad.splice(i, 1);
-        updateUI();
-    }
-
-    function resetSquad() { state.squad = []; state.budget = 50.0; updateUI(); }
-
-    function updateUI() {
-        document.getElementById('budget-val').innerText = state.budget.toFixed(1);
-        document.getElementById('count-val').innerText = state.squad.length;
-        const counts = { GK: 0, DEF: 0, MID: 0, FWD: 0, SUB: 0 };
-        state.squad.forEach(p => counts[p.role]++);
-        document.getElementById('pos-tracker').innerHTML = `<div>GK: ${counts.GK}/1</div><div>DEF: ${counts.DEF}/6</div><div>MID: ${counts.MID}/2</div><div>FWD: ${counts.FWD}/6</div><div>SUBS: ${counts.SUB}/3</div>`;
-        document.getElementById('squad-list').innerHTML = state.squad.map((p, i) => `<div class="squad-slot"><span><b>${p.role}</b>: ${p.name}</span><span onclick="removePlayer(${i})" style="color:red; cursor:pointer; font-weight:bold;">×</span></div>`).join('');
-        document.getElementById('submission-form').style.display = state.squad.length === 18 ? 'block' : 'none';
-    }
-
-    async function sendTeam() {
-        const m = document.getElementById('mgr-name').value;
-        const t = document.getElementById('team-name').value;
-        if(!m || !t) return alert("Enter Manager and Team names!");
-        const params = new URLSearchParams({ managerName: m, teamName: t, squadList: state.squad.map(p => `${p.name} (${p.role})`).join(', ') });
-        
-        try {
-            await fetch(scriptURL, { method: 'POST', mode: 'no-cors', body: params });
-            alert("Team Submitted Successfully!");
-            location.reload();
-        } catch (e) {
-            alert("Submission error. Check your connection.");
-        }
-    }
-
-    init();
-</script>
-</body>
-</html>
+        if (state.squad.filter(p =>
