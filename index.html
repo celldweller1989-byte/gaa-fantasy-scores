@@ -113,7 +113,8 @@
 
 <script>
     const SCORERS_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTcdzjZ4zYlGgFe5acS8xOb1vHR9b8i98UudIOe-iC9Z1d6x6AY5zATgX217cNjcNtAGDLJ56y8Jr8N/pub?output=csv';
-    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx1pX63b26Qg5qie0iV9eskgnGYqADyqIf6rjwy1WrHpp_vmM1ZA01QrxHUn5QOT-vp/exec';
+    // UPDATED APPS SCRIPT URL
+    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxuMaD1xTPhUNTp6AVB_PzKHnlnK_KTxJEuhNRap9Dr6Xx-QwgmMoj35V-5pWed9Zwm/exec';
     
     let allPlayers = [];
     let state = { budget: 100.0, squad: [] };
@@ -144,7 +145,6 @@
         const btn = document.getElementById('btn-save');
         const msg = document.getElementById('market-status-msg');
 
-        // Monday 7am to Friday 9pm
         let isOpen = true;
         if (day === 5 && hour >= 21) isOpen = false; 
         if (day === 6 || day === 0) isOpen = false;  
@@ -235,17 +235,11 @@
 
     function addPlayer(id, role) {
         const p = allPlayers.find(x => x.id === id);
-        
-        // Validation Checks
         if (state.squad.length >= 18) return alert("Squad full!");
         if (state.budget < p.price) return alert("Insufficient budget!");
         if (state.squad.find(x => x.id === id)) return alert("Player already in squad!");
-        
-        // Position Limits
         const currentInRole = state.squad.filter(x => x.role === role).length;
         if (currentInRole >= LIMITS[role]) return alert(`${role} position is full!`);
-
-        // County Limits (Max 2)
         const currentFromCounty = state.squad.filter(x => x.county === p.county).length;
         if (currentFromCounty >= LIMITS.COUNTY) return alert(`Max 2 players per county! (${p.county} full)`);
 
@@ -283,27 +277,32 @@
             localStorage.setItem('fantasy_manager', managerName);
         }
 
-        // --- 2 TRANSFER LIMIT LOGIC ---
+        // --- ALLOCATION LOGIC FOR INDIVIDUAL CELLS ---
+        const order = ['GK', 'DEF', 'MID', 'FWD', 'SUB'];
+        const sortedSquadNames = [];
+        order.forEach(role => {
+            const players = state.squad.filter(p => p.role === role).map(p => p.name);
+            sortedSquadNames.push(...players);
+        });
+
+        // 2 Transfer Limit Check
         const lastSaved = JSON.parse(localStorage.getItem('last_saved_squad') || "[]");
         if (lastSaved.length > 0) {
-            const currentNames = state.squad.map(p => p.name);
-            const changes = currentNames.filter(name => !lastSaved.includes(name)).length;
-            if (changes > 2) return alert(`Limit exceeded: You have made ${changes} changes. Only 2 allowed per week.`);
+            const changes = sortedSquadNames.filter(name => !lastSaved.includes(name)).length;
+            if (changes > 2) return alert(`Limit exceeded: ${changes} changes. Only 2 allowed.`);
         }
-
-        const squadNames = state.squad.map(p => p.name);
 
         try {
             await fetch(APPS_SCRIPT_URL, {
                 method: 'POST',
                 mode: 'no-cors',
-                body: JSON.stringify({ manager: managerName, squad: squadNames })
+                body: JSON.stringify({ manager: managerName, squad: sortedSquadNames })
             });
             
-            localStorage.setItem('last_saved_squad', JSON.stringify(squadNames));
-            alert("Team saved successfully!");
+            localStorage.setItem('last_saved_squad', JSON.stringify(sortedSquadNames));
+            alert("Team saved! Players allocated to individual cells.");
         } catch (e) {
-            alert("Save failed. Check your internet connection.");
+            alert("Save failed. Please try again.");
         }
     }
 
