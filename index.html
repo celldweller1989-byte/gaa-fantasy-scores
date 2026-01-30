@@ -60,14 +60,16 @@
 </nav>
 
 <div class="container">
+    
     <div id="page-rules" class="page hidden">
         <div class="panel">
-            <h2>Rules & Value Adjustments</h2>
+            <h2>Rules & Value Scoring</h2>
             <ul>
-                <li><b>Loss Penalty:</b> -2 Points (applied to player total).</li>
-                <li><b>Heavy Loss Penalty:</b> -5 Points (applied to player total).</li>
-                <li><b>Market Drop:</b> Players lose an extra <b>-0.2m</b> for every 3-point deduction (e.g., Heavy Loss).</li>
-                <li>Budget: 100.0m | Squad: 18 Players</li>
+                <li><b>Base Price:</b> GKs 4.5m | Others 5.5m</li>
+                <li><b>Loss Deduction:</b> -2 Pts | <b>Heavy Loss:</b> -5 Pts</li>
+                <li><b>Value Formula:</b> Every point adds/removes 0.05m.</li>
+                <li><b>Market Drop:</b> Extra -0.2m decrease for every 3pt team deduction.</li>
+                <li><i>Example: -4 Total Pts results in a 5.3m Market Value.</i></li>
             </ul>
         </div>
     </div>
@@ -86,7 +88,7 @@
                     </div>
                 </div>
                 <div class="scroll-box">
-                    <div id="loading-market" class="loading">Syncing Player Data...</div>
+                    <div id="loading-market" class="loading">Syncing Player Roles & Market Values...</div>
                     <table id="market-table" class="hidden">
                         <thead><tr><th>Player & Stats</th><th>Pts</th><th>Value</th><th>Assign Slot</th></tr></thead>
                         <tbody id="market-body"></tbody>
@@ -146,32 +148,34 @@
             else if (posRaw.includes("DEF") || (parseInt(posRaw) >= 2 && parseInt(posRaw) <= 7)) preferred = "DEF";
             else if (posRaw.includes("MID") || (parseInt(posRaw) >= 8 && parseInt(posRaw) <= 9)) preferred = "MID";
 
-            // 2. Action Deductions
+            // 2. Action Point Deductions (-2 for loss, -5 for heavy loss)
             let deduction = 0;
             if (result === "loss") deduction = 2;
             else if (result === "heavy loss") deduction = 5;
 
             let adjustedPts = rawPts - deduction;
+            
+            // 3. Set Base Price
             let basePrice = (preferred === "GK") ? 4.5 : 5.5;
             
-            // 3. Market Penalty: -0.2m for every 3 point deduction
-            let penaltyValue = Math.floor(deduction / 3) * 0.2;
+            // 4. Action Market Drop Penalty (-0.2m for every 3 point team deduction)
+            let marketPenalty = Math.floor(deduction / 3) * 0.2;
             
-            // 4. Final Price Calculation
-            // Base + (Adjusted Pts / 20) - Penalty. 
-            let currentPrice = basePrice + (adjustedPts / 20) - penaltyValue;
+            // 5. Final Value Calculation
+            // Logic: 5.5 + (-4 * 0.05) - 0 = 5.3m
+            let currentPrice = basePrice + (adjustedPts * 0.05) - marketPenalty;
             
-            // Prevent price dropping below base starting value
-            currentPrice = Math.max(basePrice, currentPrice);
+            // Floor price at 3.0m so players don't become free
+            currentPrice = Math.max(3.0, currentPrice);
 
             allPlayers.push({
                 id: i,
                 county: col[0].trim(),
                 name: (col[1] + " " + col[2]).trim(),
                 preferred: preferred,
-                totalPts: adjustedPts, // THE ACTIONED SCORE
+                totalPts: adjustedPts,
                 result: result,
-                price: currentPrice,   // THE ACTIONED PRICE
+                price: currentPrice,
                 change: currentPrice - basePrice,
                 stats: `G:${col[4]||0} | 1p:${col[11]||0} | 2p:${col[12]||0} | CS:${col[6]||0}`
             });
