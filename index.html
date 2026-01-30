@@ -7,49 +7,34 @@
     <style>
         :root { --orange: #f37021; --dark: #1a1a1a; --cream: #f4f1de; --white: #ffffff; --green: #28a745; --grey: #666; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--cream); margin: 0; padding: 0; color: var(--dark); }
-        
         .header { background: var(--orange); color: white; padding: 20px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
         nav { display: flex; justify-content: center; background: var(--dark); padding: 0; position: sticky; top: 0; z-index: 100; }
         .nav-link { color: white; padding: 15px 25px; text-decoration: none; font-weight: bold; cursor: pointer; transition: 0.3s; }
         .nav-link:hover { background: #333; }
         .nav-link.active { background: var(--orange); }
-
         .container { padding: 15px; max-width: 1200px; margin: auto; }
         .main-layout { display: grid; grid-template-columns: 1fr 340px; gap: 15px; }
         .panel { background: var(--white); border-radius: 8px; padding: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-
         .filter-bar { display: grid; grid-template-columns: 1.5fr 1fr 1fr; gap: 10px; margin-bottom: 15px; }
         select, input { padding: 10px; border-radius: 5px; border: 1px solid #ccc; width: 100%; height: 45px; }
-        
         .scroll-box { max-height: 600px; overflow-y: auto; border: 1px solid #eee; border-radius: 5px; }
         table { width: 100%; border-collapse: collapse; }
         th { position: sticky; top: 0; background: #f8f8f8; padding: 12px; text-align: left; font-size: 12px; border-bottom: 2px solid #ddd; z-index: 5; }
         td { padding: 12px; border-bottom: 1px solid #eee; }
-
         .player-info b { display: block; font-size: 15px; color: var(--dark); line-height: 1.2; }
         .player-info span { display: block; font-size: 11px; color: var(--grey); font-weight: bold; text-transform: uppercase; margin-top: 2px; }
-
-        .pos-tracker { font-size: 12px; background: #fff3cd; padding: 10px; border-radius: 5px; margin-bottom: 10px; display: grid; grid-template-columns: 1fr 1fr; gap: 5px; border: 1px solid #ffeeba; }
+        .pos-tracker { font-size: 12px; background: #fff3cd; padding: 10px; border-radius: 5px; margin-bottom: 10px; display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
         .squad-slot { display: flex; justify-content: space-between; background: #f9f9f9; padding: 8px; margin-bottom: 5px; border-radius: 4px; border-left: 4px solid var(--orange); align-items: center; font-size: 13px; }
         .btn-add { background: var(--orange); color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; }
         .btn-remove { color: #dc3545; cursor: pointer; font-weight: bold; font-size: 18px; padding: 0 5px; }
-
-        .leaderboard-container { max-width: 800px; margin: 20px auto; }
-        .rank-cell { font-weight: bold; color: var(--orange); width: 40px; }
-        .pts-cell { font-weight: bold; text-align: right; }
-
-        .loading { text-align: center; padding: 50px; color: var(--orange); font-weight: bold; }
         .hidden { display: none; }
-
+        .loading { text-align: center; padding: 50px; color: var(--orange); font-weight: bold; }
         @media (max-width: 900px) { .main-layout { grid-template-columns: 1fr; } .filter-bar { grid-template-columns: 1fr; } }
     </style>
 </head>
 <body>
 
-<div class="header">
-    <h1 style="margin:0; letter-spacing: 1px;">ORCHARD FANS FANTASY GAA</h1>
-</div>
-
+<div class="header"><h1>ORCHARD FANS FANTASY GAA</h1></div>
 <nav>
     <div class="nav-link active" onclick="navigate('market')">TRANSFER MARKET</div>
     <div class="nav-link" onclick="navigate('leaderboard')">LEADERBOARD</div>
@@ -60,7 +45,7 @@
         <div class="main-layout">
             <div class="panel">
                 <div class="filter-bar">
-                    <input type="text" id="searchName" placeholder="Search Player Name..." onkeyup="applyFilters()">
+                    <input type="text" id="searchName" placeholder="Search Player..." onkeyup="applyFilters()">
                     <select id="filterCounty" onchange="applyFilters()"><option value="ALL">All Counties</option></select>
                     <select id="filterPos" onchange="applyFilters()">
                         <option value="ALL">All Positions</option>
@@ -68,25 +53,19 @@
                         <option value="MID">MID</option><option value="FWD">FWD</option>
                     </select>
                 </div>
-
                 <div class="scroll-box">
-                    <div id="loading-market" class="loading">Fetching Players...</div>
+                    <div id="loading-market" class="loading">Loading Players...</div>
                     <table id="market-table" class="hidden">
-                        <thead>
-                            <tr><th>Player</th><th>Pos</th><th>Pts</th><th>Price</th><th>Add</th></tr>
-                        </thead>
+                        <thead><tr><th>Player</th><th>Pos</th><th>Pts</th><th>Price</th><th>Add</th></tr></thead>
                         <tbody id="market-body"></tbody>
                     </table>
                 </div>
             </div>
-
             <div class="panel">
                 <div class="pos-tracker" id="pos-tracker">
                     <div>GK: 0/1</div><div>DEF: 0/6</div><div>MID: 0/2</div><div>FWD: 0/6</div><div style="color:var(--orange)">SUBS: 0/3</div>
                 </div>
-                <div style="font-weight:bold; margin-bottom: 10px; font-size: 14px;">
-                    Budget: <span id="budget-val">100.0</span>m | Squad: <span id="count-val">0</span>/18
-                </div>
+                <div style="font-weight:bold; margin-bottom:10px;">Budget: <span id="budget-val">100.0</span>m | Squad: <span id="count-val">0</span>/18</div>
                 <div id="squad-list"></div>
                 <div id="submission-area" class="hidden" style="margin-top:15px; border-top: 2px solid var(--green); padding-top:15px;">
                     <input type="text" id="team-name" placeholder="Enter Team Name" style="margin-bottom:10px;">
@@ -98,13 +77,11 @@
     </div>
 
     <div id="page-leaderboard" class="page hidden">
-        <div class="panel leaderboard-container">
+        <div class="panel" style="max-width:800px; margin:auto;">
             <h2 style="text-align:center; color: var(--orange);">🏆 STANDINGS</h2>
-            <div id="loading-leaderboard" class="loading">Loading Standings...</div>
+            <div id="loading-leaderboard" class="loading">Loading Leaderboard...</div>
             <table id="leaderboard-table" class="hidden">
-                <thead>
-                    <tr><th class="rank-cell">#</th><th>Team Name</th><th class="pts-cell">Total Score</th></tr>
-                </thead>
+                <thead><tr><th style="width:40px;">#</th><th>Team</th><th style="text-align:right;">Pts</th></tr></thead>
                 <tbody id="leaderboard-body"></tbody>
             </table>
         </div>
@@ -124,7 +101,7 @@
             const res = await fetch(SCORERS_URL + '&t=' + new Date().getTime());
             const text = await res.text();
             processScorers(text);
-        } catch (e) { document.getElementById('loading-market').innerText = "Data Error."; }
+        } catch (e) { document.getElementById('loading-market').innerText = "Fetch Error."; }
     }
 
     function parseCSVLine(text) {
@@ -144,16 +121,16 @@
 
         for (let i = 1; i < lines.length; i++) {
             const col = parseCSVLine(lines[i]);
-            if (col.length < 9 || !col[0]) continue;
+            // Ensure at least County (A) and Position (D) exist
+            if (col.length < 4 || !col[0]) continue;
 
             const county = col[0];
-            // UPPERCASE Surname (Col B) + First Name (Col C)
-            const lastName = (col[2] || "").toUpperCase();
-            const firstName = (col[1] || "");
-            const fullName = (lastName + " " + firstName).trim();
+            const surname = (col[1] || "").toUpperCase(); // Col B
+            const firstname = (col[2] || ""); // Col C
+            const fullName = (surname + " " + firstname).trim();
             
-            const rawPos = col[3].toLowerCase();
-            const totalPts = parseInt(col[8]) || 0;
+            const rawPos = (col[3] || "").toLowerCase();
+            const totalPts = parseInt(col[8]) || 0; // Col I
 
             let pos = "FWD";
             const pNum = parseInt(rawPos.replace(/\D/g, ''));
@@ -163,14 +140,39 @@
 
             const price = (pos === "GK") ? 4.5 : (pos === "DEF" || pos === "MID") ? 5.0 : 6.0;
 
-            allPlayers.push({ county, name: fullName, pos, points: totalPts, price });
-            countySet.add(county);
+            if(fullName) {
+                allPlayers.push({ county, name: fullName, pos, points: totalPts, price });
+                countySet.add(county);
+            }
         }
 
         const filterDropdown = document.getElementById('filterCounty');
+        filterDropdown.innerHTML = '<option value="ALL">All Counties</option>';
         Array.from(countySet).sort().forEach(c => {
             const opt = document.createElement('option'); opt.value = c; opt.innerText = c;
             filterDropdown.appendChild(opt);
         });
 
-        document.getElementById('loading
+        document.getElementById('loading-market').classList.add('hidden');
+        document.getElementById('market-table').classList.remove('hidden');
+        applyFilters();
+    }
+
+    function applyFilters() {
+        const nameQ = document.getElementById('searchName').value.toLowerCase();
+        const countyQ = document.getElementById('filterCounty').value;
+        const posQ = document.getElementById('filterPos').value;
+
+        const filtered = allPlayers.filter(p => {
+            return (p.name.toLowerCase().includes(nameQ)) &&
+                   (countyQ === "ALL" || p.county === countyQ) &&
+                   (posQ === "ALL" || p.pos === posQ);
+        });
+        renderMarket(filtered);
+    }
+
+    function renderMarket(data) {
+        document.getElementById('market-body').innerHTML = data.map(p => `
+            <tr>
+                <td class="player-info"><b>${p.name}</b><span>${p.county}</span></td>
+                <td><small>${p.
