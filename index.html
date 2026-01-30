@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Orchard Fans Fantasy GAA</title>
     <style>
-        :root { --orange: #f37021; --dark: #1a1a1a; --cream: #f4f1de; --white: #ffffff; --green: #28a745; --grey: #666; }
+        :root { --orange: #f37021; --dark: #1a1a1a; --cream: #f4f1de; --white: #ffffff; --green: #28a745; --red: #dc3545; --blue: #007bff; --grey: #666; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--cream); margin: 0; padding: 0; color: var(--dark); }
         
         .header { background: var(--orange); color: white; padding: 20px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
@@ -18,7 +18,6 @@
         .main-layout { display: grid; grid-template-columns: 1fr 340px; gap: 20px; }
         .panel { background: var(--white); border-radius: 8px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 20px; }
 
-        /* Filter Bar with Orange Outlines */
         .filter-bar { display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 20px; align-items: center; }
         .filter-item { flex: 1; min-width: 180px; }
         select, input { padding: 10px; border-radius: 6px; border: 2px solid var(--orange); width: 100%; height: 48px; box-sizing: border-box; font-size: 14px; outline: none; }
@@ -28,8 +27,15 @@
         th { position: sticky; top: 0; background: #f8f8f8; padding: 12px; text-align: left; font-size: 11px; border-bottom: 2px solid #ddd; z-index: 5; text-transform: uppercase; }
         td { padding: 12px; border-bottom: 1px solid #eee; font-size: 14px; }
 
+        .result-badge { font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 4px; display: inline-block; margin-top: 4px; }
+        .badge-hwin { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .badge-win { background: #e8f5e9; color: var(--green); border: 1px solid var(--green); }
+        .badge-loss { background: #ffebee; color: var(--red); border: 1px solid var(--red); }
+        .badge-hloss { background: #721c24; color: white; border: 1px solid #f5c6cb; }
+        .badge-draw { background: #e2e3e5; color: #383d41; border: 1px solid #d6d8db; }
+
         .price-tag { font-weight: bold; color: var(--green); }
-        .price-up { color: #d9534f; font-size: 10px; font-weight: normal; margin-left: 4px; }
+        .price-change { font-size: 10px; font-weight: normal; margin-left: 4px; }
 
         .rules-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; }
         .rule-card { border-left: 4px solid var(--orange); padding-left: 15px; }
@@ -41,7 +47,7 @@
         .btn-group { display: flex; gap: 4px; }
         .btn-pos { border: 1px solid var(--orange); background: white; color: var(--orange); padding: 5px 8px; border-radius: 4px; font-size: 10px; font-weight: bold; cursor: pointer; min-width: 38px; }
         .btn-pos:hover { background: var(--orange); color: white; }
-        .btn-remove { color: #dc3545; cursor: pointer; font-weight: bold; font-size: 18px; padding: 0 5px; }
+        .btn-remove { color: var(--red); cursor: pointer; font-weight: bold; font-size: 18px; padding: 0 5px; }
 
         .hidden { display: none; }
         .loading { text-align: center; padding: 50px; color: var(--orange); font-weight: bold; }
@@ -66,20 +72,23 @@
             <h2 style="color:var(--orange);">Fantasy League Rules</h2>
             <div class="rules-grid">
                 <div class="rule-card">
-                    <h3>Dynamic Pricing</h3>
-                    <p style="font-size:14px;">Market values fluctuate based on form!</p>
-                    <ul>
-                        <li><b>Base Prices:</b> GK (4.5m), DEF/MID (5.0m), FWD (6.0m)</li>
-                        <li><b>Performance:</b> +0.5m for every 10 points scored.</li>
+                    <h3>Match Result Adjustments</h3>
+                    <p style="font-size:14px; margin-bottom:5px;">Points are adjusted based on the County's result:</p>
+                    <ul style="list-style-type:none; padding-left:0;">
+                        <li>🏆 <b>Heavy Win (6+ pts):</b> <b style="color:var(--green)">+5 pts</b></li>
+                        <li>✅ <b>Win:</b> <b style="color:var(--green)">+2 pts</b></li>
+                        <li>🤝 <b>Draw:</b> <b>0 pts</b></li>
+                        <li>❌ <b>Loss:</b> <b style="color:var(--red)">-2 pts</b></li>
+                        <li>💀 <b>Heavy Loss (6+ pts):</b> <b style="color:var(--red); background:#721c24; padding:0 3px;">-5 pts</b></li>
                     </ul>
                 </div>
                 <div class="rule-card">
-                    <h3>Squad Selection</h3>
+                    <h3>Squad & Budget</h3>
                     <ul>
                         <li>Total Budget: <b>100.0m</b></li>
                         <li>Squad Size: <b>18 Players</b></li>
                         <li>Max <b>2 Players</b> per County.</li>
-                        <li>1 GK, 6 DEF, 2 MID, 6 FWD, 3 SUBS.</li>
+                        <li>Prices update dynamically with points.</li>
                     </ul>
                 </div>
             </div>
@@ -179,11 +188,20 @@
         for (let i = 1; i < data.length; i++) {
             const col = data[i];
             if (!col[0] || col[0].trim() === "") continue;
+            
             const county = col[0].trim();
             const fullName = ((col[1] || "") + " " + (col[2] || "")).trim();
             const rawPos = (col[3] || "").toLowerCase();
-            const pts = parseInt(col[8]) || 0;
+            let pts = parseInt(col[8]) || 0;
             
+            // Complex Result Logic from Column J (Index 9)
+            const result = (col[9] || "").trim().toLowerCase();
+            if (result === "heavy win") pts += 5;
+            else if (result === "win") pts += 2;
+            else if (result === "loss") pts -= 2;
+            else if (result === "heavy loss") pts -= 5;
+            // Draw is 0, so no change needed
+
             let pos = "FWD";
             const pNum = parseInt(rawPos.replace(/\D/g, ''));
             if (pNum === 1 || rawPos.includes("gk")) pos = "GK";
@@ -193,7 +211,7 @@
             let base = (pos === "GK" ? 4.5 : (pos === "DEF" || pos === "MID" ? 5.0 : 6.0));
             let price = base + (pts / 20);
 
-            allPlayers.push({ county, name: fullName, pos, points: pts, price, base });
+            allPlayers.push({ county, name: fullName, pos, points: pts, price, base, result });
             countySet.add(county);
         }
         const filter = document.getElementById('filterCounty');
@@ -217,14 +235,24 @@
 
     function renderMarket(data) {
         document.getElementById('market-body').innerHTML = data.map(p => {
-            let priceIncrease = p.price - p.base;
+            let priceDiff = p.price - p.base;
+            let resultBadge = "";
+            if (p.result === "heavy win") resultBadge = `<span class="result-badge badge-hwin">Heavy Win (+5)</span>`;
+            else if (p.result === "win") resultBadge = `<span class="result-badge badge-win">Win Bonus (+2)</span>`;
+            else if (p.result === "draw") resultBadge = `<span class="result-badge badge-draw">Draw (0)</span>`;
+            else if (p.result === "loss") resultBadge = `<span class="result-badge badge-loss">Loss Penalty (-2)</span>`;
+            else if (p.result === "heavy loss") resultBadge = `<span class="result-badge badge-hloss">Heavy Loss (-5)</span>`;
+
             return `
             <tr>
-                <td><b>${p.name}</b><br><small>${p.county}</small></td>
+                <td>
+                    <b>${p.name}</b><br><small>${p.county}</small><br>
+                    ${resultBadge}
+                </td>
                 <td>${p.points}</td>
                 <td>
                     <span class="price-tag">${p.price.toFixed(1)}m</span>
-                    ${priceIncrease > 0 ? `<span class="price-up">▲+${priceIncrease.toFixed(1)}</span>` : ''}
+                    ${priceDiff !== 0 ? `<span class="price-change" style="color:${priceDiff > 0 ? 'var(--green)' : 'var(--red)'}">${priceDiff > 0 ? '▲' : '▼'}${Math.abs(priceDiff).toFixed(1)}</span>` : ''}
                 </td>
                 <td>
                     <div class="btn-group">
