@@ -6,19 +6,19 @@
     <title>Orchard Fans Fantasy GAA</title>
     <style>
         :root { --orange: #f37021; --dark: #1a1a1a; --cream: #f4f1de; --white: #ffffff; --green: #28a745; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--cream); margin: 0; padding: 15px; color: var(--dark); }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--cream); margin: 0; padding: 15px; color: var(--dark); }
         .header { background: var(--orange); color: white; padding: 25px; border-radius: 12px; text-align: center; margin-bottom: 20px; box-shadow: 0 4px var(--dark); }
         .nav-tabs { display: flex; gap: 10px; margin-bottom: 20px; justify-content: center; }
-        .tab-btn { padding: 14px 25px; border: none; border-radius: 8px; cursor: pointer; background: #e0e0e0; font-weight: bold; transition: 0.3s; flex: 1; max-width: 200px; }
+        .tab-btn { padding: 14px 25px; border: none; border-radius: 8px; cursor: pointer; background: #e0e0e0; font-weight: bold; flex: 1; max-width: 200px; }
         .tab-btn.active { background: var(--orange); color: white; }
         .panel { background: var(--white); border-radius: 10px; padding: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); margin-bottom: 20px; }
         .main-layout { display: grid; grid-template-columns: 1fr 380px; gap: 25px; }
         .scroll-box { max-height: 550px; overflow-y: auto; border: 1px solid #eee; border-radius: 8px; }
         table { width: 100%; border-collapse: collapse; }
-        th { position: sticky; top: 0; background: #f1f1f1; padding: 15px; text-align: left; border-bottom: 2px solid #ddd; }
+        th { position: sticky; top: 0; background: #f1f1f1; padding: 15px; text-align: left; border-bottom: 2px solid #ddd; z-index: 10; }
         td { padding: 12px; border-bottom: 1px solid #eee; font-size: 0.9em; }
-        .squad-slot { display: flex; justify-content: space-between; background: #fcfcfc; padding: 12px; margin-bottom: 10px; border-radius: 6px; border-left: 6px solid var(--orange); align-items: center; }
-        .pos-tracker { font-size: 0.9em; background: #fff3cd; padding: 18px; border-radius: 8px; margin-bottom: 20px; display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; border: 1px solid #ffeeba; }
+        .squad-slot { display: flex; justify-content: space-between; background: #fcfcfc; padding: 10px; margin-bottom: 8px; border-radius: 6px; border-left: 6px solid var(--orange); align-items: center; }
+        .pos-tracker { font-size: 0.9em; background: #fff3cd; padding: 15px; border-radius: 8px; margin-bottom: 15px; display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; border: 1px solid #ffeeba; }
         .btn-add { background: var(--orange); color: white; border: none; padding: 10px 16px; border-radius: 5px; cursor: pointer; font-weight: bold; }
         .sub-tag { background: #6c757d; color: white; padding: 3px 7px; border-radius: 4px; font-size: 0.75em; margin-right: 10px; }
         @media (max-width: 950px) { .main-layout { grid-template-columns: 1fr; } }
@@ -37,37 +37,20 @@
 </div>
 
 <div id="rules" class="tab-content panel" style="display:none;">
-    <h2>Official Competition Rules</h2>
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-        <div>
-            <h3>Squad Selection</h3>
-            <ul>
-                <li><b>Total Players:</b> 18</li>
-                <li><b>Formation:</b> 1 GK, 6 DEF, 2 MID, 6 FWD</li>
-                <li><b>Bench:</b> 3 Subs (any position)</li>
-                <li><b>Budget:</b> 50.0m</li>
-                <li><b>Limit:</b> Max 2 players per county</li>
-            </ul>
-        </div>
-        <div>
-            <h3>Scoring</h3>
-            <ul>
-                <li><b>Goal:</b> +3 Points</li>
-                <li><b>Point:</b> +1 Point</li>
-                <li><b>Clean Sheet:</b> +5 Points (GK/DEF only)</li>
-            </ul>
-        </div>
-    </div>
+    <h2>Official Rules</h2>
+    <ul>
+        <li><b>Formation:</b> 1 GK, 6 DEF, 2 MID, 6 FWD</li>
+        <li><b>Bench:</b> 3 Subs (assigned automatically)</li>
+        <li><b>Budget:</b> 50.0m | <b>Limit:</b> Max 2 per county</li>
+    </ul>
 </div>
 
 <div id="leaderboard" class="tab-content panel" style="display:none;">
     <h2>League Standings</h2>
     <div class="scroll-box">
         <table>
-            <thead><tr><th>Rank</th><th>Manager</th><th>Team</th><th>Total Pts</th></tr></thead>
-            <tbody id="leaderboard-body">
-                <tr><td colspan="4" style="text-align:center;">Loading standings...</td></tr>
-            </tbody>
+            <thead><tr><th>Rank</th><th>Manager</th><th>Team</th><th>Pts</th></tr></thead>
+            <tbody id="leaderboard-body"><tr><td colspan="4" style="text-align:center;">Loading...</td></tr></tbody>
         </table>
     </div>
 </div>
@@ -76,10 +59,9 @@
     <div class="main-layout">
         <div class="panel">
             <div style="display:flex; gap:10px; margin-bottom:20px;">
-                <input type="text" id="searchName" placeholder="Search Player..." onkeyup="applyFilters()" style="flex:2; padding:10px;">
-                <select id="filterCounty" onchange="applyFilters()" style="flex:1;"><option value="">All Counties</option></select>
+                <input type="text" id="searchName" placeholder="Search Player..." onkeyup="applyFilters()" style="flex:2;">
                 <select id="filterPos" onchange="applyFilters()" style="flex:1;">
-                    <option value="">All Positions</option>
+                    <option value="">All Pos</option>
                     <option value="GK">GK</option><option value="DEF">DEF</option>
                     <option value="MID">MID</option><option value="FWD">FWD</option>
                 </select>
@@ -97,12 +79,11 @@
                 <div>GK: 0/1</div><div>DEF: 0/6</div><div>MID: 0/2</div>
                 <div>FWD: 0/6</div><div style="color:var(--orange)">SUBS: 0/3</div>
             </div>
-            <div style="margin-bottom:20px; font-weight:bold; font-size:1.1em;">
+            <div style="margin-bottom:15px; font-weight:bold;">
                 Budget: <span id="budget-val">50.0</span>m | Total: <span id="count-val">0</span>/18
             </div>
             <div id="squad-list"></div>
             <button class="btn-add" style="width:100%; margin-top:10px; background:#666;" onclick="resetSquad()">Reset Squad</button>
-
             <div id="submission-form" style="display:none; margin-top:20px; border-top: 2px solid #eee; padding-top:15px;">
                 <input type="text" id="mgr-name" placeholder="Manager Name" style="width:90%; padding:10px; margin-bottom:10px;">
                 <input type="text" id="team-name" placeholder="Team Name" style="width:90%; padding:10px; margin-bottom:10px;">
@@ -114,8 +95,9 @@
 
 <script>
     const SHEET_ID = '1vTcdzjZ4zYlGgFe5acS8xOb1vHR9b8i98UudIOe-iC9Z1d6x6AY5zATgX217cNjcNtAGDLJ56y8Jr8N';
+    // The "t=" parameter forces a fresh download every time the page loads
     const playersUrl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&t=${Date.now()}`;
-    const leaderboardUrl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=Leaderboard`;
+    const leaderboardUrl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=Leaderboard&t=${Date.now()}`;
     const scriptURL = 'https://script.google.com/macros/s/AKfycbyVpULAmK_3FrHRSod9UUqnhQ2uR0pCGOXbKOWdVjJLgtp-bU5zHbEFqWSKKiXpTK8sZw/exec';
 
     let state = { budget: 50.0, squad: [] };
@@ -123,15 +105,19 @@
     const LIMITS = { GK: 1, DEF: 6, MID: 2, FWD: 6, SUB: 3 };
 
     async function init() {
-        loadPlayers();
-        loadLeaderboard();
+        await loadPlayers();
+        await loadLeaderboard();
     }
 
     async function loadPlayers() {
+        const body = document.getElementById('market-body');
+        body.innerHTML = '<tr><td colspan="4" style="text-align:center;">🔄 Loading Players...</td></tr>';
+        
         try {
             const res = await fetch(playersUrl);
             const text = await res.text();
             const rows = text.split(/\r?\n/).slice(1);
+            
             masterData = rows.map(r => {
                 const c = r.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
                 if(c.length < 11) return null;
@@ -144,10 +130,10 @@
                 };
             }).filter(p => p && p.name.length > 2);
 
-            const counties = [...new Set(masterData.map(p => p.county))].sort();
-            counties.forEach(cty => document.getElementById('filterCounty').add(new Option(cty, cty)));
             renderMarket(masterData);
-        } catch (e) { console.error("Error loading players"); }
+        } catch (e) { 
+            body.innerHTML = '<tr><td colspan="4" style="color:red;text-align:center;">⚠️ Connection Error. Please refresh.</td></tr>';
+        }
     }
 
     async function loadLeaderboard() {
@@ -159,8 +145,8 @@
                 const c = r.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
                 return `<tr><td>${i+1}</td><td>${c[0]}</td><td>${c[1]}</td><td><b>${c[2]}</b></td></tr>`;
             }).join('');
-            document.getElementById('leaderboard-body').innerHTML = html || '<tr><td colspan="4">No standings yet.</td></tr>';
-        } catch (e) { document.getElementById('leaderboard-body').innerHTML = '<tr><td colspan="4">Standings temporarily unavailable.</td></tr>'; }
+            document.getElementById('leaderboard-body').innerHTML = html || '<tr><td colspan="4">No data.</td></tr>';
+        } catch (e) { document.getElementById('leaderboard-body').innerHTML = '<tr><td colspan="4">Standings hidden.</td></tr>'; }
     }
 
     function showTab(tabId) {
@@ -172,16 +158,15 @@
 
     function applyFilters() {
         const n = document.getElementById('searchName').value.toLowerCase();
-        const c = document.getElementById('filterCounty').value;
         const p = document.getElementById('filterPos').value;
-        const filtered = masterData.filter(i => (i.name.toLowerCase().includes(n)) && (c === "" || i.county === c) && (p === "" || i.pos.includes(p)));
+        const filtered = masterData.filter(i => (i.name.toLowerCase().includes(n)) && (p === "" || i.pos.includes(p)));
         renderMarket(filtered);
     }
 
     function renderMarket(data) {
         document.getElementById('market-body').innerHTML = data.map(p => `
             <tr>
-                <td><b>${p.name}</b><br><small>${p.county} (${p.pos})</small></td>
+                <td><b>${p.name}</b><br><small>${p.county}</small></td>
                 <td>${p.totalPts}</td>
                 <td>${p.price.toFixed(1)}m</td>
                 <td><button class="btn-add" onclick="addPlayer('${p.name.replace(/'/g, "\\'")}', '${p.county}', '${p.pos}', ${p.price})">ADD</button></td>
@@ -190,61 +175,16 @@
     }
 
     function addPlayer(name, county, pos, price) {
-        if (state.squad.length >= 18) return alert("Squad full!");
-        if (state.budget < price) return alert("Over budget!");
+        if (state.squad.length >= 18) return alert("Full!");
+        if (state.budget < price) return alert("No budget!");
         if (state.squad.filter(p => p.county === county).length >= 2) return alert(`Max 2 from ${county}`);
 
         const currentPosCount = state.squad.filter(p => p.role === pos).length;
         const subCount = state.squad.filter(p => p.role === 'SUB').length;
 
         let role = (currentPosCount < LIMITS[pos]) ? pos : (subCount < LIMITS.SUB ? 'SUB' : null);
-        if (!role) return alert(`Slots for ${pos} and Subs are full.`);
+        if (!role) return alert(`Slots full.`);
 
         state.squad.push({name, county, pos, price, role});
         state.budget -= price;
-        updateUI();
-    }
-
-    function removePlayer(i) {
-        state.budget += state.squad[i].price;
-        state.squad.splice(i, 1);
-        updateUI();
-    }
-
-    function resetSquad() { state.squad = []; state.budget = 50.0; updateUI(); }
-
-    function updateUI() {
-        document.getElementById('budget-val').innerText = state.budget.toFixed(1);
-        document.getElementById('count-val').innerText = state.squad.length;
-        const counts = { GK: 0, DEF: 0, MID: 0, FWD: 0, SUB: 0 };
-        state.squad.forEach(p => counts[p.role]++);
-        
-        document.getElementById('pos-tracker').innerHTML = 
-            `<div>GK: ${counts.GK}/1</div><div>DEF: ${counts.DEF}/6</div><div>MID: ${counts.MID}/2</div>
-             <div>FWD: ${counts.FWD}/6</div><div>SUBS: ${counts.SUB}/3</div>`;
-
-        document.getElementById('squad-list').innerHTML = state.squad.map((p, i) => `
-            <div class="squad-slot">
-                <span>${p.role === 'SUB' ? '<span class="sub-tag">SUB</span>' : ''}<b>${p.pos}</b>: ${p.name}</span>
-                <span onclick="removePlayer(${i})" style="color:red; cursor:pointer; font-weight:bold;">×</span>
-            </div>
-        `).join('') || '<p style="text-align:center; color:#999;">Start adding players...</p>';
-        
-        const ok = (counts.GK===1 && counts.DEF===6 && counts.MID===2 && counts.FWD===6 && counts.SUB===3);
-        document.getElementById('submission-form').style.display = ok ? 'block' : 'none';
-    }
-
-    async function sendTeam() {
-        const m = document.getElementById('mgr-name').value;
-        const t = document.getElementById('team-name').value;
-        if(!m || !t) return alert("Enter names!");
-        const params = new URLSearchParams({ managerName: m, teamName: t, squadList: state.squad.map(p => `${p.name} (${p.role})`).join(', ') });
-        await fetch(scriptURL, { method: 'POST', mode: 'no-cors', body: params });
-        alert("Squad Submitted!");
-        location.reload();
-    }
-
-    init();
-</script>
-</body>
-</html>
+        updateUI
