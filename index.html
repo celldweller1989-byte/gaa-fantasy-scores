@@ -182,4 +182,38 @@
         btn.disabled = true;
         btn.innerText = "SAVING TEAM...";
 
-        const squadString =
+        const squadString = state.squad.map(p => p.name).join(', ');
+
+        const params = new URLSearchParams();
+        params.append('managerName', mName);
+        params.append('teamName', tName);
+        params.append('squadList', squadString);
+
+        try {
+            await fetch(scriptURL, {
+                method: 'POST',
+                mode: 'no-cors',
+                body: params
+            });
+
+            alert("SUCCESS! Your team has been saved to the Orchard Fans Database.");
+            window.location.reload();
+        } catch (e) {
+            alert("Error connecting to Google Sheets. Please try again.");
+            btn.disabled = false;
+            btn.innerText = "SUBMIT SQUAD";
+        }
+    }
+
+    function filterTable() {
+        const term = document.getElementById('playerSearch').value.toLowerCase();
+        const rows = document.querySelectorAll('#market-body tr');
+        rows.forEach(row => {
+            row.style.display = row.getAttribute('data-search').includes(term) ? '' : 'none';
+        });
+    }
+
+    init();
+</script>
+</body>
+</html>
