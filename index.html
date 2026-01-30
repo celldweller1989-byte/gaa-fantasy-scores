@@ -22,6 +22,7 @@
         .squad-slot { display: flex; justify-content: space-between; background: #f9f9f9; padding: 10px; margin-bottom: 8px; border-radius: 5px; border-left: 4px solid var(--orange); }
         .btn-add { background: var(--orange); color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; }
         .pos-tracker { font-size: 0.8em; color: #555; background: #eee; padding: 10px; border-radius: 5px; margin-bottom: 10px; line-height: 1.6; }
+        .sub-tag { background: #6c757d; color: white; padding: 2px 5px; border-radius: 3px; font-size: 0.8em; margin-right: 5px; }
         @media (max-width: 850px) { .main-layout { grid-template-columns: 1fr; } }
     </style>
 </head>
@@ -40,7 +41,8 @@
 <div id="rules" class="tab-content panel" style="display:none;">
     <h3>Official Rules</h3>
     <ul>
-        <li><strong>Squad Composition:</strong> 1 GK, 6 DEF, 2 MID, 6 FWD, 3 Subs (Total 18).</li>
+        <li><strong>Squad Composition:</strong> 1 GK, 6 DEF, 2 MID, 5 FWD + 4 Subs (Total 18).</li>
+        <li><strong>Automatic Subs:</strong> If you pick more than the allotted players for a position, they are automatically moved to the bench.</li>
         <li><strong>Budget:</strong> 50.0m.</li>
         <li><strong>County Limit:</strong> Max 2 players per county.</li>
         <li><strong>Scoring:</strong> Goal (+3), Point (+1), Clean Sheet (+5 for GK/DEF), Yellow (-2), Red (-5).</li>
@@ -83,7 +85,7 @@
         <div class="panel">
             <h3>Your Squad</h3>
             <div class="pos-tracker" id="pos-tracker">
-                GK: 0/1 | DEF: 0/6 | MID: 0/2 | FWD: 0/6 | SUB: 0/3
+                GK: 0/1 | DEF: 0/6 | MID: 0/2 | FWD: 0/5 | SUB: 0/4
             </div>
             <div style="margin-bottom:10px; font-weight:bold;">
                 💰 Budget: <span id="budget-val">50.0</span>m | 🏃 Total: <span id="count-val">0</span>/18
@@ -105,7 +107,7 @@
     let state = { budget: 50.0, squad: [] };
     let masterData = [];
 
-    const LIMITS = { GK: 1, DEF: 6, MID: 2, FWD: 6, SUB: 3 };
+    const LIMITS = { GK: 1, DEF: 6, MID: 2, FWD: 5, SUB: 4 };
 
     async function init() {
         try {
@@ -134,89 +136,4 @@
     function showTab(tabId) {
         document.querySelectorAll('.tab-content').forEach(t => t.style.display = 'none');
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        document.getElementById(tabId).style.display = 'block';
-        event.target.classList.add('active');
-    }
-
-    function applyFilters() {
-        const n = document.getElementById('searchName').value.toLowerCase();
-        const c = document.getElementById('filterCounty').value;
-        const p = document.getElementById('filterPos').value;
-        const filtered = masterData.filter(i => (i.name.toLowerCase().includes(n)) && (c === "" || i.county === c) && (p === "" || i.pos.includes(p)));
-        renderMarket(filtered);
-    }
-
-    function renderMarket(data) {
-        document.getElementById('market-body').innerHTML = data.map(p => `
-            <tr>
-                <td><b>${p.name}</b><br><small>${p.county} (${p.pos})</small></td>
-                <td>G:${p.goals} P:${p.pts}</td>
-                <td>${p.price.toFixed(1)}m</td>
-                <td><button class="btn-add" onclick="addPlayer('${p.name.replace(/'/g, "\\'")}', '${p.county}', '${p.pos}', ${p.price})">ADD</button></td>
-            </tr>
-        `).join('');
-    }
-
-    function addPlayer(name, county, pos, price) {
-        const currentPosCount = state.squad.filter(p => p.pos === pos).length;
-        const subCount = state.squad.filter(p => p.pos === 'SUB').length;
-
-        // Validation Logic
-        if (state.budget < price) return alert("No budget!");
-        const countyCount = state.squad.filter(p => p.county === county).length;
-        if (countyCount >= 2) return alert(`Max 2 players from ${county}.`);
-
-        // Check if slot available in main pos, if not, try SUB slot
-        if (currentPosCount < LIMITS[pos]) {
-            state.squad.push({name, county, pos, price, role: pos});
-        } else if (subCount < LIMITS.SUB) {
-            state.squad.push({name, county, pos, price, role: 'SUB'});
-        } else {
-            return alert(`No slots left for ${pos} (including Subs).`);
-        }
-
-        state.budget -= price;
-        updateUI();
-    }
-
-    function removePlayer(i) {
-        state.budget += state.squad[i].price;
-        state.squad.splice(i, 1);
-        updateUI();
-    }
-
-    function updateUI() {
-        document.getElementById('budget-val').innerText = state.budget.toFixed(1);
-        document.getElementById('count-val').innerText = state.squad.length;
-        
-        // Update Tracker
-        const counts = { GK: 0, DEF: 0, MID: 0, FWD: 0, SUB: 0 };
-        state.squad.forEach(p => counts[p.role]++);
-        document.getElementById('pos-tracker').innerText = 
-            `GK: ${counts.GK}/1 | DEF: ${counts.DEF}/6 | MID: ${counts.MID}/2 | FWD: ${counts.FWD}/6 | SUB: ${counts.SUB}/3`;
-
-        document.getElementById('squad-list').innerHTML = state.squad.map((p, i) => `
-            <div class="squad-slot">
-                <span><b>${p.role === 'SUB' ? 'SUB ('+p.pos+')' : p.pos}</b>: ${p.name}</span>
-                <span onclick="removePlayer(${i})" style="color:red; cursor:pointer; font-weight:bold;">✖</span>
-            </div>
-        `).join('') || '<p style="text-align:center;color:#888;">Select 18 players</p>';
-        
-        const complete = counts.GK===1 && counts.DEF===6 && counts.MID===2 && counts.FWD===6 && counts.SUB===3;
-        document.getElementById('submission-form').style.display = complete ? 'block' : 'none';
-    }
-
-    async function sendTeam() {
-        const m = document.getElementById('mgr-name').value.trim();
-        const t = document.getElementById('team-name').value.trim();
-        if(!m || !t) return alert("Enter names!");
-        const params = new URLSearchParams({ managerName: m, teamName: t, squadList: state.squad.map(p => `${p.name} (${p.role})`).join(', ') });
-        await fetch(scriptURL, { method: 'POST', mode: 'no-cors', body: params });
-        alert("Team Submitted!");
-        location.reload();
-    }
-
-    init();
-</script>
-</body>
-</html>
+        document.getElementById(
