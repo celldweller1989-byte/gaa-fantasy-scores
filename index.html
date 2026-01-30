@@ -7,192 +7,30 @@
     <style>
         :root { --orange: #f37021; --dark: #1a1a1a; --cream: #f4f1de; --white: #ffffff; --green: #28a745; --red: #dc3545; --grey: #777; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--cream); margin: 0; padding: 0; color: var(--dark); }
-        .header { background: var(--orange); color: white; padding: 20px; text-align: center; }
-        nav { display: flex; justify-content: center; background: var(--dark); position: sticky; top: 0; z-index: 100; }
-        .nav-link { color: white; padding: 15px 20px; text-decoration: none; font-weight: bold; cursor: pointer; border: none; background: none; font-size: 13px; }
+        
+        .header { background: var(--orange); color: white; padding: 20px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+        nav { display: flex; justify-content: center; background: var(--dark); position: sticky; top: 0; z-index: 100; flex-wrap: wrap; }
+        .nav-link { color: white; padding: 15px 20px; text-decoration: none; font-weight: bold; cursor: pointer; transition: 0.3s; border: none; background: none; font-size: 13px; text-transform: uppercase; }
+        .nav-link:hover { background: #333; }
         .nav-link.active { background: var(--orange); }
+
         .container { padding: 15px; max-width: 1300px; margin: auto; }
         .main-layout { display: grid; grid-template-columns: 1fr 360px; gap: 20px; }
         .panel { background: var(--white); border-radius: 8px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 20px; }
+
+        /* Deadline Banner */
         #deadline-notice { padding: 10px; text-align: center; font-weight: bold; border-radius: 5px; margin-bottom: 15px; }
-        .open { background: #d4edda; color: #155724; }
-        .closed { background: #f8d7da; color: #721c24; }
-        .scroll-box { max-height: 600px; overflow-y: auto; border: 1px solid #eee; }
+        .open { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .closed { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+
+        .filter-bar { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; align-items: center; }
+        .filter-item { flex: 1; min-width: 150px; }
+        select, input { padding: 10px; border-radius: 6px; border: 2px solid var(--orange); width: 100%; height: 45px; box-sizing: border-box; font-size: 14px; outline: none; }
+        
+        .scroll-box { max-height: 650px; overflow-y: auto; border: 1px solid #eee; border-radius: 5px; background: #fff; }
         table { width: 100%; border-collapse: collapse; }
-        th { position: sticky; top: 0; background: #f8f8f8; padding: 12px; font-size: 10px; border-bottom: 2px solid #ddd; }
-        td { padding: 12px; border-bottom: 1px solid #eee; font-size: 13px; }
-        .stats-subtle { font-size: 11px; color: var(--grey); display: block; }
-        .val-up { color: var(--green); font-size: 10px; font-weight: bold; }
-        .val-down { color: var(--red); font-size: 10px; font-weight: bold; }
-        .btn-group { display: flex; gap: 2px; }
-        .btn-pos { border: 1px solid var(--orange); background: white; color: var(--orange); padding: 4px; border-radius: 4px; font-size: 9px; cursor: pointer; flex: 1; }
-        .btn-pos.pref-pos { background: #fff3cd; border: 2px solid var(--orange); }
-        .btn-pos:disabled { opacity: 0.3; }
-        .pos-tracker { font-size: 11px; background: #fff3cd; padding: 10px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; margin-bottom: 10px; }
-        .squad-slot { display: flex; justify-content: space-between; padding: 8px; border-bottom: 1px solid #eee; font-size: 12px; }
-        .submit-btn { background: var(--green); color: white; padding: 15px; width: 100%; border: none; font-weight: bold; cursor: pointer; margin-top: 10px; border-radius: 4px; }
-        #submission-output { white-space: pre-wrap; background: #f0f0f0; padding: 10px; margin-top: 10px; font-size: 11px; display: none; }
-        .hidden { display: none; }
-    </style>
-</head>
-<body>
+        th { position: sticky; top: 0; background: #f8f8f8; padding: 12px; text-align: left; font-size: 10px; border-bottom: 2px solid #ddd; z-index: 5; text-transform: uppercase; }
+        td { padding: 12px; border-bottom: 1px solid #eee; font-size: 13px; vertical-align: top; }
 
-<div class="header"><h1>ORCHARD FANS FANTASY GAA</h1></div>
-<nav>
-    <button class="nav-link active" onclick="showPage('market')">MARKET</button>
-    <button class="nav-link" onclick="showPage('rules')">RULES</button>
-</nav>
-
-<div class="container">
-    <div id="deadline-notice">Checking Market Status...</div>
-
-    <div id="page-market" class="page">
-        <div class="main-layout">
-            <div class="panel">
-                <input type="text" id="searchName" placeholder="Search Player..." onkeyup="applyFilters()" style="width:100%; padding:10px; margin-bottom:10px;">
-                <div class="scroll-box">
-                    <table id="market-table">
-                        <thead><tr><th>Player</th><th>Pts</th><th>Value</th><th>Assign</th></tr></thead>
-                        <tbody id="market-body"></tbody>
-                    </table>
-                </div>
-            </div>
-
-            <div class="panel">
-                <h3 style="margin-top:0;">Your Squad</h3>
-                <input type="text" id="userName" placeholder="Enter Your Name" style="width:100%; padding:10px; margin-bottom:10px; border: 1px solid #ccc;">
-                <div class="pos-tracker" id="pos-tracker"></div>
-                <div style="font-weight:bold; margin-bottom:10px;">Budget: <span id="budget-val">100.0</span>m</div>
-                <div id="squad-list"></div>
-                <button id="submitTeamBtn" class="submit-btn" onclick="submitSquad()">SUBMIT TO GOOGLE SHEET</button>
-                <div id="submission-output"></div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<script>
-    // --- CONFIGURATION ---
-    const SCORERS_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTcdzjZ4zYlGgFe5acS8xOb1vHR9b8i98UudIOe-iC9Z1d6x6AY5zATgX217cNjcNtAGDLJ56y8Jr8N/pub?output=csv';
-    const GOOGLE_SCRIPT_URL = 'PASTE_YOUR_WEB_APP_URL_HERE'; 
-
-    let allPlayers = [];
-    let state = { budget: 100.0, squad: [] };
-    const LIMITS = { GK: 1, DEF: 6, MID: 2, FWD: 6, SUB: 3 };
-    let isMarketOpen = true;
-
-    async function init() {
-        checkDeadline();
-        try {
-            const res = await fetch(SCORERS_URL + '&t=' + new Date().getTime());
-            const text = await res.text();
-            processData(text);
-            loadSaved();
-        } catch (e) { console.error("Load error"); }
-    }
-
-    function checkDeadline() {
-        const now = new Date();
-        const day = now.getDay(), hr = now.getHours();
-        const closed = (day === 5 && hr >= 19) || (day === 6) || (day === 0) || (day === 1 && hr < 13);
-        const banner = document.getElementById('deadline-notice');
-        isMarketOpen = !closed;
-        banner.innerText = isMarketOpen ? "MARKET OPEN (Closes Fri 7pm)" : "MARKET CLOSED (Opens Mon 1pm)";
-        banner.className = isMarketOpen ? "open" : "closed";
-    }
-
-    function processData(csv) {
-        const rows = csv.split('\n').slice(1);
-        allPlayers = rows.map((r, i) => {
-            const c = r.split(',');
-            if (!c[0]) return null;
-            let posRaw = (c[3]||"").trim().toUpperCase();
-            let pref = "FWD";
-            if (posRaw.includes("GK") || posRaw === "1") pref = "GK";
-            else if (posRaw.includes("DEF") || (parseInt(posRaw) >= 2 && parseInt(posRaw) <= 7)) pref = "DEF";
-            else if (posRaw.includes("MID") || (parseInt(posRaw) >= 8 && parseInt(posRaw) <= 9)) pref = "MID";
-            
-            let pts = parseInt(c[8]) || 0;
-            let price = (pref === "GK" ? 4.5 : 5.5) + (pts / 20);
-            
-            return { id: i.toString(), name: c[1]+" "+c[2], county: c[0], preferred: pref, pts, price, result: (c[9]||"").toLowerCase() };
-        }).filter(x => x);
-        applyFilters();
-    }
-
-    function renderMarket(data) {
-        const squadIds = state.squad.map(s => s.id);
-        document.getElementById('market-body').innerHTML = data.filter(p => !squadIds.includes(p.id)).map(p => `
-            <tr>
-                <td><b>${p.name}</b> <small>(${p.county})</small></td>
-                <td>${p.pts}</td>
-                <td>${p.price.toFixed(1)}m</td>
-                <td>
-                    <div class="btn-group">
-                        ${['GK','DEF','MID','FWD','SUB'].map(role => `
-                            <button class="btn-pos ${p.preferred === role ? 'pref-pos' : ''}" 
-                                ${!isMarketOpen ? 'disabled' : ''} 
-                                onclick="addPlayer('${p.id}', '${role}')">${role}</button>
-                        `).join('')}
-                    </div>
-                </td>
-            </tr>`).join('');
-    }
-
-    function addPlayer(id, role) {
-        const p = allPlayers.find(x => x.id === id);
-        if (state.squad.length >= 18 || state.budget < p.price) return alert("Check Budget/Size");
-        if (state.squad.filter(x => x.role === role).length >= LIMITS[role]) return alert("Role full");
-        state.squad.push({...p, role});
-        state.budget -= p.price;
-        updateUI();
-    }
-
-    function removePlayer(idx) {
-        if (!isMarketOpen) return;
-        state.budget += state.squad[idx].price;
-        state.squad.splice(idx, 1);
-        updateUI();
-    }
-
-    async function submitSquad() {
-        const name = document.getElementById('userName').value;
-        if (!name || state.squad.length < 18) return alert("Enter name and select 18 players.");
-
-        const payload = {
-            userName: name,
-            budget: state.budget.toFixed(1),
-            squadCode: btoa(state.squad.map(s => s.id).join(',')),
-            squadList: state.squad.map(s => `[${s.role}] ${s.name}`).join(', ')
-        };
-
-        const btn = document.getElementById('submitTeamBtn');
-        btn.disabled = true; btn.innerText = "SAVING...";
-
-        try {
-            await fetch(GOOGLE_SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) });
-            localStorage.setItem('fantasySquad', JSON.stringify(state.squad));
-            document.getElementById('submission-output').style.display = 'block';
-            document.getElementById('submission-output').innerText = "Team Submitted to Spreadsheet!";
-            alert("Success!");
-        } catch (e) { alert("Save failed."); }
-        btn.disabled = false; btn.innerText = "SUBMIT TO GOOGLE SHEET";
-    }
-
-    function updateUI() {
-        document.getElementById('budget-val').innerText = state.budget.toFixed(1);
-        document.getElementById('squad-list').innerHTML = state.squad.map((p, i) => `
-            <div class="squad-slot"><span><b>[${p.role}]</b> ${p.name}</span>
-            <span style="cursor:pointer;color:red" onclick="removePlayer(${i})">×</span></div>`).join('');
-        applyFilters();
-    }
-
-    function applyFilters() { renderMarket(allPlayers); }
-    function loadSaved() {
-        const s = localStorage.getItem('fantasySquad');
-        if (s) { state.squad = JSON.parse(s); updateUI(); }
-    }
-    init();
-</script>
-</body>
-</html>
+        .player-info b { color: var(--dark); font-size: 14px; }
+        .stats-subtle { font-size:
