@@ -24,16 +24,17 @@
         th { position: sticky; top: 0; background: #f8f8f8; padding: 12px; text-align: left; font-size: 10px; border-bottom: 2px solid #ddd; z-index: 5; }
         td { padding: 12px; border-bottom: 1px solid #eee; font-size: 13px; vertical-align: middle; }
         
+        /* Tooltip Logic */
+        .player-cell { display: flex; align-items: center; position: relative; cursor: help; }
+        .tooltip { visibility: hidden; width: 180px; background-color: var(--dark); color: #fff; text-align: left; border-radius: 6px; padding: 10px; position: absolute; z-index: 100; bottom: 125%; left: 10%; opacity: 0; transition: opacity 0.3s; box-shadow: 0 4px 15px rgba(0,0,0,0.3); font-size: 11px; line-height: 1.4; }
+        .tooltip::after { content: ""; position: absolute; top: 100%; left: 20%; margin-left: -5px; border-width: 5px; border-style: solid; border-color: var(--dark) transparent transparent transparent; }
+        .player-cell:hover .tooltip { visibility: visible; opacity: 1; }
+
         .county-badge { width: 35px; height: 35px; object-fit: contain; margin-right: 12px; }
-        .player-cell { display: flex; align-items: center; }
-        .stats-text { font-size: 11px; color: var(--grey); margin-top: 2px; }
-        
-        /* Result Badges */
         .result-badge { font-size: 9px; font-weight: bold; padding: 2px 5px; border-radius: 4px; display: inline-block; margin-top: 4px; border: 1px solid #ddd; }
         .res-win { background: #d4edda; color: #155724; }
         .res-loss { background: #f8d7da; color: #721c24; }
         
-        /* Value/Points Indicators */
         .trend-up { color: var(--green); font-weight: bold; }
         .trend-down { color: var(--red); font-weight: bold; }
 
@@ -76,7 +77,7 @@
                     <table>
                         <thead>
                             <tr>
-                                <th>Player Info</th>
+                                <th>Player Info (Hover for Stats)</th>
                                 <th>Total Pts</th>
                                 <th>Market Value</th>
                                 <th style="width: 180px;">Assign Position</th>
@@ -145,7 +146,6 @@
             
             let totalPts = rawPts + bonus - deduction;
             let price = 5.5 + (totalPts * 0.05);
-            let preferredPos = (col[3] || "").trim().toUpperCase();
 
             counties.add(col[0].trim());
 
@@ -153,13 +153,12 @@
                 id: i,
                 county: col[0].trim(),
                 name: (col[1] + " " + col[2]).trim(),
-                prefPos: preferredPos,
+                prefPos: (col[3] || "").trim().toUpperCase(),
                 badge: getDirectImg(col[14]), 
                 totalPts: totalPts,
                 price: Math.max(3.0, price),
                 result: displayResult,
-                isPositive: (bonus - deduction) >= 0,
-                stats: `G: ${col[4]||0} | 1pt: ${col[11]||0} | 2pt: ${col[12]||0}`
+                statsHTML: `<strong>${col[0].trim()}</strong><br>Goals: ${col[4]||0}<br>1-pt: ${col[11]||0}<br>2-pt: ${col[12]||0}`
             });
         }
         
@@ -190,10 +189,8 @@
 
     function renderMarket(data) {
         document.getElementById('market-body').innerHTML = data.map(p => {
-            const ptClass = p.totalPts >= 0 ? 'trend-up' : 'trend-down';
             const ptSymbol = p.totalPts >= 0 ? '▲' : '▼';
             const priceSymbol = p.price > 5.5 ? '▲' : (p.price < 5.5 ? '▼' : '');
-            const priceClass = p.price > 5.5 ? 'trend-up' : (p.price < 5.5 ? 'trend-down' : '');
             const resClass = p.result.includes('WIN') ? 'res-win' : 'res-loss';
 
             return `
@@ -203,13 +200,13 @@
                         <img src="${p.badge}" class="county-badge" onerror="this.src='https://ui-avatars.com/api/?name=${p.county[0]}&background=f37021&color=fff'">
                         <div>
                             <b>${p.name}</b><br>
-                            <div class="stats-text">${p.stats}</div>
                             <span class="result-badge ${resClass}">${p.result || 'N/A'}</span>
                         </div>
+                        <div class="tooltip">${p.statsHTML}</div>
                     </div>
                 </td>
-                <td><span class="${ptClass}">${ptSymbol} ${p.totalPts}</span></td>
-                <td><span class="${priceClass}">${priceSymbol} ${p.price.toFixed(2)}m</span></td>
+                <td><span class="${p.totalPts >= 0 ? 'trend-up' : 'trend-down'}">${ptSymbol} ${p.totalPts}</span></td>
+                <td><span class="${p.price > 5.5 ? 'trend-up' : 'trend-down'}">${priceSymbol} ${p.price.toFixed(2)}m</span></td>
                 <td>
                     <div class="btn-group">
                         <button class="btn-pos ${p.prefPos==='GK'?'btn-pref':''}" onclick="addPlayer(${p.id}, 'GK')">GK</button>
