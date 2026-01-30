@@ -31,11 +31,12 @@
         .val-up { color: var(--green); }
         .val-down { color: var(--red); }
 
-        .result-badge { font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 4px; display: inline-block; margin-top: 6px; }
+        .result-badge { font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 4px; display: inline-block; margin-top: 6px; margin-right: 4px; }
         .badge-hwin { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
         .badge-win { background: #e8f5e9; color: var(--green); border: 1px solid var(--green); }
         .badge-loss { background: #ffebee; color: var(--red); border: 1px solid var(--red); }
         .badge-hloss { background: #721c24; color: white; border: 1px solid #f5c6cb; }
+        .badge-red { background: #dc3545; color: white; border: 1px solid #a71d2a; }
 
         .btn-group { display: flex; gap: 3px; }
         .btn-pos { border: 1px solid var(--orange); background: white; color: var(--orange); padding: 5px 2px; border-radius: 4px; font-size: 9px; font-weight: bold; cursor: pointer; flex: 1; }
@@ -60,16 +61,15 @@
 </nav>
 
 <div class="container">
-    
     <div id="page-rules" class="page hidden">
         <div class="panel">
             <h2>Rules & Value Scoring</h2>
             <ul>
                 <li><b>Base Price:</b> GKs 4.5m | Others 5.5m</li>
+                <li><b>Red Card Penalty:</b> -5 Pts and -0.25m Market Value.</li>
                 <li><b>Loss Deduction:</b> -2 Pts | <b>Heavy Loss:</b> -5 Pts</li>
                 <li><b>Value Formula:</b> Every point adds/removes 0.05m.</li>
                 <li><b>Market Drop:</b> Extra -0.2m decrease for every 3pt team deduction.</li>
-                <li><i>Example: -4 Total Pts results in a 5.3m Market Value.</i></li>
             </ul>
         </div>
     </div>
@@ -88,7 +88,7 @@
                     </div>
                 </div>
                 <div class="scroll-box">
-                    <div id="loading-market" class="loading">Syncing Player Roles & Market Values...</div>
+                    <div id="loading-market" class="loading">Syncing Player Stats...</div>
                     <table id="market-table" class="hidden">
                         <thead><tr><th>Player & Stats</th><th>Pts</th><th>Value</th><th>Assign Slot</th></tr></thead>
                         <tbody id="market-body"></tbody>
@@ -141,6 +141,7 @@
             let posRaw = (col[3] || "").trim().toUpperCase();
             let rawPts = parseInt(col[8]) || 0;
             let result = (col[9] || "").trim().toLowerCase();
+            let hasRedCard = (col[7] || "").trim() === "1"; // Column H: Red Card
             
             // 1. Determine Position
             let preferred = "FWD"; 
@@ -148,24 +149,24 @@
             else if (posRaw.includes("DEF") || (parseInt(posRaw) >= 2 && parseInt(posRaw) <= 7)) preferred = "DEF";
             else if (posRaw.includes("MID") || (parseInt(posRaw) >= 8 && parseInt(posRaw) <= 9)) preferred = "MID";
 
-            // 2. Action Point Deductions (-2 for loss, -5 for heavy loss)
-            let deduction = 0;
-            if (result === "loss") deduction = 2;
-            else if (result === "heavy loss") deduction = 5;
+            // 2. Point Deductions
+            let teamDeduction = 0;
+            if (result === "loss") teamDeduction = 2;
+            else if (result === "heavy loss") teamDeduction = 5;
 
-            let adjustedPts = rawPts - deduction;
+            let redCardDeduction = hasRedCard ? 5 : 0;
+            let adjustedPts = rawPts - teamDeduction - redCardDeduction;
             
             // 3. Set Base Price
             let basePrice = (preferred === "GK") ? 4.5 : 5.5;
             
-            // 4. Action Market Drop Penalty (-0.2m for every 3 point team deduction)
-            let marketPenalty = Math.floor(deduction / 3) * 0.2;
+            // 4. Market Drop Penalties
+            // -0.2m for every 3pt team deduction
+            let marketPenalty = Math.floor(teamDeduction / 3) * 0.2;
             
             // 5. Final Value Calculation
-            // Logic: 5.5 + (-4 * 0.05) - 0 = 5.3m
+            // Base + (Adjusted Pts * 0.05) - Market Penalty
             let currentPrice = basePrice + (adjustedPts * 0.05) - marketPenalty;
-            
-            // Floor price at 3.0m so players don't become free
             currentPrice = Math.max(3.0, currentPrice);
 
             allPlayers.push({
@@ -175,6 +176,7 @@
                 preferred: preferred,
                 totalPts: adjustedPts,
                 result: result,
+                redCard: hasRedCard,
                 price: currentPrice,
                 change: currentPrice - basePrice,
                 stats: `G:${col[4]||0} | 1p:${col[11]||0} | 2p:${col[12]||0} | CS:${col[6]||0}`
@@ -211,11 +213,13 @@
 
     function renderMarket(data) {
         document.getElementById('market-body').innerHTML = data.map(p => {
-            let resBadge = "";
-            if (p.result === "heavy win") resBadge = `<span class="result-badge badge-hwin">Heavy Win (+5)</span>`;
-            else if (p.result === "win") resBadge = `<span class="result-badge badge-win">Win (+2)</span>`;
-            else if (p.result === "loss") resBadge = `<span class="result-badge badge-loss">Loss (-2)</span>`;
-            else if (p.result === "heavy loss") resBadge = `<span class="result-badge badge-hloss">Heavy Loss (-5)</span>`;
+            let badges = "";
+            if (p.result === "heavy win") badges += `<span class="result-badge badge-hwin">Heavy Win (+5)</span>`;
+            else if (p.result === "win") badges += `<span class="result-badge badge-win">Win (+2)</span>`;
+            else if (p.result === "loss") badges += `<span class="result-badge badge-loss">Loss (-2)</span>`;
+            else if (p.result === "heavy loss") badges += `<span class="result-badge badge-hloss">Heavy Loss (-5)</span>`;
+            
+            if (p.redCard) badges += `<span class="result-badge badge-red">RED CARD (-5)</span>`;
 
             let changeHtml = "";
             if (p.change > 0) changeHtml = `<span class="val-change val-up">▲ +${p.change.toFixed(1)}m</span>`;
@@ -223,7 +227,7 @@
 
             return `
             <tr>
-                <td><b>${p.name}</b> <small>(${p.county})</small><br><span style="font-size:11px;color:#777">${p.stats}</span>${resBadge}</td>
+                <td><b>${p.name}</b> <small>(${p.county})</small><br><span style="font-size:11px;color:#777">${p.stats}</span><br>${badges}</td>
                 <td><b>${p.totalPts}</b></td>
                 <td><span style="color:var(--green); font-weight:bold;">${p.price.toFixed(1)}m</span>${changeHtml}</td>
                 <td>
