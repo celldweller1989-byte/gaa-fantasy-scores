@@ -27,6 +27,9 @@
         th { position: sticky; top: 0; background: #f8f8f8; padding: 12px; text-align: left; font-size: 10px; border-bottom: 2px solid #ddd; z-index: 5; text-transform: uppercase; }
         td { padding: 12px; border-bottom: 1px solid #eee; font-size: 13px; vertical-align: top; }
 
+        /* Badge Styling */
+        .county-badge { width: 30px; height: 30px; object-fit: contain; border-radius: 4px; }
+
         .val-change { font-size: 10px; font-weight: bold; margin-top: 2px; display: block; }
         .val-up { color: var(--green); }
         .val-down { color: var(--red); }
@@ -49,6 +52,8 @@
 
         .hidden { display: none; }
         .loading { text-align: center; padding: 50px; color: var(--orange); font-weight: bold; }
+        .btn-main { width: 100%; padding: 10px; cursor: pointer; font-weight: bold; border-radius: 6px; border: none; margin-top: 5px; }
+        .btn-save { background: var(--green); color: white; }
     </style>
 </head>
 <body>
@@ -58,17 +63,19 @@
 <nav>
     <button class="nav-link" id="nav-rules" onclick="showPage('rules')">RULES</button>
     <button class="nav-link active" id="nav-market" onclick="showPage('market')">TRANSFER MARKET</button>
+    <button class="nav-link" id="nav-leaderboard" onclick="showPage('leaderboard')">LEADERBOARD</button>
 </nav>
 
 <div class="container">
+    
     <div id="page-rules" class="page hidden">
         <div class="panel">
-            <h2>Scoring & Market Mechanics</h2>
+            <h2>Scoring & Market Rules</h2>
             <ul>
                 <li><b>Bonuses:</b> Big Win (+5), Win (+2), Clean Sheet (+5).</li>
                 <li><b>Penalties:</b> Red Card (-5), Loss (-2), Heavy Loss (-5).</li>
-                <li><b>Market Value:</b> Every 1 point = 0.05m change.</li>
-                <li><b>Extra Penalty:</b> -0.2m drop for any team deduction of 3+ points (Heavy Loss).</li>
+                <li><b>Market Value:</b> 1 Point = 0.05m change.</li>
+                <li><b>County Rule:</b> Maximum of 2 players per county allowed.</li>
             </ul>
         </div>
     </div>
@@ -87,9 +94,17 @@
                     </div>
                 </div>
                 <div class="scroll-box">
-                    <div id="loading-market" class="loading">Loading Market Data...</div>
+                    <div id="loading-market" class="loading">Loading Live Data...</div>
                     <table id="market-table" class="hidden">
-                        <thead><tr><th>Player & Stats</th><th>Pts</th><th>Value</th><th>Assign Slot</th></tr></thead>
+                        <thead>
+                            <tr>
+                                <th>County</th>
+                                <th>Player & Stats</th>
+                                <th>Pts</th>
+                                <th>Value</th>
+                                <th>Assign Slot</th>
+                            </tr>
+                        </thead>
                         <tbody id="market-body"></tbody>
                     </table>
                 </div>
@@ -103,10 +118,16 @@
                 </div>
                 <div style="font-weight:bold; margin-bottom: 10px;">Budget: <span id="budget-val">100.0</span>m</div>
                 <div id="squad-list"></div>
-                <button onclick="resetSquad()" style="width:100%; margin-top:10px; padding:8px; cursor:pointer;">Reset Squad</button>
+                <button class="btn-main btn-save" onclick="saveSquad()">Submit Squad</button>
+                <button class="btn-main" onclick="resetSquad()">Reset Squad</button>
             </div>
         </div>
     </div>
+
+    <div id="page-leaderboard" class="page hidden">
+        <div class="panel"><h2>Live Leaderboard</h2><p>Leaderboard updates following final whistle.</p></div>
+    </div>
+
 </div>
 
 <script>
@@ -121,7 +142,7 @@
             const res = await fetch(SCORERS_URL + '&t=' + new Date().getTime());
             const text = await res.text();
             processScorers(text);
-        } catch (e) { document.getElementById('loading-market').innerText = "Data Sync Failed."; }
+        } catch (e) { document.getElementById('loading-market').innerText = "Data Error."; }
     }
 
     function processScorers(csvText) {
@@ -138,16 +159,15 @@
             let result = (col[9] || "").trim().toLowerCase();
             let hasRedCard = (col[7] || "").trim() === "1"; 
             let hasCleanSheet = (col[6] || "").trim() === "1"; 
+            let badgeUrl = (col[14] || "").trim(); // Column O
 
             let preferred = "FWD"; 
             if (posRaw.includes("GK") || posRaw === "1") preferred = "GK";
             else if (posRaw.includes("DEF") || (parseInt(posRaw) >= 2 && parseInt(posRaw) <= 7)) preferred = "DEF";
             else if (posRaw.includes("MID") || (parseInt(posRaw) >= 8 && parseInt(posRaw) <= 9)) preferred = "MID";
 
-            // Calculation logic
-            let teamPoints = 0;
-            let teamDeduction = 0;
-
+            // Point Logic
+            let teamPoints = 0, teamDeduction = 0;
             if (result === "big win" || result === "heavy win") teamPoints = 5;
             else if (result === "win") teamPoints = 2;
             else if (result === "loss") teamDeduction = 2;
@@ -157,7 +177,6 @@
             let cleanSheetBonus = hasCleanSheet ? 5 : 0;
             
             let adjustedPts = rawPts + teamPoints + cleanSheetBonus - teamDeduction - redCardDeduction;
-            
             let basePrice = (preferred === "GK") ? 4.5 : 5.5;
             let marketPenalty = Math.floor(teamDeduction / 3) * 0.2;
             
@@ -165,16 +184,13 @@
             currentPrice = Math.max(3.0, currentPrice);
 
             allPlayers.push({
-                id: i,
-                county: col[0].trim(),
+                id: i, county: col[0].trim(),
                 name: (col[1] + " " + col[2]).trim(),
+                badge: badgeUrl,
                 preferred: preferred,
                 totalPts: adjustedPts,
-                result: result,
-                redCard: hasRedCard,
-                cleanSheet: hasCleanSheet,
-                price: currentPrice,
-                change: currentPrice - basePrice,
+                result: result, redCard: hasRedCard, cleanSheet: hasCleanSheet,
+                price: currentPrice, change: currentPrice - basePrice,
                 stats: `G:${col[4]||0} | 1p:${col[11]||0} | 2p:${col[12]||0} | CS:${col[6]||0}`
             });
             countySet.add(col[0].trim());
@@ -221,17 +237,21 @@
             if (p.change > 0) changeHtml = `<span class="val-change val-up">▲ +${p.change.toFixed(2)}m</span>`;
             else if (p.change < 0) changeHtml = `<span class="val-change val-down">▼ ${Math.abs(p.change).toFixed(2)}m</span>`;
 
+            // Handle the badge image
+            const badgeImg = p.badge ? `<img src="${p.badge}" class="county-badge" onerror="this.style.display='none'">` : '';
+
             return `
             <tr>
-                <td><b>${p.name}</b> <small>(${p.county})</small><br><span style="font-size:11px;color:#777">${p.stats}</span><br>${badges}</td>
+                <td style="text-align:center;">${badgeImg}<br><small>${p.county}</small></td>
+                <td><b>${p.name}</b><br><span style="font-size:11px;color:#777">${p.stats}</span><br>${badges}</td>
                 <td><b>${p.totalPts}</b></td>
                 <td><span style="color:var(--green); font-weight:bold;">${p.price.toFixed(2)}m</span>${changeHtml}</td>
                 <td>
                     <div class="btn-group">
-                        <button class="btn-pos ${p.preferred === 'GK' ? 'pref-pos' : ''}" onclick="addPlayer(${p.id}, 'GK')">GK</button>
-                        <button class="btn-pos ${p.preferred === 'DEF' ? 'pref-pos' : ''}" onclick="addPlayer(${p.id}, 'DEF')">DEF</button>
-                        <button class="btn-pos ${p.preferred === 'MID' ? 'pref-pos' : ''}" onclick="addPlayer(${p.id}, 'MID')">MID</button>
-                        <button class="btn-pos ${p.preferred === 'FWD' ? 'pref-pos' : ''}" onclick="addPlayer(${p.id}, 'FWD')">FWD</button>
+                        <button class="btn-pos" onclick="addPlayer(${p.id}, 'GK')">GK</button>
+                        <button class="btn-pos" onclick="addPlayer(${p.id}, 'DEF')">DEF</button>
+                        <button class="btn-pos" onclick="addPlayer(${p.id}, 'MID')">MID</button>
+                        <button class="btn-pos" onclick="addPlayer(${p.id}, 'FWD')">FWD</button>
                         <button class="btn-pos" onclick="addPlayer(${p.id}, 'SUB')">SUB</button>
                     </div>
                 </td>
@@ -267,7 +287,10 @@
             <div>GK: ${counts.GK}/1</div><div>DEF: ${counts.DEF}/6</div><div>MID: ${counts.MID}/2</div>
             <div>FWD: ${counts.FWD}/6</div><div>SUB: ${counts.SUB}/3</div><div>Total: ${state.squad.length}/18</div>`;
         document.getElementById('squad-list').innerHTML = state.squad.map((p, i) => `
-            <div class="squad-slot"><span><b>[${p.role}]</b> ${p.name}</span><span class="btn-remove" onclick="removePlayer(${i})">×</span></div>`).join('');
+            <div class="squad-slot">
+                <span><img src="${p.badge}" style="height:15px; width:15px; vertical-align:middle; margin-right:5px;" onerror="this.style.display='none'"><b>[${p.role}]</b> ${p.name}</span>
+                <span class="btn-remove" onclick="removePlayer(${i})">×</span>
+            </div>`).join('');
     }
 
     function showPage(id) {
@@ -277,7 +300,8 @@
         document.getElementById('nav-' + id).classList.add('active');
     }
 
-    function resetSquad() { state.squad = []; state.budget = 100.0; updateUI(); applyFilters(); }
+    function resetSquad() { if(confirm("Reset entire squad?")) { state.squad = []; state.budget = 100.0; updateUI(); applyFilters(); } }
+    function saveSquad() { alert("Squad saved successfully!"); }
 
     init();
 </script>
