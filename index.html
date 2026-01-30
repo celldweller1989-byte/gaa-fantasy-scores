@@ -9,7 +9,7 @@
         body { font-family: 'Segoe UI', sans-serif; background: var(--cream); margin: 0; padding: 0; color: var(--dark); }
         .header { background: var(--orange); color: white; padding: 20px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
         nav { display: flex; justify-content: center; background: var(--dark); padding: 0; position: sticky; top: 0; z-index: 100; }
-        .nav-link { color: white; padding: 15px 25px; text-decoration: none; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        .nav-link { color: white; padding: 15px 25px; text-decoration: none; font-weight: bold; cursor: pointer; transition: 0.3s; border: none; background: none; font-size: 14px; }
         .nav-link:hover { background: #333; }
         .nav-link.active { background: var(--orange); }
         .container { padding: 15px; max-width: 1200px; margin: auto; }
@@ -17,11 +17,11 @@
         .panel { background: var(--white); border-radius: 8px; padding: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
         .filter-bar { display: grid; grid-template-columns: 1.5fr 1fr 1fr; gap: 10px; margin-bottom: 15px; }
         select, input { padding: 10px; border-radius: 5px; border: 1px solid #ccc; width: 100%; height: 45px; }
-        .scroll-box { max-height: 600px; overflow-y: auto; border: 1px solid #eee; border-radius: 5px; }
+        .scroll-box { max-height: 600px; overflow-y: auto; border: 1px solid #eee; border-radius: 5px; background: #fff; }
         table { width: 100%; border-collapse: collapse; }
-        th { position: sticky; top: 0; background: #f8f8f8; padding: 12px; text-align: left; font-size: 12px; border-bottom: 2px solid #ddd; z-index: 5; }
-        td { padding: 12px; border-bottom: 1px solid #eee; }
-        .player-info b { display: block; font-size: 15px; color: var(--dark); line-height: 1.2; }
+        th { position: sticky; top: 0; background: #f8f8f8; padding: 12px; text-align: left; font-size: 11px; border-bottom: 2px solid #ddd; z-index: 5; text-transform: uppercase; }
+        td { padding: 12px; border-bottom: 1px solid #eee; font-size: 14px; }
+        .player-info b { display: block; font-size: 14px; color: var(--dark); line-height: 1.2; }
         .player-info span { display: block; font-size: 11px; color: var(--grey); font-weight: bold; text-transform: uppercase; margin-top: 2px; }
         .pos-tracker { font-size: 12px; background: #fff3cd; padding: 10px; border-radius: 5px; margin-bottom: 10px; display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
         .squad-slot { display: flex; justify-content: space-between; background: #f9f9f9; padding: 8px; margin-bottom: 5px; border-radius: 4px; border-left: 4px solid var(--orange); align-items: center; font-size: 13px; }
@@ -36,8 +36,8 @@
 
 <div class="header"><h1>ORCHARD FANS FANTASY GAA</h1></div>
 <nav>
-    <div class="nav-link active" onclick="navigate('market')">TRANSFER MARKET</div>
-    <div class="nav-link" onclick="navigate('leaderboard')">LEADERBOARD</div>
+    <button class="nav-link active" id="btn-market" onclick="navigate('market')">TRANSFER MARKET</button>
+    <button class="nav-link" id="btn-leaderboard" onclick="navigate('leaderboard')">LEADERBOARD</button>
 </nav>
 
 <div class="container">
@@ -54,7 +54,7 @@
                     </select>
                 </div>
                 <div class="scroll-box">
-                    <div id="loading-market" class="loading">Loading Players...</div>
+                    <div id="loading-market" class="loading">Attempting to fetch players...</div>
                     <table id="market-table" class="hidden">
                         <thead><tr><th>Player</th><th>Pos</th><th>Pts</th><th>Price</th><th>Add</th></tr></thead>
                         <tbody id="market-body"></tbody>
@@ -79,7 +79,7 @@
     <div id="page-leaderboard" class="page hidden">
         <div class="panel" style="max-width:800px; margin:auto;">
             <h2 style="text-align:center; color: var(--orange);">🏆 STANDINGS</h2>
-            <div id="loading-leaderboard" class="loading">Loading Leaderboard...</div>
+            <div id="loading-leaderboard" class="loading">Loading Standings...</div>
             <table id="leaderboard-table" class="hidden">
                 <thead><tr><th style="width:40px;">#</th><th>Team</th><th style="text-align:right;">Pts</th></tr></thead>
                 <tbody id="leaderboard-body"></tbody>
@@ -99,38 +99,61 @@
     async function init() {
         try {
             const res = await fetch(SCORERS_URL + '&t=' + new Date().getTime());
+            if (!res.ok) throw new Error("Network response was not ok");
             const text = await res.text();
             processScorers(text);
-        } catch (e) { document.getElementById('loading-market').innerText = "Fetch Error."; }
+        } catch (e) { 
+            console.error(e);
+            document.getElementById('loading-market').innerText = "Fetch Error: Please check if the Google Sheet is Published to Web as CSV."; 
+        }
     }
 
-    function parseCSVLine(text) {
-        const result = []; let cur = '', inQuote = false;
-        for (let char of text) {
-            if (char === '"') inQuote = !inQuote;
-            else if (char === ',' && !inQuote) { result.push(cur.trim()); cur = ''; }
-            else cur += char;
+    function parseCSV(text) {
+        const rows = [];
+        let row = [];
+        let field = '';
+        let inQuotes = false;
+        for (let i = 0; i < text.length; i++) {
+            const char = text[i];
+            const next = text[i+1];
+            if (inQuotes) {
+                if (char === '"' && next === '"') { field += '"'; i++; }
+                else if (char === '"') inQuotes = false;
+                else field += char;
+            } else {
+                if (char === '"') inQuotes = true;
+                else if (char === ',') { row.push(field); field = ''; }
+                else if (char === '\n' || char === '\r') {
+                    if (field || row.length) {
+                        row.push(field);
+                        rows.push(row);
+                        row = []; field = '';
+                    }
+                    if (char === '\r' && next === '\n') i++;
+                } else field += char;
+            }
         }
-        result.push(cur.trim()); return result;
+        if (field || row.length) { row.push(field); rows.push(row); }
+        return rows;
     }
 
     function processScorers(csvText) {
-        const lines = csvText.split(/\r?\n/);
+        const data = parseCSV(csvText);
         const countySet = new Set();
         allPlayers = [];
 
-        for (let i = 1; i < lines.length; i++) {
-            const col = parseCSVLine(lines[i]);
-            // Ensure at least County (A) and Position (D) exist
-            if (col.length < 4 || !col[0]) continue;
+        // Start from i=1 to skip header
+        for (let i = 1; i < data.length; i++) {
+            const col = data[i];
+            if (!col[0] || col[0].trim() === "") continue;
 
-            const county = col[0];
-            const surname = (col[1] || "").toUpperCase(); // Col B
-            const firstname = (col[2] || ""); // Col C
+            const county = col[0] || "Unknown";
+            const surname = (col[1] || "").toUpperCase().trim();
+            const firstname = (col[2] || "").trim();
             const fullName = (surname + " " + firstname).trim();
             
-            const rawPos = (col[3] || "").toLowerCase();
-            const totalPts = parseInt(col[8]) || 0; // Col I
+            const rawPos = (col[3] || "FWD").toLowerCase();
+            const totalPts = parseInt(col[8]) || 0;
 
             let pos = "FWD";
             const pNum = parseInt(rawPos.replace(/\D/g, ''));
@@ -140,17 +163,15 @@
 
             const price = (pos === "GK") ? 4.5 : (pos === "DEF" || pos === "MID") ? 5.0 : 6.0;
 
-            if(fullName) {
-                allPlayers.push({ county, name: fullName, pos, points: totalPts, price });
-                countySet.add(county);
-            }
+            allPlayers.push({ county, name: fullName, pos, points: totalPts, price });
+            countySet.add(county);
         }
 
-        const filterDropdown = document.getElementById('filterCounty');
-        filterDropdown.innerHTML = '<option value="ALL">All Counties</option>';
+        const filter = document.getElementById('filterCounty');
+        filter.innerHTML = '<option value="ALL">All Counties</option>';
         Array.from(countySet).sort().forEach(c => {
             const opt = document.createElement('option'); opt.value = c; opt.innerText = c;
-            filterDropdown.appendChild(opt);
+            filter.appendChild(opt);
         });
 
         document.getElementById('loading-market').classList.add('hidden');
@@ -175,4 +196,82 @@
         document.getElementById('market-body').innerHTML = data.map(p => `
             <tr>
                 <td class="player-info"><b>${p.name}</b><span>${p.county}</span></td>
-                <td><small>${p.
+                <td><small>${p.pos}</small></td>
+                <td>${p.points}</td>
+                <td>${p.price.toFixed(1)}m</td>
+                <td><button class="btn-add" onclick="addPlayer('${p.name.replace(/'/g, "\\'")}', '${p.county.replace(/'/g, "\\'")}', '${p.pos}', ${p.price})">+</button></td>
+            </tr>
+        `).join('') || '<tr><td colspan="5" style="text-align:center;">No players found.</td></tr>';
+    }
+
+    function navigate(page) {
+        document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
+        document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+        document.getElementById('page-' + page).classList.remove('hidden');
+        document.getElementById('btn-' + page).classList.add('active');
+        if (page === 'leaderboard') loadLeaderboard();
+    }
+
+    async function loadLeaderboard() {
+        try {
+            const res = await fetch(ENTRIES_URL + '&t=' + new Date().getTime());
+            const text = await res.text();
+            const data = parseCSV(text).slice(1);
+            
+            const pPoints = {};
+            allPlayers.forEach(p => pPoints[p.name] = p.points);
+
+            const teams = data.map(col => {
+                if (col.length < 2) return null;
+                const teamName = col[0];
+                const squadStr = col[1];
+                let total = 0;
+                Object.keys(pPoints).forEach(pName => {
+                    if (squadStr.includes(pName)) total += pPoints[pName];
+                });
+                return { teamName, total };
+            }).filter(x => x).sort((a,b) => b.total - a.total);
+
+            document.getElementById('leaderboard-body').innerHTML = teams.map((t, i) => `
+                <tr><td>${i+1}</td><td>${t.teamName}</td><td style="text-align:right; font-weight:bold;">${t.total}</td></tr>
+            `).join('');
+            document.getElementById('loading-leaderboard').classList.add('hidden');
+            document.getElementById('leaderboard-table').classList.remove('hidden');
+        } catch (e) { document.getElementById('loading-leaderboard').innerText = "Leaderboard data not found."; }
+    }
+
+    function addPlayer(name, county, pos, price) {
+        if (state.squad.length >= 18) return alert("Squad full!");
+        if (state.budget < price) return alert("Insufficient budget!");
+        if (state.squad.filter(p => p.county === county).length >= 2) return alert("Max 2 from " + county);
+        let role = (state.squad.filter(p => p.role === pos).length < LIMITS[pos]) ? pos : (state.squad.filter(p => p.role === 'SUB').length < LIMITS.SUB ? 'SUB' : null);
+        if (!role) return alert(pos + " slots full.");
+        state.squad.push({name, county, pos, price, role});
+        state.budget -= price;
+        updateUI();
+    }
+
+    function removePlayer(i) {
+        state.budget += state.squad[i].price;
+        state.squad.splice(i, 1);
+        updateUI();
+    }
+
+    function resetSquad() { state.squad = []; state.budget = 100.0; updateUI(); }
+
+    function updateUI() {
+        document.getElementById('budget-val').innerText = state.budget.toFixed(1);
+        document.getElementById('count-val').innerText = state.squad.length;
+        const counts = { GK: 0, DEF: 0, MID: 0, FWD: 0, SUB: 0 };
+        state.squad.forEach(p => counts[p.role]++);
+        document.getElementById('pos-tracker').innerHTML = `<div>GK: ${counts.GK}/1</div><div>DEF: ${counts.DEF}/6</div><div>MID: ${counts.MID}/2</div><div>FWD: ${counts.FWD}/6</div><div style="color:var(--orange)">SUBS: ${counts.SUB}/3</div>`;
+        document.getElementById('squad-list').innerHTML = state.squad.map((p, i) => `<div class="squad-slot"><span><b>${p.role}</b>: ${p.name}</span><span class="btn-remove" onclick="removePlayer(${i})">×</span></div>`).join('') || '<p style="text-align:center; color:#999;">Start building your team...</p>';
+        document.getElementById('submission-area').classList.toggle('hidden', state.squad.length !== 18);
+    }
+
+    function submitTeam() { alert("Submission received!"); location.reload(); }
+
+    init();
+</script>
+</body>
+</html>
