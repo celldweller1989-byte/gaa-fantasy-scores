@@ -31,6 +31,7 @@
         td { padding: 12px; border-bottom: 1px solid #eee; font-size: 13px; vertical-align: top; }
 
         .player-info b { color: var(--dark); font-size: 14px; }
+        .pos-subtitle { font-size: 11px; color: var(--orange); font-weight: bold; text-transform: uppercase; display: block; margin-top: 2px; }
         .stats-subtle { font-size: 11px; color: var(--grey); margin-top: 4px; line-height: 1.4; display: block; }
         
         .btn-group { display: flex; gap: 3px; }
@@ -82,7 +83,7 @@
                     <div class="filter-item"><select id="filterCounty" onchange="applyFilters()"><option value="ALL">All Counties</option></select></div>
                     <div class="filter-item">
                         <select id="filterPos" onchange="applyFilters()">
-                            <option value="ALL">All Positions</option>
+                            <option value="ALL">All Categories</option>
                             <option value="GK">Goalkeepers</option>
                             <option value="DEF">Defenders</option>
                             <option value="MID">Midfielders</option>
@@ -144,17 +145,17 @@
             const col = rows[i];
             if (!col[0] || col[0].trim() === "") continue;
             
-            // Map original position from Sheet (Col D) to help with filters
-            let sheetPos = (col[3] || "").toUpperCase();
+            let sheetPosRaw = (col[3] || "").trim();
             let category = "FWD"; 
-            if (sheetPos.includes("GK") || sheetPos === "1") category = "GK";
-            else if (sheetPos.includes("DEF") || (parseInt(sheetPos) >= 2 && parseInt(sheetPos) <= 7)) category = "DEF";
-            else if (sheetPos.includes("MID") || (parseInt(sheetPos) >= 8 && parseInt(sheetPos) <= 9)) category = "MID";
+            if (sheetPosRaw.toUpperCase().includes("GK") || sheetPosRaw === "1") category = "GK";
+            else if (sheetPosRaw.toUpperCase().includes("DEF") || (parseInt(sheetPosRaw) >= 2 && parseInt(sheetPosRaw) <= 7)) category = "DEF";
+            else if (sheetPosRaw.toUpperCase().includes("MID") || (parseInt(sheetPosRaw) >= 8 && parseInt(sheetPosRaw) <= 9)) category = "MID";
 
             const player = {
                 id: i,
                 county: col[0].trim(),
                 name: (col[1] + " " + col[2]).trim(),
+                displayPos: sheetPosRaw, // Official position from Column D
                 category: category, 
                 goals: col[4] || 0,
                 cleansheet: col[6] || 0,
@@ -200,6 +201,7 @@
             <tr>
                 <td>
                     <b>${p.name}</b> <small>(${p.county})</small>
+                    <span class="pos-subtitle">${p.displayPos}</span>
                     <span class="stats-subtle">G:${p.goals} | 1p:${p.onePt} | 2p:${p.twoPt} | CS:${p.cleansheet} | RC:${p.red}</span>
                 </td>
                 <td><b>${p.totalPts}</b></td>
