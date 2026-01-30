@@ -141,3 +141,29 @@
             state.squad.push(p);
             state.budget -= p.price;
             updateUI();
+        }
+    }
+
+    function updateUI() {
+        document.getElementById('budget-val').innerText = `Budget: ${state.budget.toFixed(2)}m`;
+        document.getElementById('squad-list').innerHTML = state.squad.map((p, i) => `
+            <div class="squad-slot"><span>${p.name}</span><button onclick="removePlayer(${i})">×</button></div>
+        `).join('');
+    }
+
+    function removePlayer(idx) {
+        state.budget += state.squad[idx].price;
+        state.squad.splice(idx, 1);
+        updateUI();
+    }
+
+    function showPage(id) {
+        document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
+        document.getElementById('page-' + id).classList.remove('hidden');
+    }
+
+    function resetSquad() { state.squad = []; state.budget = 100; updateUI(); }
+    init();
+</script>
+</body>
+</html>
