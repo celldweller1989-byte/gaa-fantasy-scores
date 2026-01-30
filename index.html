@@ -24,10 +24,8 @@
         th { position: sticky; top: 0; background: #f8f8f8; padding: 12px; text-align: left; font-size: 10px; border-bottom: 2px solid #ddd; z-index: 5; }
         td { padding: 12px; border-bottom: 1px solid #eee; font-size: 13px; vertical-align: middle; }
         
-        /* Tooltip Logic */
         .player-cell { display: flex; align-items: center; position: relative; cursor: help; }
         .tooltip { visibility: hidden; width: 180px; background-color: var(--dark); color: #fff; text-align: left; border-radius: 6px; padding: 10px; position: absolute; z-index: 100; bottom: 125%; left: 10%; opacity: 0; transition: opacity 0.3s; box-shadow: 0 4px 15px rgba(0,0,0,0.3); font-size: 11px; line-height: 1.4; }
-        .tooltip::after { content: ""; position: absolute; top: 100%; left: 20%; margin-left: -5px; border-width: 5px; border-style: solid; border-color: var(--dark) transparent transparent transparent; }
         .player-cell:hover .tooltip { visibility: visible; opacity: 1; }
 
         .county-badge { width: 35px; height: 35px; object-fit: contain; margin-right: 12px; }
@@ -46,6 +44,9 @@
         .squad-slot { display: flex; justify-content: space-between; background: #f9f9f9; padding: 8px; margin-bottom: 5px; border-radius: 4px; border-left: 4px solid var(--orange); align-items: center; font-size: 12px; }
         .pos-tracker { font-size: 11px; background: #fff3cd; padding: 10px; border-radius: 5px; margin-bottom: 15px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; border: 1px solid #ffeeba; }
         .hidden { display: none; }
+        
+        .btn-submit { width: 100%; padding: 12px; background: var(--green); color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        .btn-reset { width: 100%; padding: 8px; background: #eee; border: 1px solid #ccc; cursor: pointer; margin-top: 5px; font-size: 11px; }
     </style>
 </head>
 <body>
@@ -96,13 +97,14 @@
                 </div>
                 <div id="budget-val" style="font-weight:bold; margin-bottom:10px; font-size: 1.1em; color: var(--green);">Budget: 100.00m</div>
                 <div id="squad-list"></div>
-                <button onclick="resetSquad()" style="width:100%; margin-top:10px; padding:10px; cursor:pointer; background: #eee; border:1px solid #ccc; font-weight:bold;">RESET SQUAD</button>
+                <button class="btn-submit" onclick="submitToForm()">SUBMIT SQUAD</button>
+                <button class="btn-reset" onclick="resetSquad()">RESET SQUAD</button>
             </div>
         </div>
     </div>
 
     <div id="page-rules" class="page hidden"><div class="panel"><h2>Rules</h2><p>Big Win: +5 | Win: +2 | Loss: -2 | Big Loss: -5</p></div></div>
-    <div id="page-leaderboard" class="page hidden"><div class="panel"><h2>Leaderboard</h2></div></div>
+    <div id="page-leaderboard" class="page hidden"><div class="panel"><h2>Leaderboard</h2><p>Submission data will appear here once published.</p></div></div>
 </div>
 
 <script>
@@ -132,23 +134,17 @@
         const rows = csvText.split('\n').map(row => row.split(','));
         allPlayers = [];
         const counties = new Set();
-
         for (let i = 1; i < rows.length; i++) {
             const col = rows[i];
             if (!col[0]) continue;
-            
             let rawResult = (col[9] || "").trim().toLowerCase();
             let displayResult = rawResult.replace('heavy', 'BIG').toUpperCase();
-            
             let rawPts = parseInt(col[8]) || 0;
             let bonus = (rawResult.includes("win")) ? (rawResult.includes("big") || rawResult.includes("heavy") ? 5 : 2) : 0;
             let deduction = (rawResult.includes("loss")) ? (rawResult.includes("big") || rawResult.includes("heavy") ? 5 : 2) : 0;
-            
             let totalPts = rawPts + bonus - deduction;
             let price = 5.5 + (totalPts * 0.05);
-
             counties.add(col[0].trim());
-
             allPlayers.push({
                 id: i,
                 county: col[0].trim(),
@@ -161,14 +157,12 @@
                 statsHTML: `<strong>${col[0].trim()}</strong><br>Goals: ${col[4]||0}<br>1-pt: ${col[11]||0}<br>2-pt: ${col[12]||0}`
             });
         }
-        
         const countySelect = document.getElementById('filter-county');
         [...counties].sort().forEach(c => {
             const opt = document.createElement('option');
             opt.value = opt.text = c;
             countySelect.add(opt);
         });
-
         filterPlayers();
     }
 
@@ -176,14 +170,9 @@
         const nameQuery = document.getElementById('search-name').value.toLowerCase();
         const countyQuery = document.getElementById('filter-county').value;
         const posQuery = document.getElementById('filter-pos').value;
-
         const filtered = allPlayers.filter(p => {
-            const matchesName = p.name.toLowerCase().includes(nameQuery);
-            const matchesCounty = !countyQuery || p.county === countyQuery;
-            const matchesPos = !posQuery || p.prefPos === posQuery;
-            return matchesName && matchesCounty && matchesPos;
+            return p.name.toLowerCase().includes(nameQuery) && (!countyQuery || p.county === countyQuery) && (!posQuery || p.prefPos === posQuery);
         });
-
         renderMarket(filtered);
     }
 
@@ -192,16 +181,12 @@
             const ptSymbol = p.totalPts >= 0 ? '▲' : '▼';
             const priceSymbol = p.price > 5.5 ? '▲' : (p.price < 5.5 ? '▼' : '');
             const resClass = p.result.includes('WIN') ? 'res-win' : 'res-loss';
-
             return `
             <tr>
                 <td>
                     <div class="player-cell">
                         <img src="${p.badge}" class="county-badge" onerror="this.src='https://ui-avatars.com/api/?name=${p.county[0]}&background=f37021&color=fff'">
-                        <div>
-                            <b>${p.name}</b><br>
-                            <span class="result-badge ${resClass}">${p.result || 'N/A'}</span>
-                        </div>
+                        <div><b>${p.name}</b><br><span class="result-badge ${resClass}">${p.result || 'N/A'}</span></div>
                         <div class="tooltip">${p.statsHTML}</div>
                     </div>
                 </td>
@@ -209,26 +194,20 @@
                 <td><span class="${p.price > 5.5 ? 'trend-up' : 'trend-down'}">${priceSymbol} ${p.price.toFixed(2)}m</span></td>
                 <td>
                     <div class="btn-group">
-                        <button class="btn-pos ${p.prefPos==='GK'?'btn-pref':''}" onclick="addPlayer(${p.id}, 'GK')">GK</button>
-                        <button class="btn-pos ${p.prefPos==='DEF'?'btn-pref':''}" onclick="addPlayer(${p.id}, 'DEF')">DEF</button>
-                        <button class="btn-pos ${p.prefPos==='MID'?'btn-pref':''}" onclick="addPlayer(${p.id}, 'MID')">MID</button>
-                        <button class="btn-pos ${p.prefPos==='FWD'?'btn-pref':''}" onclick="addPlayer(${p.id}, 'FWD')">FWD</button>
-                        <button class="btn-pos" onclick="addPlayer(${p.id}, 'SUB')">SUB</button>
+                        ${['GK','DEF','MID','FWD','SUB'].map(role => `<button class="btn-pos ${p.prefPos===role?'btn-pref':''}" onclick="addPlayer(${p.id}, '${role}')">${role}</button>`).join('')}
                     </div>
                 </td>
-            </tr>
-        `}).join('');
+            </tr>`;
+        }).join('');
     }
 
     function addPlayer(id, role) {
         const p = allPlayers.find(x => x.id === id);
         const currentInRole = state.squad.filter(x => x.role === role).length;
-
         if (state.squad.length >= 18) return alert("Squad full!");
         if (state.budget < p.price) return alert("Not enough cash!");
         if (currentInRole >= LIMITS[role]) return alert(`Position ${role} is full!`);
         if (state.squad.find(x => x.id === id)) return alert("Player already in squad!");
-
         state.squad.push({ ...p, role });
         state.budget -= p.price;
         updateUI();
@@ -238,17 +217,11 @@
         document.getElementById('budget-val').innerText = `Budget: ${state.budget.toFixed(2)}m`;
         const counts = { GK: 0, DEF: 0, MID: 0, FWD: 0, SUB: 0 };
         state.squad.forEach(p => counts[p.role]++);
-        
         document.getElementById('pos-tracker').innerHTML = `
             <div>GK: ${counts.GK}/1</div><div>DEF: ${counts.DEF}/6</div><div>MID: ${counts.MID}/2</div>
-            <div>FWD: ${counts.FWD}/6</div><div>SUB: ${counts.SUB}/3</div><div>Total: ${state.squad.length}/18</div>
-        `;
-
+            <div>FWD: ${counts.FWD}/6</div><div>SUB: ${counts.SUB}/3</div><div>Total: ${state.squad.length}/18</div>`;
         document.getElementById('squad-list').innerHTML = state.squad.map((p, i) => `
-            <div class="squad-slot">
-                <span><b>[${p.role}]</b> ${p.name}</span>
-                <button onclick="removePlayer(${i})" style="border:none; background:none; color:red; cursor:pointer;">×</button>
-            </div>
+            <div class="squad-slot"><span><b>[${p.role}]</b> ${p.name}</span><button onclick="removePlayer(${i})" style="border:none; background:none; color:red; cursor:pointer;">×</button></div>
         `).join('');
     }
 
@@ -256,6 +229,26 @@
         state.budget += state.squad[idx].price;
         state.squad.splice(idx, 1);
         updateUI();
+    }
+
+    // --- FORM SUBMISSION LOGIC ---
+    function submitToForm() {
+        if (state.squad.length < 18) {
+            return alert("Your squad is incomplete! You need 18 players.");
+        }
+
+        // Format the squad list as a comma-separated string
+        const squadNames = state.squad.map(p => p.name).join(', ');
+        
+        // Base URL from your pre-fill link
+        const baseUrl = "https://docs.google.com/forms/d/e/1FAIpQLScjWl7mZv9lVkzKgy5VaQksBfWumMCuYh9-ZU9WBK0l1LWnUA/viewform?usp=pp_url";
+        
+        // entry.144458252 is the ID for the squad/test field in your link
+        const squadEntryId = "&entry.144458252=";
+        
+        // Combine and open
+        const finalUrl = baseUrl + squadEntryId + encodeURIComponent(squadNames);
+        window.open(finalUrl, '_blank');
     }
 
     function showPage(id) {
