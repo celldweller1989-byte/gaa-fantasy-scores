@@ -198,3 +198,120 @@
 </script>
 </body>
 </html>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GAA Leaderboard</title>
+    <style>
+        :root { --orange: #f37021; --dark: #1a1a1a; --cream: #f4f1de; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--cream); padding: 20px; color: var(--dark); }
+        .container { max-width: 800px; margin: auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        h1 { text-align: center; color: var(--orange); }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th { background: #eee; padding: 12px; text-align: left; border-bottom: 2px solid var(--orange); }
+        td { padding: 12px; border-bottom: 1px solid #eee; }
+        .rank { font-weight: bold; color: var(--orange); width: 50px; }
+        .loading { text-align: center; padding: 50px; font-weight: bold; }
+        .points { font-weight: bold; text-align: right; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>🏆 LIVE LEADERBOARD</h1>
+    <div id="loading" class="loading">Calculating Live Standings...</div>
+    <table id="leaderboard" style="display:none;">
+        <thead>
+            <tr>
+                <th class="rank">#</th>
+                <th>Team Name</th>
+                <th class="points">Total Pts</th>
+            </tr>
+        </thead>
+        <tbody id="leaderboard-body"></tbody>
+    </table>
+</div>
+
+<script>
+    // URL 1: Your Scorers Sheet (Column I has points)
+    const SCORERS_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTcdzjZ4zYlGgFe5acS8xOb1vHR9b8i98UudIOe-iC9Z1d6x6AY5zATgX217cNjcNtAGDLJ56y8Jr8N/pub?output=csv';
+    
+    // URL 2: Your ENTRIES Sheet (Where submissions go)
+    // You need to Publish the "Entries" tab to web as CSV and paste link here:
+    const ENTRIES_URL = 'PASTE_YOUR_ENTRIES_CSV_LINK_HERE';
+
+    async function loadLeaderboard() {
+        try {
+            // 1. Get Live Player Scores
+            const scoreRes = await fetch(SCORERS_URL + '&t=' + new Date().getTime());
+            const scoreText = await scoreRes.text();
+            const playerMap = parseScorers(scoreText);
+
+            // 2. Get Submitted Teams
+            const entryRes = await fetch(ENTRIES_URL + '&t=' + new Date().getTime());
+            const entryText = await entryRes.text();
+            const leaderboardData = calculateScores(entryText, playerMap);
+
+            renderLeaderboard(leaderboardData);
+        } catch (e) {
+            document.getElementById('loading').innerText = "Error loading standings. Ensure both sheets are published.";
+        }
+    }
+
+    function parseScorers(csv) {
+        const lines = csv.split(/\r?\n/);
+        const map = {};
+        for (let i = 1; i < lines.length; i++) {
+            const cols = lines[i].split(',');
+            if (cols.length < 9) continue;
+            const name = (cols[2] + " " + cols[1]).trim(); // Col C + Col B
+            map[name] = parseInt(cols[8]) || 0; // Col I
+        }
+        return map;
+    }
+
+    function calculateScores(csv, playerMap) {
+        const lines = csv.split(/\r?\n/);
+        const teams = [];
+        
+        for (let i = 1; i < lines.length; i++) {
+            const cols = lines[i].split(','); // Adjust parser if names have commas
+            if (cols.length < 2) continue;
+
+            const teamName = cols[0];
+            const squadString = cols[1]; // The list of players
+            
+            let total = 0;
+            // Loop through the squad string to find player names
+            Object.keys(playerMap).forEach(playerName => {
+                if (squadString.includes(playerName)) {
+                    total += playerMap[playerName];
+                }
+            });
+
+            teams.push({ name: teamName, score: total });
+        }
+        return teams.sort((a, b) => b.score - a.score);
+    }
+
+    function renderLeaderboard(data) {
+        const body = document.getElementById('leaderboard-body');
+        body.innerHTML = data.map((team, index) => `
+            <tr>
+                <td class="rank">${index + 1}</td>
+                <td>${team.name}</td>
+                <td class="points">${team.score}</td>
+            </tr>
+        `).join('');
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('leaderboard').style.display = 'table';
+    }
+
+    loadLeaderboard();
+</script>
+</body>
+</html>
+
