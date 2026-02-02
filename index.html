@@ -50,36 +50,6 @@
         .btn-reset { width: 100%; padding: 8px; background: #eee; border: 1px solid #ccc; cursor: pointer; margin-top: 5px; font-size: 11px; }
         
         #market-status-msg { font-size: 12px; text-align: center; font-weight: bold; margin-top: 10px; }
-        /* Red Ticker Styling */
-.ticker-wrap {
-    width: 100%;
-    overflow: hidden;
-    background: #ff0000; /* Red Background */
-    color: #ffffff;      /* White Text */
-    padding: 10px 0;
-    white-space: nowrap;
-    border-bottom: 2px solid #b30000; /* Subtle dark red border */
-}
-
-.ticker-content {
-    display: inline-block;
-    padding-left: 100%;
-    font-weight: bold;
-    text-transform: uppercase;
-    animation: ticker 15s linear infinite;
-    font-size: 14px;
-}
-
-/* Pause on hover so users can read easily */
-.ticker-wrap:hover .ticker-content {
-    animation-play-state: paused;
-}
-
-@keyframes ticker {
-    0% { transform: translateX(0); }
-    100% { transform: translateX(-100%); }
-}
-
     </style>
 </head>
 <body>
@@ -349,7 +319,4 @@
 </script>
 </body>
 </html>
-
-
-
 
