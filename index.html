@@ -22,15 +22,15 @@
 
         .panel { background: var(--white); border-radius: 8px; padding: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); height: fit-content; }
 
-        /* Hover Stats Logic */
+        /* Corrected Hover Stats */
         .player-info-cell { position: relative; display: flex; align-items: center; cursor: help; }
         .stats-popup { 
-            visibility: hidden; width: 200px; background-color: #222; color: #fff; text-align: left; 
+            visibility: hidden; width: 180px; background-color: #222; color: #fff; text-align: left; 
             border-radius: 6px; padding: 12px; position: absolute; z-index: 1000; left: 10px; top: 30px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.5); opacity: 0; transition: opacity 0.2s; pointer-events: none;
-            font-size: 11px; border: 1.5px solid var(--orange); line-height: 1.5;
+            font-size: 11px; border: 1.5px solid var(--orange); line-height: 1.6;
         }
-        .stats-popup strong { color: var(--orange); font-size: 12px; border-bottom: 1px solid #444; display: block; margin-bottom: 5px; padding-bottom: 2px; }
+        .stats-popup strong { color: var(--orange); font-size: 12px; display: block; border-bottom: 1px solid #444; margin-bottom: 5px; }
         .player-info-cell:hover .stats-popup { visibility: visible; opacity: 1; }
 
         /* Pitch UI */
@@ -46,7 +46,7 @@
 
         .bench-area { background: #222; padding: 12px; border-radius: 0 0 8px 8px; display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; margin-top: -5px; }
 
-        /* Market UI */
+        /* Filter & Table UI */
         .filter-row { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; }
         .filter-row input, .filter-row select { padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 12px; flex: 1; min-width: 80px; }
         .scroll-box { max-height: 550px; overflow-y: auto; }
@@ -64,8 +64,8 @@
         .intel-item img { width: 18px; height: 18px; margin-right: 8px; }
         .p-stat { font-weight: bold; color: var(--orange); margin-left: auto; }
 
-        #countdown { color: var(--orange); font-weight: bold; font-family: monospace; }
         .timer-sidebar { background: var(--dark); color: #fff; padding: 10px; text-align: center; border-radius: 5px; margin-top: 10px; }
+        #countdown { color: var(--orange); font-weight: bold; font-family: monospace; }
         .hidden { display: none; }
 
         .rules-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; margin-top: 10px; }
@@ -137,19 +137,20 @@
             <h2 style="color:var(--orange);">Full Competition Rules</h2>
             <div class="rules-grid">
                 <div class="rule-card">
-                    <h3>Squad & Budget</h3>
+                    <h3>Squad Building</h3>
                     <ul class="rule-list">
-                        <li><span>Total Squad</span><span>18 Players</span></li>
-                        <li><span>Budget</span><span>100.0m</span></li>
+                        <li><span>Total Players</span><span>18</span></li>
+                        <li><span>Starting 15</span><span>1 GK, 6 DEF, 2 MID, 6 FWD</span></li>
                         <li><span>Max per County</span><span>3 Players</span></li>
                     </ul>
                 </div>
                 <div class="rule-card">
-                    <h3>Point Scoring</h3>
+                    <h3>Competition Scoring</h3>
                     <ul class="rule-list">
                         <li><span>Goal Scored</span><span style="color:var(--green)">+3 Pts</span></li>
                         <li><span>Point Scored</span><span style="color:var(--green)">+1 Pt</span></li>
-                        <li><span>Clean Sheet</span><span style="color:var(--green)">+5 Pts</span></li>
+                        <li><span>Clean Sheet (GK)</span><span style="color:var(--green)">+5 Pts</span></li>
+                        <li><span>Match Win</span><span style="color:var(--green)">+2 Pts</span></li>
                     </ul>
                 </div>
             </div>
@@ -181,10 +182,9 @@
             allPlayers.push({
                 id: i, county: rows[i][0].trim(), name: (rows[i][1]+" "+rows[i][2]).trim(),
                 prefPos: rows[i][3].trim().toUpperCase(), price: parseFloat(rows[i][10]) || 5.0,
-                colE: rows[i][4] || 0, colF: rows[i][5] || 0, colG: rows[i][6] || 0,
-                colH: rows[i][7] || 0, pointsTotal: parseInt(rows[i][8]) || 0,
-                colL: rows[i][11] || 0, colM: rows[i][12] || 0, 
-                colP: rows[i][15] || 0, colQ: rows[i][16] || 0, colR: rows[i][17] || 0,
+                E: rows[i][4] || 0, F: rows[i][5] || 0, G: rows[i][6] || 0, H: rows[i][7] || 0,
+                ptsTotal: rows[i][8] || 0, L: rows[i][11] || 0, M: rows[i][12] || 0,
+                P: rows[i][15] || 0, Q: rows[i][16] || 0, R: rows[i][17] || 0,
                 badge: rows[i][14] ? rows[i][14].trim() : ''
             });
         }
@@ -206,12 +206,12 @@
         document.getElementById('market-body').innerHTML = filtered.map(p => {
             const buttons = ['GK', 'DEF', 'MID', 'FWD', 'SUB'].map(pos => `<button class="btn-assign ${p.prefPos === pos ? 'is-pref' : ''}" onclick="addPlayer(${p.id}, '${pos}')">${pos}</button>`).join('');
             
-            // Generate Hover Content
-            let statsContent = "";
+            // Strictly using user-defined column letters
+            let statsHtml = "";
             if(p.prefPos === 'GK') {
-                statsContent = `Clean Sheets: ${p.colG}<br>Saves: ${p.colR}`;
+                statsHtml = `Metric G: ${p.G}<br>Metric R: ${p.R}`;
             } else {
-                statsContent = `Goals: ${p.colE} | Points: ${p.colF}<br>Assists: ${p.colH}<br>Turnovers: ${p.colL} | Blocks: ${p.colM}<br>Yellow: ${p.colP} | Red: ${p.colQ}`;
+                statsHtml = `Metric E: ${p.E}<br>Metric F: ${p.F}<br>Metric H: ${p.H}<br>Metric L: ${p.L}<br>Metric M: ${p.M}<br>Metric P: ${p.P}<br>Metric Q: ${p.Q}`;
             }
 
             return `<tr>
@@ -220,9 +220,8 @@
                         <img src="${p.badge}" class="table-badge" onerror="this.src='https://ui-avatars.com/api/?name=${p.county[0]}'">
                         <b>${p.name}</b>
                         <div class="stats-popup">
-                            <strong>${p.name} (${p.prefPos})</strong>
-                            ${statsContent}<br>
-                            <span style="color:var(--orange)"><strong>Season Score: ${p.pointsTotal}</strong></span>
+                            <strong>${p.name}</strong>
+                            ${statsHtml}
                         </div>
                     </div>
                 </td>
@@ -234,7 +233,7 @@
 
     function addPlayer(id, assignedRole) {
         const p = allPlayers.find(x => x.id === id);
-        if (squad.length >= 18 || budget < p.price || squad.filter(s => s.county === p.county).length >= 3) return alert("Limit Reached!");
+        if (squad.length >= 18 || budget < p.price || squad.filter(s => s.county === p.county).length >= 3) return;
         squad.push({...p, assignedRole: assignedRole});
         budget -= p.price; updateUI();
     }
@@ -265,14 +264,14 @@
         const content = document.getElementById('intel-content'), title = document.getElementById('intel-title');
         let sorted, suffix, label;
         switch(intelIndex) {
-            case 0: label="Top Performers"; sorted=[...allPlayers].sort((a,b)=>b.pointsTotal-a.pointsTotal); suffix="pts"; break;
-            case 1: label="Strugglers"; sorted=[...allPlayers].sort((a,b)=>a.pointsTotal-b.pointsTotal); suffix="pts"; break;
-            case 2: label="Golden Boot"; sorted=[...allPlayers].sort((a,b)=>b.colE-a.colE); suffix="gls"; break;
-            case 3: label="Sharp Shooters"; sorted=[...allPlayers].sort((a,b)=>b.colF-a.colF); suffix="pts"; break;
-            case 4: label="Top GKs"; sorted=allPlayers.filter(p=>p.prefPos==='GK').sort((a,b)=>b.pointsTotal-a.pointsTotal); suffix="pts"; break;
+            case 0: label="Top Performers"; sorted=[...allPlayers].sort((a,b)=>b.ptsTotal-a.ptsTotal); suffix="pts"; break;
+            case 1: label="Strugglers"; sorted=[...allPlayers].sort((a,b)=>a.ptsTotal-b.ptsTotal); suffix="pts"; break;
+            case 2: label="Golden Boot"; sorted=[...allPlayers].sort((a,b)=>b.E-a.E); suffix="gls"; break;
+            case 3: label="Sharp Shooters"; sorted=[...allPlayers].sort((a,b)=>b.F-a.F); suffix="pts"; break;
+            case 4: label="Top GKs"; sorted=allPlayers.filter(p=>p.prefPos==='GK').sort((a,b)=>b.ptsTotal-a.ptsTotal); suffix="pts"; break;
         }
         title.innerText = label;
-        content.innerHTML = sorted.slice(0, 10).map(p => `<div class="intel-item"><img src="${p.badge}"><span>${p.name}</span><span class="p-stat">${intelIndex===2?p.colE:intelIndex===3?p.colF:p.pointsTotal}${suffix}</span></div>`).join('');
+        content.innerHTML = sorted.slice(0, 10).map(p => `<div class="intel-item"><img src="${p.badge}"><span>${p.name}</span><span class="p-stat">${intelIndex===2?p.E:intelIndex===3?p.F:p.ptsTotal}${suffix}</span></div>`).join('');
     }
 
     function showPage(id) {
