@@ -8,66 +8,72 @@
         :root { --orange: #f37021; --dark: #1a1a1a; --cream: #f4f1de; --white: #ffffff; --green: #28a745; --red: #dc3545; --grey: #777; --blue: #007bff; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--cream); margin: 0; padding: 0; color: var(--dark); }
         
-        .header { background: var(--orange); padding: 20px 10px; text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,0.2); display: flex; justify-content: center; align-items: center; }
-        .header img { max-width: 100%; height: auto; max-height: 140px; display: block; filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.1)); }
+        .header { background: var(--orange); padding: 15px 10px; text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
+        .header img { max-width: 100%; height: auto; max-height: 80px; display: block; margin: auto; }
 
         nav { display: flex; justify-content: center; background: var(--dark); padding: 0; position: sticky; top: 0; z-index: 100; flex-wrap: wrap; }
-        .nav-link { color: white; padding: 15px 20px; text-decoration: none; font-weight: bold; cursor: pointer; border: none; background: none; font-size: 13px; text-transform: uppercase; }
+        .nav-link { color: white; padding: 12px 15px; text-decoration: none; font-weight: bold; cursor: pointer; border: none; background: none; font-size: 12px; text-transform: uppercase; }
         .nav-link.active { background: var(--orange); }
         
-        .container { padding: 15px; max-width: 1300px; margin: auto; }
-        .main-layout { display: grid; grid-template-columns: 1fr 360px; gap: 20px; }
-        .panel { background: var(--white); border-radius: 8px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        .container { padding: 10px; max-width: 1300px; margin: auto; }
+        
+        /* Mobile First Layout */
+        .main-layout { display: flex; flex-direction: column; gap: 15px; }
+        @media (min-width: 992px) { .main-layout { display: grid; grid-template-columns: 1fr 360px; } }
 
-        .filter-bar { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
-        .filter-bar input, .filter-bar select { padding: 10px; border: 1px solid #ccc; border-radius: 5px; flex: 1; min-width: 150px; }
+        .panel { background: var(--white); border-radius: 8px; padding: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
 
-        .scroll-box { max-height: 650px; overflow-y: auto; border: 1px solid #eee; border-radius: 5px; background: #fff; }
+        .filter-bar { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+        .filter-bar input, .filter-bar select { padding: 12px; border: 1px solid #ccc; border-radius: 5px; flex: 1; min-width: 140px; font-size: 14px; }
+
+        .scroll-box { max-height: 500px; overflow-y: auto; border: 1px solid #eee; border-radius: 5px; background: #fff; }
+        @media (min-width: 992px) { .scroll-box { max-height: 700px; } }
+
         table { width: 100%; border-collapse: collapse; }
-        th { position: sticky; top: 0; background: #f8f8f8; padding: 12px; text-align: left; font-size: 10px; border-bottom: 2px solid #ddd; z-index: 5; }
-        td { padding: 12px; border-bottom: 1px solid #eee; font-size: 13px; vertical-align: middle; }
+        th { position: sticky; top: 0; background: #f8f8f8; padding: 10px 5px; text-align: left; font-size: 10px; border-bottom: 2px solid #ddd; z-index: 5; }
+        td { padding: 10px 5px; border-bottom: 1px solid #eee; font-size: 13px; vertical-align: middle; }
         
-        .player-cell { display: flex; align-items: center; position: relative; cursor: help; }
-        .county-badge { width: 35px; height: 35px; object-fit: contain; margin-right: 12px; }
-        .tooltip { visibility: hidden; width: 200px; background-color: var(--dark); color: #fff; text-align: left; border-radius: 6px; padding: 12px; position: absolute; z-index: 100; bottom: 125%; left: 0; opacity: 0; transition: opacity 0.3s; box-shadow: 0 4px 15px rgba(0,0,0,0.3); font-size: 11px; line-height: 1.6; }
-        .player-cell:hover .tooltip { visibility: visible; opacity: 1; }
-
-        .btn-group { display: flex; gap: 2px; }
-        .btn-pos { border: 1px solid #ddd; background: #f9f9f9; padding: 6px 2px; border-radius: 4px; font-size: 9px; cursor: pointer; flex: 1; transition: 0.2s; }
-        .btn-pos:hover { background: #e0e0e0; }
-        .btn-pref { border: 2px solid var(--orange); color: var(--orange); font-weight: bold; background: #fff5ee; }
-
-        .squad-slot { display: flex; justify-content: space-between; background: #f9f9f9; padding: 8px; margin-bottom: 5px; border-radius: 4px; border-left: 4px solid var(--orange); align-items: center; font-size: 12px; }
-        .pos-tracker { font-size: 11px; background: #fff3cd; padding: 10px; border-radius: 5px; margin-bottom: 15px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; }
+        .player-cell { display: flex; align-items: center; position: relative; }
+        .county-badge { width: 30px; height: 30px; object-fit: contain; margin-right: 8px; }
         
-        .btn-submit { width: 100%; padding: 12px; background: var(--green); color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; margin-top: 10px; }
-        .btn-load { width: 100%; padding: 10px; background: var(--blue); color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; margin-bottom: 10px; }
-        .btn-reset { width: 100%; padding: 8px; background: #eee; border: 1px solid #ccc; cursor: pointer; margin-top: 5px; font-size: 11px; }
+        .tooltip { visibility: hidden; width: 180px; background-color: var(--dark); color: #fff; border-radius: 6px; padding: 10px; position: absolute; z-index: 100; bottom: 110%; left: 0; opacity: 0; transition: opacity 0.3s; font-size: 11px; pointer-events: none; }
+        .player-cell:hover .tooltip, .player-cell:active .tooltip { visibility: visible; opacity: 1; }
+
+        .btn-group { display: flex; gap: 3px; width: 100%; }
+        .btn-pos { border: 1px solid #ddd; background: #f9f9f9; padding: 10px 0; border-radius: 4px; font-size: 10px; cursor: pointer; flex: 1; font-weight: bold; }
+        .btn-pref { border: 2px solid var(--orange); color: var(--orange); background: #fff5ee; }
+
+        .squad-slot { display: flex; justify-content: space-between; background: #f9f9f9; padding: 10px; margin-bottom: 5px; border-radius: 4px; border-left: 4px solid var(--orange); align-items: center; font-size: 13px; }
+        .pos-tracker { font-size: 12px; background: #fff3cd; padding: 10px; border-radius: 5px; margin-bottom: 15px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; text-align: center; }
+        
+        .btn-submit { width: 100%; padding: 15px; background: var(--green); color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 10px; font-size: 16px; }
+        .btn-load { width: 100%; padding: 12px; background: var(--blue); color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; margin-bottom: 15px; font-size: 14px; }
+        .btn-reset { width: 100%; padding: 10px; background: #eee; border: 1px solid #ccc; cursor: pointer; margin-top: 10px; font-size: 12px; border-radius: 4px; }
         .hidden { display: none; }
     </style>
 </head>
 <body>
 
 <div class="header">
-    <img src="https://lh3.googleusercontent.com/d/1JGqYSa8yysXfOEtRYxafMAD7BPV7YJLI" alt="GAA Fantasy Football Banner" onerror="this.src='https://via.placeholder.com/600x120?text=GAA+FANTASY+FOOTBALL'">
+    <img src="https://lh3.googleusercontent.com/d/1JGqYSa8yysXfOEtRYxafMAD7BPV7YJLI" alt="GAA Fantasy Banner" onerror="this.src='https://via.placeholder.com/400x80?text=GAA+FANTASY'">
 </div>
 
 <nav>
-    <button class="nav-link active" onclick="showPage('market')">Team Selection</button>
+    <button class="nav-link active" onclick="showPage('market')">Squad</button>
     <button class="nav-link" onclick="showPage('rules')">Rules</button>
 </nav>
 
 <div class="container">
     <div id="page-market" class="page">
         <div class="filter-bar">
-            <input type="text" id="search-name" placeholder="Search player name..." oninput="filterPlayers()">
-            <select id="filter-county" onchange="filterPlayers()"><option value="">All Counties</option></select>
+            <input type="text" id="search-name" placeholder="Search Player..." oninput="filterPlayers()">
+            <select id="filter-county" onchange="filterPlayers()"><option value="">Counties</option></select>
             <select id="filter-pos" onchange="filterPlayers()">
-                <option value="">All Positions</option>
-                <option value="GK">Goalkeepers</option>
-                <option value="DEF">Defenders</option>
-                <option value="MID">Midfielders</option>
-                <option value="FWD">Forwards</option>
+                <option value="">Positions</option>
+                <option value="GK">GK</option>
+                <option value="DEF">DEF</option>
+                <option value="MID">MID</option>
+                <option value="FWD">FWD</option>
             </select>
         </div>
 
@@ -78,9 +84,9 @@
                         <thead>
                             <tr>
                                 <th>Player</th>
-                                <th>Pts</th>
-                                <th>Value</th>
-                                <th style="width: 200px;">Assign Slot</th>
+                                <th style="text-align:center">Pts</th>
+                                <th style="text-align:center">Price</th>
+                                <th style="width: 140px; text-align:center">Assign Slot</th>
                             </tr>
                         </thead>
                         <tbody id="market-body"></tbody>
@@ -89,13 +95,12 @@
             </div>
 
             <div class="panel">
-                <button class="btn-load" onclick="loadExistingTeam()">LOAD MY TEAM</button>
-                <h3>Your Squad</h3>
+                <button class="btn-load" onclick="loadExistingTeam()">LOAD PREVIOUS TEAM</button>
                 <div class="pos-tracker" id="pos-tracker">
                     <div>GK: 0/1</div><div>DEF: 0/6</div><div>MID: 0/2</div>
                     <div>FWD: 0/6</div><div>SUB: 0/3</div><div>Total: 0/18</div>
                 </div>
-                <div id="budget-val" style="font-weight:bold; margin-bottom:10px; font-size: 1.1em; color: var(--green);">Budget: 100.00m</div>
+                <div id="budget-val" style="font-weight:bold; margin-bottom:10px; font-size: 1.2em; color: var(--green); text-align:center;">Budget: 100.00m</div>
                 <div id="squad-list"></div>
                 <button id="btn-save" class="btn-submit" onclick="saveTeamToSheet()">SAVE WEEKLY TEAM</button>
                 <button class="btn-reset" onclick="resetSquad()">RESET SQUAD</button>
@@ -103,7 +108,17 @@
         </div>
     </div>
     
-    <div id="page-rules" class="page hidden"><div class="panel"><h2>Rules</h2><p>Select 18 players. Max 2 per county. 100m Budget.</p></div></div>
+    <div id="page-rules" class="page hidden">
+        <div class="panel">
+            <h2>Rules</h2>
+            <ul>
+                <li><strong>Squad:</strong> 18 players total.</li>
+                <li><strong>Limits:</strong> Max 3 players from any one county.</li>
+                <li><strong>Budget:</strong> 100.0m total.</li>
+                <li><strong>Transfers:</strong> 3 allowed per game week.</li>
+            </ul>
+        </div>
+    </div>
 </div>
 
 <script>
@@ -112,7 +127,7 @@
     
     let allPlayers = [];
     let state = { budget: 100.0, squad: [] };
-    const LIMITS = { GK: 1, DEF: 6, MID: 2, FWD: 6, SUB: 3, COUNTY: 2 };
+    const LIMITS = { GK: 1, DEF: 6, MID: 2, FWD: 6, SUB: 3, COUNTY: 3 }; // County limit updated to 3
 
     async function init() {
         try {
@@ -130,7 +145,6 @@
         for (let i = 1; i < rows.length; i++) {
             const col = rows[i];
             if (!col[0]) continue;
-
             const countyName = col[0].trim();
             counties.add(countyName);
 
@@ -143,14 +157,10 @@
                 price: Math.max(3.0, 5.5 + ((parseInt(col[8]) || 0) * 0.05)),
                 badge: col[14] ? col[14].trim() : '',
                 statsHTML: `
-                    <strong>${col[1]} ${col[2]} (${countyName})</strong><hr>
-                    Preferred Pos: ${col[3] || 'N/A'}<br>
-                    Goals: ${col[4] || 0}<br>
-                    Points: ${col[5] || 0}<br>
-                    Frees: ${col[6] || 0}<br>
-                    45s: ${col[7] || 0}<br>
-                    Minutes: ${col[11] || 0}<br>
-                    Turnovers: ${col[12] || 0}
+                    <strong>${col[1]} ${col[2]}</strong><br>
+                    Pos: ${col[3] || 'N/A'}<br>
+                    Goals: ${col[4] || 0} | Pts: ${col[5] || 0}<br>
+                    Frees: ${col[6] || 0} | 45s: ${col[7] || 0}
                 `
             });
         }
@@ -194,8 +204,8 @@
                         <div class="tooltip">${p.statsHTML}</div>
                     </div>
                 </td>
-                <td>${p.totalPts}</td>
-                <td>${p.price.toFixed(2)}m</td>
+                <td style="text-align:center">${p.totalPts}</td>
+                <td style="text-align:center">${p.price.toFixed(1)}m</td>
                 <td><div class="btn-group">${buttons}</div></td>
             </tr>`;
         }).join('');
@@ -206,8 +216,8 @@
         if (state.squad.length >= 18) return alert("Squad full!");
         if (state.budget < p.price) return alert("Insufficient budget!");
         if (state.squad.find(x => x.id === id)) return alert("Already in squad!");
-        if (state.squad.filter(x => x.role === role).length >= LIMITS[role]) return alert(`${role} position full!`);
-        if (state.squad.filter(x => x.county === p.county).length >= LIMITS.COUNTY) return alert(`Max 2 players per county!`);
+        if (state.squad.filter(x => x.role === role).length >= LIMITS[role]) return alert(`${role} slot full!`);
+        if (state.squad.filter(x => x.county === p.county).length >= LIMITS.COUNTY) return alert(`Max 3 players per county allowed!`);
 
         state.squad.push({ ...p, role });
         state.budget -= p.price;
@@ -225,7 +235,7 @@
         document.getElementById('squad-list').innerHTML = state.squad.map((p, i) => `
             <div class="squad-slot">
                 <span><b>${p.name}</b> <small>(${p.role})</small></span>
-                <button onclick="removePlayer(${i})" style="color:red; border:none; background:none; cursor:pointer;">×</button>
+                <button onclick="removePlayer(${i})" style="color:red; border:none; background:none; cursor:pointer; font-size: 20px;">×</button>
             </div>`).join('');
     }
 
@@ -236,9 +246,9 @@
     }
 
     async function saveTeamToSheet() {
-        if (state.squad.length < 18) return alert("Need 18 players.");
+        if (state.squad.length < 18) return alert("Need 18 players to save.");
         let manager = prompt("Manager Name:");
-        let pin = prompt("Set/Enter 4-digit PIN:");
+        let pin = prompt("Enter PIN:");
         if (!manager || !pin) return;
 
         const order = ['GK', 'DEF', 'MID', 'FWD', 'SUB'];
@@ -254,8 +264,8 @@
                 mode: 'no-cors',
                 body: JSON.stringify({ manager, pin, squad: names })
             });
-            alert("Team saved!");
-        } catch (e) { alert("Error saving."); }
+            alert("Team saved! (Max 3 transfers allowed per week)");
+        } catch (e) { alert("Save error."); }
     }
 
     async function loadExistingTeam() {
@@ -282,9 +292,11 @@
     function showPage(id) {
         document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
         document.getElementById('page-' + id).classList.remove('hidden');
+        document.querySelectorAll('.nav-link').forEach(n => n.classList.remove('active'));
+        event.target.classList.add('active');
     }
 
-    function resetSquad() { if(confirm("Reset?")) { state.squad = []; state.budget = 100.0; updateUI(); } }
+    function resetSquad() { if(confirm("Clear current squad?")) { state.squad = []; state.budget = 100.0; updateUI(); } }
     init();
 </script>
 </body>
