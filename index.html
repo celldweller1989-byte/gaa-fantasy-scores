@@ -41,6 +41,10 @@
         th { background: #f8f8f8; padding: 8px; text-align: left; position: sticky; top: 0; z-index: 5; border-bottom: 2px solid #ddd; }
         td { padding: 8px 6px; border-bottom: 1px solid #eee; }
 
+        /* Filter Row Styling */
+        .filter-row { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; }
+        .filter-row input, .filter-row select { padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 12px; flex: 1; min-width: 80px; }
+
         /* Position Buttons */
         .btn-assign { padding: 4px 2px; font-size: 9px; cursor: pointer; border: 1px solid #ddd; background: #fff; flex: 1; font-weight: bold; }
         .btn-assign:hover { background: #f0f0f0; }
@@ -73,7 +77,17 @@
     <div id="page-market" class="page">
         <div class="main-layout">
             <div class="panel">
-                <input type="text" id="search-name" placeholder="Search Player..." oninput="filterPlayers()" style="width:94%; padding:8px; margin-bottom:10px;">
+                <div class="filter-row">
+                    <input type="text" id="search-name" placeholder="Name..." oninput="filterPlayers()">
+                    <select id="filter-county" onchange="filterPlayers()"><option value="">All Counties</option></select>
+                    <select id="filter-pos" onchange="filterPlayers()">
+                        <option value="">All Positions</option>
+                        <option value="GK">Goalkeeper</option>
+                        <option value="DEF">Defender</option>
+                        <option value="MID">Midfielder</option>
+                        <option value="FWD">Forward</option>
+                    </select>
+                </div>
                 <div class="scroll-box">
                     <table>
                         <thead><tr><th>Player</th><th>Price</th><th>Assign to Slot</th></tr></thead>
@@ -124,12 +138,15 @@
         const res = await fetch(SCORERS_URL + '&t=' + new Date().getTime());
         const text = await res.text();
         const rows = text.split('\n').map(r => r.split(','));
+        const counties = new Set();
         
         for(let i=1; i<rows.length; i++) {
             if(!rows[i][0]) continue;
+            const co = rows[i][0].trim();
+            counties.add(co);
             allPlayers.push({
                 id: i,
-                county: rows[i][0].trim(),
+                county: co,
                 name: (rows[i][1]+" "+rows[i][2]).trim(),
                 prefPos: rows[i][3].trim().toUpperCase(),
                 price: parseFloat(rows[i][10]) || 5.0,
@@ -139,6 +156,15 @@
                 badge: rows[i][14] ? rows[i][14].trim() : ''
             });
         }
+
+        // Fill County Filter
+        const coSelect = document.getElementById('filter-county');
+        [...counties].sort().forEach(c => {
+            const opt = document.createElement('option');
+            opt.value = opt.text = c;
+            coSelect.add(opt);
+        });
+
         updateUI();
         filterPlayers();
         updateIntel();
@@ -146,8 +172,16 @@
     }
 
     function filterPlayers() {
-        const q = document.getElementById('search-name').value.toLowerCase();
-        const filtered = allPlayers.filter(p => p.name.toLowerCase().includes(q));
+        const nameQ = document.getElementById('search-name').value.toLowerCase();
+        const coQ = document.getElementById('filter-county').value;
+        const posQ = document.getElementById('filter-pos').value;
+
+        const filtered = allPlayers.filter(p => {
+            const matchName = p.name.toLowerCase().includes(nameQ);
+            const matchCo = !coQ || p.county === coQ;
+            const matchPos = !posQ || p.prefPos === posQ;
+            return matchName && matchCo && matchPos;
+        });
         
         document.getElementById('market-body').innerHTML = filtered.map(p => {
             const positions = ['GK', 'DEF', 'MID', 'FWD', 'SUB'];
@@ -173,7 +207,6 @@
         if (budget < p.price) return alert("Not enough budget!");
         if (countyCount >= 3) return alert("Max 3 players per county!");
 
-        // Add player with the specific role chosen via button
         squad.push({...p, assignedRole: assignedRole});
         budget -= p.price;
         updateUI();
@@ -194,7 +227,6 @@
         pitchPositions.forEach(pos => {
             pitchHtml += `<div class="pitch-row">`;
             for(let i=0; i<pos.limit; i++) {
-                // Look for players assigned to this tactical role
                 const sIdx = tempSquad.findIndex(ps => ps.assignedRole === pos.role);
                 if(sIdx > -1) {
                     const player = tempSquad.splice(sIdx, 1)[0];
@@ -212,7 +244,6 @@
         });
         document.getElementById('pitch-board').innerHTML = pitchHtml;
 
-        // SUBs and remaining players go to the bench
         document.getElementById('bench-list').innerHTML = tempSquad.map(p => {
             const realIdx = squad.indexOf(p);
             return `<div class="player-disc" onclick="removePlayer(${realIdx})">
