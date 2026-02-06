@@ -35,8 +35,6 @@
         .btn-group { display: flex; gap: 2px; }
         .btn-pos { border: 1px solid #ddd; background: #f9f9f9; padding: 6px 2px; border-radius: 4px; font-size: 9px; cursor: pointer; flex: 1; transition: 0.2s; }
         .btn-pos:hover { background: #e0e0e0; }
-        
-        /* Highlight for Preferred Position */
         .btn-pref { border: 2px solid var(--orange); color: var(--orange); font-weight: bold; background: #fff5ee; }
 
         .squad-slot { display: flex; justify-content: space-between; background: #f9f9f9; padding: 8px; margin-bottom: 5px; border-radius: 4px; border-left: 4px solid var(--orange); align-items: center; font-size: 12px; }
@@ -79,10 +77,10 @@
                     <table>
                         <thead>
                             <tr>
-                                <th>Player (Hover for Stats)</th>
+                                <th>Player</th>
                                 <th>Pts</th>
                                 <th>Value</th>
-                                <th style="width: 200px;">Assign (Orange = Pref)</th>
+                                <th style="width: 200px;">Assign Slot</th>
                             </tr>
                         </thead>
                         <tbody id="market-body"></tbody>
@@ -136,7 +134,6 @@
             const countyName = col[0].trim();
             counties.add(countyName);
 
-            // Mapping: D=3 (Pref Pos), E=4, F=5, G=6, H=7, L=11, M=12, O=14
             allPlayers.push({
                 id: i,
                 county: countyName,
@@ -184,7 +181,6 @@
         document.getElementById('market-body').innerHTML = data.map(p => {
             const roles = ['GK','DEF','MID','FWD','SUB'];
             const buttons = roles.map(role => {
-                // Check if this button matches the preferred position from Column D
                 const isPref = (p.prefPos === role);
                 return `<button class="btn-pos ${isPref ? 'btn-pref' : ''}" onclick="addPlayer(${p.id}, '${role}')">${role}</button>`;
             }).join('');
@@ -194,7 +190,7 @@
                 <td>
                     <div class="player-cell">
                         <img src="${p.badge}" class="county-badge" onerror="this.src='https://ui-avatars.com/api/?name=${p.county[0]}&background=f37021&color=fff'">
-                        <div><b>${p.name}</b><br><small>${p.county} (${p.prefPos})</small></div>
+                        <div><b>${p.name}</b><br><small>${p.county}</small></div>
                         <div class="tooltip">${p.statsHTML}</div>
                     </div>
                 </td>
@@ -228,7 +224,7 @@
         `;
         document.getElementById('squad-list').innerHTML = state.squad.map((p, i) => `
             <div class="squad-slot">
-                <span><b>[${p.role}]</b> ${p.name}</span>
+                <span><b>${p.name}</b> <small>(${p.role})</small></span>
                 <button onclick="removePlayer(${i})" style="color:red; border:none; background:none; cursor:pointer;">×</button>
             </div>`).join('');
     }
