@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GAA FANTASY FOOTBALL v1.2</title>
+    <title>GAA FANTASY FOOTBALL v1.3</title>
     <style>
         :root { --orange: #f37021; --dark: #1a1a1a; --cream: #f4f1de; --white: #ffffff; --green: #2e7d32; --pitch-lines: rgba(255,255,255,0.8); --red: #dc3545; --blue: #007bff; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--cream); margin: 0; padding: 0; color: var(--dark); }
@@ -35,7 +35,7 @@
 
         .bench-area { background: #222; padding: 15px 10px; border-radius: 0 0 8px 8px; display: flex; justify-content: center; gap: 20px; margin-top: -5px; }
 
-        /* Market & Hover Function */
+        /* Market Table */
         .scroll-box { max-height: 650px; overflow-y: auto; }
         table { width: 100%; border-collapse: collapse; font-size: 12px; }
         th { background: #f8f8f8; padding: 8px; text-align: left; position: sticky; top: 0; border-bottom: 2px solid #ddd; z-index: 5; }
@@ -61,9 +61,7 @@
         .timer-sidebar { background: var(--dark); color: #fff; padding: 12px; text-align: center; border-radius: 5px; margin-top: 15px; border-left: 4px solid var(--orange); }
         #countdown { color: var(--orange); font-weight: bold; font-family: monospace; display: block; font-size: 16px; margin-top: 4px; }
         
-        /* Version Stamp */
         .version-stamp { position: fixed; bottom: 5px; right: 5px; font-size: 10px; color: #999; pointer-events: none; }
-
         .hidden { display: none; }
     </style>
 </head>
@@ -127,7 +125,7 @@
     </div>
 </div>
 
-<div class="version-stamp">v1.2 - Win/Loss Updated</div>
+<div class="version-stamp">v1.3 - List Fix</div>
 
 <script>
     const SCORERS_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTcdzjZ4zYlGgFe5acS8xOb1vHR9b8i98UudIOe-iC9Z1d6x6AY5zATgX217cNjcNtAGDLJ56y8Jr8N/pub?output=csv';
@@ -143,40 +141,52 @@
         const dist = deadline - now;
         if (dist < 0) { document.getElementById("countdown").innerHTML = "CLOSED"; return; }
         const d = Math.floor(dist/86400000), h = Math.floor((dist%86400000)/3600000), m = Math.floor((dist%3600000)/60000), s = Math.floor((dist%60000)/1000);
-        document.getElementById("countdown").innerHTML = `${d}d ${h}h ${m}m ${s}s`;
+        document.getElementById("countdown").innerHTML = `${d}d ${h}h ${m}s`;
     }, 1000);
 
     async function init() {
-        // Cache buster added to URL (?cb=...) to force fresh data load
-        const res = await fetch(SCORERS_URL + '?cb=' + new Date().getTime());
-        const text = await res.text();
-        const rows = text.split('\n').map(r => r.split(','));
-        const counties = new Set();
-        
-        for(let i=1; i<rows.length; i++) {
-            if(!rows[i][0]) continue;
-            counties.add(rows[i][0].trim());
-            allPlayers.push({
-                id: i, 
-                county: rows[i][0].trim(), 
-                name: (rows[i][1]+" "+rows[i][2]).trim(),
-                prefPos: rows[i][3].trim().toUpperCase(), 
-                price: Math.max(3.0, 5.5 + (parseInt(rows[i][8])||0)*0.05),
-                goals: rows[i][4] || 0, 
-                points: rows[i][5] || 0, 
-                yellow: rows[i][11] || 0, 
-                red: rows[i][12] || 0,
-                clean: rows[i][6] || 0, 
-                apps: rows[i][7] || 0,
-                pointsTotal: rows[i][8] || 0,
-                badge: rows[i][14] ? rows[i][14].trim() : '',
-                win: rows[i][18] || 0, // Column S
-                loss: rows[i][19] || 0  // Column T
+        try {
+            const res = await fetch(SCORERS_URL + '?cb=' + new Date().getTime());
+            const text = await res.text();
+            const rows = text.split('\n').filter(r => r.trim() !== "").map(r => r.split(','));
+            const counties = new Set();
+            
+            allPlayers = []; // Reset list
+            for(let i=1; i<rows.length; i++) {
+                if(!rows[i][0] || rows[i][0].trim() === "") continue;
+                
+                const co = rows[i][0].trim();
+                counties.add(co);
+                
+                allPlayers.push({
+                    id: i, 
+                    county: co, 
+                    name: ((rows[i][1]||"") + " " + (rows[i][2]||"")).trim(),
+                    prefPos: (rows[i][3] || "FWD").trim().toUpperCase(), 
+                    price: parseFloat(rows[i][10]) || 5.0, 
+                    goals: rows[i][4] || "0", 
+                    points: rows[i][5] || "0", 
+                    clean: rows[i][6] || "0", 
+                    apps: rows[i][7] || "0",
+                    pointsTotal: rows[i][8] || "0",
+                    yellow: rows[i][11] || "0", 
+                    red: rows[i][12] || "0",
+                    badge: rows[i][14] ? rows[i][14].trim() : '',
+                    win: rows[i][18] || "0", 
+                    loss: rows[i][19] || "0"
+                });
+            }
+            const select = document.getElementById('filter-county');
+            [...counties].sort().forEach(c => { 
+                let o = document.createElement('option'); 
+                o.value = o.text = c; 
+                select.add(o); 
             });
+            updateUI();
+            filterPlayers();
+        } catch (err) {
+            console.error("Failed to load players:", err);
         }
-        [...counties].sort().forEach(c => { let o = document.createElement('option'); o.value = o.text = c; document.getElementById('filter-county').add(o); });
-        updateUI();
-        filterPlayers();
     }
 
     function filterPlayers() {
@@ -184,7 +194,8 @@
         const coQ = document.getElementById('filter-county').value;
         const filtered = allPlayers.filter(p => p.name.toLowerCase().includes(nameQ) && (!coQ || p.county === coQ));
         
-        document.getElementById('market-body').innerHTML = filtered.map(p => `
+        const tbody = document.getElementById('market-body');
+        tbody.innerHTML = filtered.map(p => `
             <tr>
                 <td>
                     <div class="market-player-cell">
