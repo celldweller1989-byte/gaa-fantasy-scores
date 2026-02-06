@@ -3,11 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>https://i.postimg.cc/28yKYj7D/Chat-GPT-Image-Feb-6-2026-02-34-21-PM.png</title>
+    <title>GAA FANTASY FOOTBALL</title>
     <style>
         :root { --orange: #f37021; --dark: #1a1a1a; --cream: #f4f1de; --white: #ffffff; --green: #28a745; --red: #dc3545; --grey: #777; --blue: #007bff; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--cream); margin: 0; padding: 0; color: var(--dark); }
-        .header { background: var(--orange); color: white; padding: 20px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+        
+        /* Updated Header for Image */
+        .header { 
+            background: var(--orange); 
+            padding: 15px; 
+            text-align: center; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2); 
+        }
+        .header img {
+            max-width: 100%;
+            height: auto;
+            max-height: 120px; /* Adjust this height to fit your design */
+            display: block;
+            margin: 0 auto;
+        }
+
         nav { display: flex; justify-content: center; background: var(--dark); padding: 0; position: sticky; top: 0; z-index: 100; flex-wrap: wrap; }
         .nav-link { color: white; padding: 15px 20px; text-decoration: none; font-weight: bold; cursor: pointer; transition: 0.3s; border: none; background: none; font-size: 13px; text-transform: uppercase; }
         .nav-link.active { background: var(--orange); }
@@ -50,42 +65,12 @@
         .btn-reset { width: 100%; padding: 8px; background: #eee; border: 1px solid #ccc; cursor: pointer; margin-top: 5px; font-size: 11px; }
         
         #market-status-msg { font-size: 12px; text-align: center; font-weight: bold; margin-top: 10px; }
-        /* Red Ticker Styling */
-.ticker-wrap {
-    width: 100%;
-    overflow: hidden;
-    background: #ff0000; /* Red Background */
-    color: #ffffff;      /* White Text */
-    padding: 10px 0;
-    white-space: nowrap;
-    border-bottom: 2px solid #b30000; /* Subtle dark red border */
-}
-
-.ticker-content {
-    display: inline-block;
-    padding-left: 100%;
-    font-weight: bold;
-    text-transform: uppercase;
-    animation: ticker 15s linear infinite;
-    font-size: 14px;
-}
-
-/* Pause on hover so users can read easily */
-.ticker-wrap:hover .ticker-content {
-    animation-play-state: paused;
-}
-
-@keyframes ticker {
-    0% { transform: translateX(0); }
-    100% { transform: translateX(-100%); }
-}
-
     </style>
 </head>
 <body>
 
 <div class="header">
-    https://postimg.cc/bsXTHh5C    <h1>GAA FANTASY FOOTBALL</h1>
+    <img src="https://i.postimg.cc/28yKYj7D/Chat-GPT-Image-Feb-6-2026-02-34-21-PM.png" alt="GAA Fantasy Football Header">
 </div>
 
 <nav>
@@ -146,7 +131,6 @@
 
 <script>
     const SCORERS_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTcdzjZ4zYlGgFe5acS8xOb1vHR9b8i98UudIOe-iC9Z1d6x6AY5zATgX217cNjcNtAGDLJ56y8Jr8N/pub?output=csv';
-    // UPDATED APPS SCRIPT URL
     const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxuMaD1xTPhUNTp6AVB_PzKHnlnK_KTxJEuhNRap9Dr6Xx-QwgmMoj35V-5pWed9Zwm/exec';
     
     let allPlayers = [];
@@ -310,7 +294,6 @@
             localStorage.setItem('fantasy_manager', managerName);
         }
 
-        // --- ALLOCATION LOGIC FOR INDIVIDUAL CELLS ---
         const order = ['GK', 'DEF', 'MID', 'FWD', 'SUB'];
         const sortedSquadNames = [];
         order.forEach(role => {
@@ -318,7 +301,6 @@
             sortedSquadNames.push(...players);
         });
 
-        // 2 Transfer Limit Check
         const lastSaved = JSON.parse(localStorage.getItem('last_saved_squad') || "[]");
         if (lastSaved.length > 0) {
             const changes = sortedSquadNames.filter(name => !lastSaved.includes(name)).length;
@@ -333,7 +315,7 @@
             });
             
             localStorage.setItem('last_saved_squad', JSON.stringify(sortedSquadNames));
-            alert("Team saved! Players allocated to individual cells.");
+            alert("Team saved!");
         } catch (e) {
             alert("Save failed. Please try again.");
         }
@@ -352,4 +334,3 @@
 </script>
 </body>
 </html>
-
