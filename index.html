@@ -25,7 +25,7 @@
         /* Stats Popup */
         .player-info-cell { position: relative; display: flex; align-items: center; cursor: help; }
         .stats-popup { 
-            visibility: hidden; width: 220px; background-color: #222; color: #fff; text-align: left; 
+            visibility: hidden; width: 210px; background-color: #222; color: #fff; text-align: left; 
             border-radius: 6px; padding: 12px; position: absolute; z-index: 1000; left: 20px; top: 30px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.5); opacity: 0; transition: opacity 0.3s; pointer-events: none;
             font-size: 11px; border: 1.5px solid var(--orange); line-height: 1.6;
@@ -48,7 +48,7 @@
 
         .bench-area { background: #222; padding: 12px; border-radius: 0 0 8px 8px; display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; margin-top: -5px; }
 
-        /* Market UI */
+        /* Filters */
         .filter-row { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; }
         .filter-row input, .filter-row select { padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 12px; flex: 1; min-width: 80px; }
         .scroll-box { max-height: 550px; overflow-y: auto; }
@@ -61,17 +61,18 @@
         .is-pref { border: 2px solid var(--orange) !important; color: var(--orange); background: #fff5ee !important; }
         .btn-assign:disabled { opacity: 0.3; cursor: not-allowed; }
 
+        /* Sidebar/Submit */
+        .submit-section { margin-top: 15px; padding-top: 15px; border-top: 2px solid #eee; }
+        .submit-section input { width: 100%; padding: 10px; margin-bottom: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
         .intel-box { background: var(--dark); color: white; border-radius: 8px; padding: 15px; margin-top: 15px; border-top: 4px solid var(--orange); min-height: 420px; }
         .intel-box h3 { margin: 0 0 10px 0; font-size: 12px; color: var(--orange); text-transform: uppercase; border-bottom: 1px solid #333; padding-bottom: 5px; }
         .intel-item { display: flex; align-items: center; padding: 5px 0; border-bottom: 1px solid #222; font-size: 10px; }
         .p-stat { font-weight: bold; color: var(--orange); margin-left: auto; }
-
-        /* Rules UI */
-        .rules-card { background: #fff; padding: 20px; border-radius: 8px; border-top: 4px solid var(--orange); box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 15px; }
-        .rules-list { list-style: none; padding: 0; margin: 0; }
-        .rules-list li { padding: 10px 0; border-bottom: 1px solid #f9f9f9; display: flex; justify-content: space-between; font-size: 13px; align-items: center; }
-        .rules-list li b { color: var(--green); }
         .hidden { display: none; }
+
+        /* Rules */
+        .rules-card { background: #fff; padding: 20px; border-radius: 8px; border-top: 4px solid var(--orange); box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        .rules-list li { padding: 10px 0; border-bottom: 1px solid #f9f9f9; display: flex; justify-content: space-between; font-size: 13px; }
     </style>
 </head>
 <body>
@@ -101,7 +102,7 @@
                 </div>
                 <div class="scroll-box">
                     <table>
-                        <thead><tr><th>Player</th><th>Mkt Price</th><th>Assign to Slot</th></tr></thead>
+                        <thead><tr><th>Player</th><th>Price</th><th>Assign to Slot</th></tr></thead>
                         <tbody id="market-body"></tbody>
                     </table>
                 </div>
@@ -117,6 +118,11 @@
 
             <div class="panel">
                 <div id="budget-val" style="font-size:22px; font-weight:bold; color:var(--green); text-align:center;">Budget: 100.00m</div>
+                <div class="submit-section">
+                    <input type="text" id="sub-mgr-name" placeholder="Manager Name">
+                    <input type="password" id="sub-mgr-pin" placeholder="5-Digit PIN" maxlength="5">
+                    <button onclick="saveTeamToSheet()" style="width:100%; padding:12px; background:var(--green); color:white; border:none; border-radius:5px; font-weight:bold; cursor:pointer;">SUBMIT TEAM</button>
+                </div>
                 <div class="intel-box">
                     <h3 id="intel-title">Market Intel</h3>
                     <div id="intel-content"></div>
@@ -127,20 +133,11 @@
 
     <div id="page-rules" class="page hidden">
         <div class="rules-card">
-            <h3>Value & Scoring Logic</h3>
+            <h3>Price Calculation</h3>
             <ul class="rules-list">
-                <li><span>Initial Baseline</span><b>From Column K</b></li>
-                <li><span>Performance Boost</span><b style="color:var(--green)">+0.25m per 3 Total Pts</b></li>
-                <li><span>Performance Drop</span><b style="color:red">-0.25m per -3 Total Pts</b></li>
-                <li><span>Total Score</span><b>Column I</b></li>
-            </ul>
-        </div>
-        <div class="rules-card">
-            <h3>Squad Selection</h3>
-            <ul class="rules-list">
+                <li><span>Accumulated Pts (+3)</span><b>+0.25m Value</b></li>
+                <li><span>Accumulated Pts (-3)</span><b>-0.25m Value</b></li>
                 <li><span>Max Per County</span><b>3 Players</b></li>
-                <li><span>Squad Size</span><b>18 Players</b></li>
-                <li><span>Starting Budget</span><b>100.00m</b></li>
             </ul>
         </div>
     </div>
@@ -148,6 +145,7 @@
 
 <script>
     const SCORERS_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTcdzjZ4zYlGgFe5acS8xOb1vHR9b8i98UudIOe-iC9Z1d6x6AY5zATgX217cNjcNtAGDLJ56y8Jr8N/pub?output=csv';
+    const SCRIPT_URL = 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE'; 
     
     let allPlayers = [], squad = [], budget = 100.0, intelIndex = 0;
 
@@ -170,10 +168,9 @@
             if(!rows[i][0]) continue;
             counties.add(rows[i][0].trim());
             
-            // MATH ENGINE: BASELINE (K) + (FLOOR(TOTAL SCORE / 3) * 0.25)
-            const totalScore = parseInt(rows[i][8]) || 0;
-            const baselineK = parseFloat(rows[i][10]) || 5.0;
-            const marketValue = baselineK + (Math.floor(totalScore / 3) * 0.25);
+            let totalScore = parseInt(rows[i][8]) || 0;
+            let basePrice = parseFloat(rows[i][10]) || 5.0;
+            let currentPrice = basePrice + (Math.floor(totalScore / 3) * 0.25);
 
             allPlayers.push({
                 id: i, 
@@ -185,12 +182,11 @@
                 cleanSheet: rows[i][6] || 0,
                 redCard: rows[i][7] || 0,
                 totalScore: totalScore,
-                baseline: baselineK,
-                price: marketValue,
+                price: currentPrice,
                 onePointer: rows[i][11] || 0,
                 twoPointer: rows[i][12] || 0,
                 win: rows[i][15] || 0,
-                loss: rows[i][16] || 0,
+                lost: rows[i][16] || 0, // Column Q
                 gkConceded: rows[i][17] || 0,
                 badge: rows[i][14] ? rows[i][14].trim() : ''
             });
@@ -222,20 +218,21 @@
                         <img src="${p.badge}" class="table-badge" onerror="this.src='https://ui-avatars.com/api/?name=${p.county[0]}'">
                         <b>${p.name} ${isSelected ? '✔️' : ''}</b>
                         <div class="stats-popup">
-                            <strong>${p.name} (Valuation)</strong>
-                            <div class="stat-row"><span>Baseline (K)</span><span>${p.baseline.toFixed(2)}m</span></div>
+                            <strong>${p.name}</strong>
                             <div class="stat-row"><span>Goals (E)</span><span>${p.goals}</span></div>
                             <div class="stat-row"><span>Points (F)</span><span>${p.points}</span></div>
                             <div class="stat-row"><span>Clean Sheet (G)</span><span>${p.cleanSheet}</span></div>
-                            <div class="stat-row"><span>Wins (P)</span><span>${p.win}</span></div>
-                            <div class="stat-row"><span>Losses (Q)</span><span>${p.loss}</span></div>
-                            <div class="stat-row"><span>Red Cards (H)</span><span style="color:red">${p.redCard}</span></div>
+                            <div class="stat-row"><span>Red Card (H)</span><span style="color:red">${p.redCard}</span></div>
+                            <div class="stat-row"><span>1 Pointer (L)</span><span>${p.onePointer}</span></div>
+                            <div class="stat-row"><span>2 Pointer (M)</span><span>${p.twoPointer}</span></div>
+                            <div class="stat-row"><span>Match Win (P)</span><span>${p.win}</span></div>
+                            <div class="stat-row"><span>Match Loss (Q)</span><span>${p.lost}</span></div>
+                            <div class="stat-row"><span>GK Conceded (R)</span><span>${p.gkConceded}</span></div>
                             <div class="stat-row total-row"><span>Total Score (I)</span><span>${p.totalScore}</span></div>
-                            <div class="stat-row" style="color:var(--green); font-weight:bold;"><span>Calculated Market Value</span><span>${p.price.toFixed(2)}m</span></div>
                         </div>
                     </div>
                 </td>
-                <td><b>${p.price.toFixed(2)}m</b></td>
+                <td>${p.price.toFixed(2)}m</td>
                 <td><div style="display:flex; gap:2px;">${buttons}</div></td>
             </tr>`;
         }).join('');
@@ -276,15 +273,24 @@
         document.getElementById('pitch-board').innerHTML = pitchHtml;
     }
 
+    async function saveTeamToSheet() {
+        const name = document.getElementById('sub-mgr-name').value.trim();
+        const pin = document.getElementById('sub-mgr-pin').value.trim();
+        if(!name || pin.length !== 5) return alert("Missing name or 5-digit PIN.");
+        if(squad.length < 18) return alert("Squad incomplete.");
+        const data = { manager: name, pin: pin, team: squad.map(p => ({ name: p.name, role: p.assignedRole, price: p.price })) };
+        try { await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(data) }); alert("Submitted!"); } catch (e) { alert("Error."); }
+    }
+
     function updateIntel() {
         const content = document.getElementById('intel-content'), title = document.getElementById('intel-title');
         let sorted, label;
         switch(intelIndex) {
-            case 0: label="Top Market Values"; sorted=[...allPlayers].sort((a,b)=>b.price-a.price); break;
-            case 1: label="Biggest Bargains"; sorted=[...allPlayers].sort((a,b)=>a.price-b.price); break;
-            case 2: label="High Point Scorers"; sorted=[...allPlayers].sort((a,b)=>b.totalScore-a.totalScore); break;
-            case 3: label="Top 10 Forwards"; sorted=allPlayers.filter(p=>p.prefPos==='FWD').sort((a,b)=>b.totalScore-a.totalScore); break;
-            case 4: label="Clean Sheet Kings"; sorted=allPlayers.filter(p=>p.prefPos==='GK').sort((a,b)=>b.cleanSheet-a.cleanSheet); break;
+            case 0: label="Overall Top 10"; sorted=[...allPlayers].sort((a,b)=>b.totalScore-a.totalScore); break;
+            case 1: label="League Strugglers"; sorted=[...allPlayers].sort((a,b)=>a.totalScore-b.totalScore); break;
+            case 2: label="Most Expensive"; sorted=[...allPlayers].sort((a,b)=>b.price-a.price); break;
+            case 3: label="Top Scorers"; sorted=[...allPlayers].sort((a,b)=>b.points-a.points); break;
+            case 4: label="Best Value GK"; sorted=allPlayers.filter(p=>p.prefPos==='GK').sort((a,b)=>b.totalScore-a.totalScore); break;
         }
         title.innerText = label;
         content.innerHTML = sorted.slice(0, 10).map((p, idx) => `<div class="intel-item"><img src="${p.badge}" style="width:18px; margin-right:8px;"><span style="color:#888; width:20px;">${idx+1}.</span><span>${p.name}</span><span class="p-stat">${p.price.toFixed(2)}m</span></div>`).join('');
