@@ -22,11 +22,11 @@
 
         .panel { background: var(--white); border-radius: 8px; padding: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); height: fit-content; }
 
-        /* Stats Popup */
+        /* Restored Stats Popup */
         .player-info-cell { position: relative; display: flex; align-items: center; cursor: help; }
         .stats-popup { 
-            visibility: hidden; width: 190px; background-color: #222; color: #fff; text-align: left; 
-            border-radius: 6px; padding: 12px; position: absolute; z-index: 1000; left: 10px; top: 30px;
+            visibility: hidden; width: 200px; background-color: #222; color: #fff; text-align: left; 
+            border-radius: 6px; padding: 12px; position: absolute; z-index: 1000; left: 20px; top: 30px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.5); opacity: 0; transition: opacity 0.3s; pointer-events: none;
             font-size: 11px; border: 1.5px solid var(--orange); line-height: 1.6;
         }
@@ -48,7 +48,7 @@
 
         .bench-area { background: #222; padding: 12px; border-radius: 0 0 8px 8px; display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; margin-top: -5px; }
 
-        /* Filter UI */
+        /* Filters */
         .filter-row { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; }
         .filter-row input, .filter-row select { padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 12px; flex: 1; min-width: 80px; }
         .scroll-box { max-height: 550px; overflow-y: auto; }
@@ -61,27 +61,21 @@
         .is-pref { border: 2px solid var(--orange) !important; color: var(--orange); background: #fff5ee !important; }
         .btn-assign:disabled { opacity: 0.3; cursor: not-allowed; }
 
-        /* Submission Sidebar */
+        /* Sidebar/Submit */
         .submit-section { margin-top: 15px; padding-top: 15px; border-top: 2px solid #eee; }
         .submit-section input { width: 100%; padding: 10px; margin-bottom: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
-
         .intel-box { background: var(--dark); color: white; border-radius: 8px; padding: 15px; margin-top: 15px; border-top: 4px solid var(--orange); min-height: 420px; }
         .intel-box h3 { margin: 0 0 10px 0; font-size: 12px; color: var(--orange); text-transform: uppercase; border-bottom: 1px solid #333; padding-bottom: 5px; }
         .intel-item { display: flex; align-items: center; padding: 5px 0; border-bottom: 1px solid #222; font-size: 10px; }
         .p-stat { font-weight: bold; color: var(--orange); margin-left: auto; }
-
-        .timer-sidebar { background: var(--dark); color: #fff; padding: 10px; text-align: center; border-radius: 5px; margin-top: 10px; font-size: 13px; }
         #countdown { color: var(--orange); font-weight: bold; font-family: monospace; }
         .hidden { display: none; }
 
-        /* Rules UI */
+        /* Rules */
         .rules-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; }
         .rules-card { background: #fff; padding: 20px; border-radius: 8px; border-top: 4px solid var(--orange); box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        .rules-card h3 { margin-top: 0; color: var(--orange); border-bottom: 1px solid #eee; padding-bottom: 10px; font-size: 16px; }
-        .rules-list { list-style: none; padding: 0; margin: 0; }
-        .rules-list li { padding: 10px 0; border-bottom: 1px solid #f9f9f9; display: flex; justify-content: space-between; font-size: 13px; align-items: center; }
+        .rules-list li { padding: 10px 0; border-bottom: 1px solid #f9f9f9; display: flex; justify-content: space-between; font-size: 13px; }
         .rules-list li b { color: var(--green); }
-        .rules-desc { font-size: 12px; color: #666; font-style: italic; margin-top: 5px; line-height: 1.4; }
     </style>
 </head>
 <body>
@@ -126,16 +120,12 @@
             </div>
 
             <div class="panel">
-                <div id="budget-val" style="font-size:22px; font-weight:bold; color:var(--green); text-align:center;">Budget: 100.0m</div>
-                
+                <div id="budget-val" style="font-size:22px; font-weight:bold; color:var(--green); text-align:center;">Budget: 100.00m</div>
                 <div class="submit-section">
                     <input type="text" id="sub-mgr-name" placeholder="Manager Name">
                     <input type="password" id="sub-mgr-pin" placeholder="5-Digit PIN" maxlength="5">
                     <button onclick="saveTeamToSheet()" style="width:100%; padding:12px; background:var(--green); color:white; border:none; border-radius:5px; font-weight:bold; cursor:pointer;">SUBMIT TEAM</button>
                 </div>
-
-                <div class="timer-sidebar">DEADLINE: <span id="countdown">--</span></div>
-                
                 <div class="intel-box">
                     <h3 id="intel-title">Market Intel</h3>
                     <div id="intel-content"></div>
@@ -147,21 +137,11 @@
     <div id="page-rules" class="page hidden">
         <div class="rules-container">
             <div class="rules-card">
-                <h3>Market Value Rules</h3>
+                <h3>Price & Value Rules</h3>
                 <ul class="rules-list">
-                    <li><span>Accumulated Pts (+3)</span><b style="color:var(--green)">+0.25m Value</b></li>
-                    <li><span>Accumulated Pts (-3)</span><b style="color:red">-0.25m Value</b></li>
-                    <li><span>Starting Budget</span><b>100.0m</b></li>
-                </ul>
-                <p class="rules-desc">A player's price is calculated based on their Base Value (Col K) plus/minus 0.25 for every 3 points in their Total Score (Col I).</p>
-            </div>
-            <div class="rules-card">
-                <h3>Squad Management</h3>
-                <ul class="rules-list">
-                    <li><span>Squad Size</span><b>18 Players</b></li>
-                    <li><span>County Limit</span><b>Max 3 Per County</b></li>
-                    <li><span>Selection</span><b>Unique Players Only</b></li>
-                    <li><span>Security</span><b>5-Digit PIN</b></li>
+                    <li><span>Accumulated Pts (+3)</span><b>+0.25m Value</b></li>
+                    <li><span>Accumulated Pts (-3)</span><b>-0.25m Value</b></li>
+                    <li><span>Starting Budget</span><b>100.00m</b></li>
                 </ul>
             </div>
             <div class="rules-card">
@@ -204,10 +184,7 @@
             
             let totalScore = parseInt(rows[i][8]) || 0;
             let basePrice = parseFloat(rows[i][10]) || 5.0;
-            
-            // MARKET VALUE FORMULA: +/- 0.25 per 3 points
-            let priceAdjustment = Math.floor(totalScore / 3) * 0.25;
-            let currentPrice = basePrice + priceAdjustment;
+            let currentPrice = basePrice + (Math.floor(totalScore / 3) * 0.25);
 
             allPlayers.push({
                 id: i, 
@@ -249,7 +226,32 @@
                 onclick="addPlayer(${p.id}, '${pos}')" ${isSelected ? 'disabled' : ''}>${pos}</button>`
             ).join('');
             
-            return `<tr><td><div class="player-info-cell"><img src="${p.badge}" class="table-badge" onerror="this.src='https://ui-avatars.com/api/?name=${p.county[0]}'"><b>${p.name} ${isSelected ? '✔️' : ''}</b><div class="stats-popup"><strong>${p.name}</strong><div class="stat-row"><span>Goals</span><span>${p.goals}</span></div><div class="stat-row"><span>Points</span><span>${p.points}</span></div><div class="stat-row total-row"><span>Total Score</span><span>${p.totalScore}</span></div></div></div></td><td>${p.price.toFixed(2)}m</td><td><div style="display:flex; gap:2px;">${buttons}</div></td></tr>`;
+            // Comprehensive Hover Stats
+            let hoverHtml = `
+                <div class="stats-popup">
+                    <strong>${p.name} (${p.county})</strong>
+                    <div class="stat-row"><span>Goals (E)</span><span>${p.goals}</span></div>
+                    <div class="stat-row"><span>Points (F)</span><span>${p.points}</span></div>
+                    <div class="stat-row"><span>Clean Sheet (G)</span><span>${p.cleanSheet}</span></div>
+                    <div class="stat-row"><span>Red Card (H)</span><span style="color:red">${p.redCard}</span></div>
+                    <div class="stat-row"><span>1 Pointer (L)</span><span>${p.onePointer}</span></div>
+                    <div class="stat-row"><span>2 Pointer (M)</span><span>${p.twoPointer}</span></div>
+                    <div class="stat-row"><span>Match Win (P)</span><span>${p.win}</span></div>
+                    <div class="stat-row"><span>GK Conceded (R)</span><span>${p.gkConceded}</span></div>
+                    <div class="stat-row total-row"><span>Total Score (I)</span><span>${p.totalScore}</span></div>
+                </div>`;
+
+            return `<tr>
+                <td>
+                    <div class="player-info-cell">
+                        <img src="${p.badge}" class="table-badge" onerror="this.src='https://ui-avatars.com/api/?name=${p.county[0]}'">
+                        <b>${p.name} ${isSelected ? '✔️' : ''}</b>
+                        ${hoverHtml}
+                    </div>
+                </td>
+                <td>${p.price.toFixed(2)}m</td>
+                <td><div style="display:flex; gap:2px;">${buttons}</div></td>
+            </tr>`;
         }).join('');
     }
 
@@ -294,9 +296,8 @@
         const mgrPin = document.getElementById('sub-mgr-pin').value.trim();
         if(!mgrName || mgrPin.length !== 5) return alert("Enter Name & 5-digit PIN.");
         if(squad.length < 18) return alert("Select 18 players first!");
-        
         const data = { manager: mgrName, pin: mgrPin, team: squad.map(p => ({ name: p.name, role: p.assignedRole, price: p.price })) };
-        try { await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(data) }); alert("Submitted!"); } catch (e) { alert("Error"); }
+        try { await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(data) }); alert("Submitted!"); } catch (e) { alert("Error connecting to script."); }
     }
 
     function updateIntel() {
@@ -306,7 +307,7 @@
             case 0: label="Overall Top 10"; sorted=[...allPlayers].sort((a,b)=>b.totalScore-a.totalScore); break;
             case 1: label="League Strugglers"; sorted=[...allPlayers].sort((a,b)=>a.totalScore-b.totalScore); break;
             case 2: label="Most Expensive"; sorted=[...allPlayers].sort((a,b)=>b.price-a.price); break;
-            case 3: label="Top Scorers"; sorted=[...allPlayers].sort((a,b)=>b.points-a.points); break;
+            case 3: label="Top Goal Scorers"; sorted=[...allPlayers].sort((a,b)=>b.goals-a.goals); break;
             case 4: label="Best Value GK"; sorted=allPlayers.filter(p=>p.prefPos==='GK').sort((a,b)=>b.totalScore-a.totalScore); break;
         }
         title.innerText = label;
@@ -319,13 +320,6 @@
         document.querySelectorAll('.nav-link').forEach(n => n.classList.remove('active'));
         document.getElementById('nav-' + id).classList.add('active');
     }
-
-    const deadline = new Date("Feb 13, 2026 23:00:00").getTime();
-    setInterval(() => {
-        const dist = deadline - new Date().getTime();
-        const d = Math.floor(dist/86400000), h = Math.floor((dist%86400000)/3600000), m = Math.floor((dist%3600000)/60000), s = Math.floor((dist%60000)/1000);
-        document.getElementById("countdown").innerHTML = `${d}d ${h}h ${m}m ${s}s`;
-    }, 1000);
 
     init();
 </script>
