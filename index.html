@@ -8,25 +8,11 @@
         :root { --orange: #f37021; --dark: #1a1a1a; --cream: #f4f1de; --white: #ffffff; --green: #28a745; --red: #dc3545; --grey: #777; --blue: #007bff; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--cream); margin: 0; padding: 0; color: var(--dark); }
         
-        .header { 
-            background: var(--orange); 
-            padding: 20px 10px; 
-            text-align: center; 
-            box-shadow: 0 2px 10px rgba(0,0,0,0.2); 
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-        .header img {
-            max-width: 100%;
-            height: auto;
-            max-height: 140px; 
-            display: block;
-            filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.1));
-        }
+        .header { background: var(--orange); padding: 20px 10px; text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,0.2); display: flex; justify-content: center; align-items: center; }
+        .header img { max-width: 100%; height: auto; max-height: 140px; display: block; filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.1)); }
 
         nav { display: flex; justify-content: center; background: var(--dark); padding: 0; position: sticky; top: 0; z-index: 100; flex-wrap: wrap; }
-        .nav-link { color: white; padding: 15px 20px; text-decoration: none; font-weight: bold; cursor: pointer; transition: 0.3s; border: none; background: none; font-size: 13px; text-transform: uppercase; }
+        .nav-link { color: white; padding: 15px 20px; text-decoration: none; font-weight: bold; cursor: pointer; border: none; background: none; font-size: 13px; text-transform: uppercase; }
         .nav-link.active { background: var(--orange); }
         
         .container { padding: 15px; max-width: 1300px; margin: auto; }
@@ -41,46 +27,34 @@
         th { position: sticky; top: 0; background: #f8f8f8; padding: 12px; text-align: left; font-size: 10px; border-bottom: 2px solid #ddd; z-index: 5; }
         td { padding: 12px; border-bottom: 1px solid #eee; font-size: 13px; vertical-align: middle; }
         
+        /* Tooltip & Player Cell */
         .player-cell { display: flex; align-items: center; position: relative; cursor: help; }
-        .tooltip { visibility: hidden; width: 180px; background-color: var(--dark); color: #fff; text-align: left; border-radius: 6px; padding: 10px; position: absolute; z-index: 100; bottom: 125%; left: 10%; opacity: 0; transition: opacity 0.3s; box-shadow: 0 4px 15px rgba(0,0,0,0.3); font-size: 11px; line-height: 1.4; }
+        .county-badge { width: 35px; height: 35px; object-fit: contain; margin-right: 12px; }
+        .tooltip { visibility: hidden; width: 200px; background-color: var(--dark); color: #fff; text-align: left; border-radius: 6px; padding: 12px; position: absolute; z-index: 100; bottom: 125%; left: 0; opacity: 0; transition: opacity 0.3s; box-shadow: 0 4px 15px rgba(0,0,0,0.3); font-size: 11px; line-height: 1.6; }
         .player-cell:hover .tooltip { visibility: visible; opacity: 1; }
 
-        .county-badge { width: 35px; height: 35px; object-fit: contain; margin-right: 12px; }
-        .result-badge { font-size: 9px; font-weight: bold; padding: 2px 5px; border-radius: 4px; display: inline-block; margin-top: 4px; border: 1px solid #ddd; }
-        .res-win { background: #d4edda; color: #155724; }
-        .res-loss { background: #f8d7da; color: #721c24; }
-        
-        .trend-up { color: var(--green); font-weight: bold; }
-        .trend-down { color: var(--red); font-weight: bold; }
-
         .btn-group { display: flex; gap: 2px; }
-        .btn-pos { border: 1px solid #ddd; background: #f9f9f9; color: #555; padding: 6px 2px; border-radius: 4px; font-size: 9px; font-weight: normal; cursor: pointer; flex: 1; transition: 0.2s; }
-        .btn-pos:hover { background: var(--orange); color: white; border-color: var(--orange); }
-        .btn-pref { border: 2px solid var(--orange); color: var(--orange); font-weight: bold; background: #fff5ee; }
+        .btn-pos { border: 1px solid #ddd; background: #f9f9f9; padding: 6px 2px; border-radius: 4px; font-size: 9px; cursor: pointer; flex: 1; }
+        .btn-pos:hover { background: var(--orange); color: white; }
 
         .squad-slot { display: flex; justify-content: space-between; background: #f9f9f9; padding: 8px; margin-bottom: 5px; border-radius: 4px; border-left: 4px solid var(--orange); align-items: center; font-size: 12px; }
-        .pos-tracker { font-size: 11px; background: #fff3cd; padding: 10px; border-radius: 5px; margin-bottom: 15px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; border: 1px solid #ffeeba; }
-        .hidden { display: none; }
+        .pos-tracker { font-size: 11px; background: #fff3cd; padding: 10px; border-radius: 5px; margin-bottom: 15px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; }
         
         .btn-submit { width: 100%; padding: 12px; background: var(--green); color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; margin-top: 10px; }
         .btn-load { width: 100%; padding: 10px; background: var(--blue); color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; margin-bottom: 10px; }
         .btn-reset { width: 100%; padding: 8px; background: #eee; border: 1px solid #ccc; cursor: pointer; margin-top: 5px; font-size: 11px; }
-        
-        #market-status-msg { font-size: 12px; text-align: center; font-weight: bold; margin-top: 10px; }
+        .hidden { display: none; }
     </style>
 </head>
 <body>
 
 <div class="header">
-    <img src="https://lh3.googleusercontent.com/d/1JGqYSa8yysXfOEtRYxafMAD7BPV7YJLI" 
-         alt="GAA Fantasy Football Banner" 
-         onerror="this.src='https://via.placeholder.com/600x120?text=GAA+FANTASY+FOOTBALL'">
+    <img src="https://lh3.googleusercontent.com/d/1JGqYSa8yysXfOEtRYxafMAD7BPV7YJLI" alt="GAA Fantasy Football Banner">
 </div>
 
 <nav>
+    <button class="nav-link active" onclick="showPage('market')">Team Selection</button>
     <button class="nav-link" onclick="showPage('rules')">Rules</button>
-    <button class="nav-link active" id="nav-market" onclick="showPage('market')">Team</button>
-    <button class="nav-link" onclick="window.open('https://your-forum-link.com')">Forum</button>
 </nav>
 
 <div class="container">
@@ -103,10 +77,10 @@
                     <table>
                         <thead>
                             <tr>
-                                <th>Player Info (Hover for Stats)</th>
-                                <th>Total Pts</th>
-                                <th>Market Value</th>
-                                <th style="width: 180px;">Assign Position</th>
+                                <th>Player (Hover for Stats)</th>
+                                <th>Pts</th>
+                                <th>Value</th>
+                                <th style="width: 180px;">Assign</th>
                             </tr>
                         </thead>
                         <tbody id="market-body"></tbody>
@@ -125,12 +99,11 @@
                 <div id="squad-list"></div>
                 <button id="btn-save" class="btn-submit" onclick="saveTeamToSheet()">SAVE WEEKLY TEAM</button>
                 <button class="btn-reset" onclick="resetSquad()">RESET SQUAD</button>
-                <div id="market-status-msg"></div>
             </div>
         </div>
     </div>
-
-    <div id="page-rules" class="page hidden"><div class="panel"><h2>Rules</h2><p>Big Win: +5 | Win: +2 | Loss: -2 | Big Loss: -5</p></div></div>
+    
+    <div id="page-rules" class="page hidden"><div class="panel"><h2>Rules</h2><p>Select 18 players within the 100m budget.</p></div></div>
 </div>
 
 <script>
@@ -141,74 +114,47 @@
     let state = { budget: 100.0, squad: [] };
     const LIMITS = { GK: 1, DEF: 6, MID: 2, FWD: 6, SUB: 3, COUNTY: 2 };
 
-    function getDirectImg(url) {
-        if (!url) return '';
-        let clean = url.trim();
-        if (clean.includes('imgur.com') && !clean.match(/\.(png|jpg|jpeg|gif)$/)) {
-            return clean.replace('imgur.com', 'i.imgur.com') + '.png';
-        }
-        return clean;
-    }
-
     async function init() {
-        checkMarketStatus();
         try {
             const res = await fetch(SCORERS_URL + '&t=' + new Date().getTime());
             const text = await res.text();
             processScorers(text);
-        } catch (e) { console.error(e); }
-    }
-
-    function checkMarketStatus() {
-        const now = new Date();
-        const day = now.getDay(); 
-        const hour = now.getHours();
-        const btn = document.getElementById('btn-save');
-        const msg = document.getElementById('market-status-msg');
-
-        let isOpen = true;
-        if (day === 5 && hour >= 21) isOpen = false; 
-        if (day === 6 || day === 0) isOpen = false;  
-        if (day === 1 && hour < 7) isOpen = false;   
-
-        if (!isOpen) {
-            btn.disabled = true;
-            msg.innerText = "Market Closed (Opens Mon 7am)";
-            msg.style.color = "var(--red)";
-        } else {
-            btn.disabled = false;
-            msg.innerText = "Market Open - 2 Transfers Allowed";
-            msg.style.color = "var(--green)";
-        }
-        return isOpen;
+        } catch (e) { console.error("Load error:", e); }
     }
 
     function processScorers(csvText) {
         const rows = csvText.split('\n').map(row => row.split(','));
         allPlayers = [];
         const counties = new Set();
+
         for (let i = 1; i < rows.length; i++) {
             const col = rows[i];
             if (!col[0]) continue;
-            let rawResult = (col[9] || "").trim().toLowerCase();
-            let displayResult = rawResult.replace('heavy', 'BIG').toUpperCase();
-            let rawPts = parseInt(col[8]) || 0;
-            let bonus = (rawResult.includes("win")) ? (rawResult.includes("big") || rawResult.includes("heavy") ? 5 : 2) : 0;
-            let deduction = (rawResult.includes("loss")) ? (rawResult.includes("big") || rawResult.includes("heavy") ? 5 : 2) : 0;
-            let totalPts = rawPts + bonus - deduction;
-            let price = 5.5 + (totalPts * 0.05);
-            counties.add(col[0].trim());
+
+            const countyName = col[0].trim();
+            counties.add(countyName);
+
+            // Columns mapping: E=4, F=5, G=6, H=7, L=11, M=12, O=14
             allPlayers.push({
-                id: i, county: col[0].trim(),
+                id: i,
+                county: countyName,
                 name: (col[1] + " " + col[2]).trim(),
                 prefPos: (col[3] || "").trim().toUpperCase(),
-                badge: getDirectImg(col[14]), 
-                totalPts: totalPts,
-                price: Math.max(3.0, price),
-                result: displayResult,
-                statsHTML: `<strong>${col[0].trim()}</strong><br>Goals: ${col[4]||0}<br>Pts: ${totalPts}`
+                totalPts: parseInt(col[8]) || 0,
+                price: Math.max(3.0, 5.5 + ((parseInt(col[8]) || 0) * 0.05)),
+                badge: col[14] ? col[14].trim() : '',
+                statsHTML: `
+                    <strong>${col[1]} ${col[2]} (${countyName})</strong><hr>
+                    Goals: ${col[4] || 0}<br>
+                    Points: ${col[5] || 0}<br>
+                    Frees: ${col[6] || 0}<br>
+                    45s: ${col[7] || 0}<br>
+                    Minutes: ${col[11] || 0}<br>
+                    Turnovers: ${col[12] || 0}
+                `
             });
         }
+        
         const countySelect = document.getElementById('filter-county');
         [...counties].sort().forEach(c => {
             const opt = document.createElement('option');
@@ -219,15 +165,28 @@
     }
 
     function filterPlayers() {
-        const nameQuery = document.getElementById('search-name').value.toLowerCase();
-        const filtered = allPlayers.filter(p => p.name.toLowerCase().includes(nameQuery));
+        const nameQ = document.getElementById('search-name').value.toLowerCase();
+        const countyQ = document.getElementById('filter-county').value;
+        const posQ = document.getElementById('filter-pos').value;
+
+        const filtered = allPlayers.filter(p => 
+            p.name.toLowerCase().includes(nameQ) && 
+            (!countyQ || p.county === countyQ) && 
+            (!posQ || p.prefPos === posQ)
+        );
         renderMarket(filtered);
     }
 
     function renderMarket(data) {
         document.getElementById('market-body').innerHTML = data.map(p => `
             <tr>
-                <td><div class="player-cell"><b>${p.name}</b><br><small>${p.county}</small></div></td>
+                <td>
+                    <div class="player-cell">
+                        <img src="${p.badge}" class="county-badge" onerror="this.src='https://ui-avatars.com/api/?name=${p.county[0]}&background=f37021&color=fff'">
+                        <div><b>${p.name}</b><br><small>${p.county}</small></div>
+                        <div class="tooltip">${p.statsHTML}</div>
+                    </div>
+                </td>
                 <td>${p.totalPts}</td>
                 <td>${p.price.toFixed(2)}m</td>
                 <td>
@@ -242,9 +201,10 @@
         const p = allPlayers.find(x => x.id === id);
         if (state.squad.length >= 18) return alert("Squad full!");
         if (state.budget < p.price) return alert("Insufficient budget!");
-        if (state.squad.find(x => x.id === id)) return alert("Player already in squad!");
-        if (state.squad.filter(x => x.role === role).length >= LIMITS[role]) return alert(`${role} position is full!`);
-        
+        if (state.squad.find(x => x.id === id)) return alert("Already in squad!");
+        if (state.squad.filter(x => x.role === role).length >= LIMITS[role]) return alert(`${role} position full!`);
+        if (state.squad.filter(x => x.county === p.county).length >= LIMITS.COUNTY) return alert(`Max 2 players per county!`);
+
         state.squad.push({ ...p, role });
         state.budget -= p.price;
         updateUI();
@@ -254,8 +214,15 @@
         document.getElementById('budget-val').innerText = `Budget: ${state.budget.toFixed(2)}m`;
         const counts = { GK: 0, DEF: 0, MID: 0, FWD: 0, SUB: 0 };
         state.squad.forEach(p => counts[p.role]++);
-        document.getElementById('pos-tracker').innerHTML = `<div>GK: ${counts.GK}/1</div><div>DEF: ${counts.DEF}/6</div><div>MID: ${counts.MID}/2</div><div>FWD: ${counts.FWD}/6</div><div>SUB: ${counts.SUB}/3</div>`;
-        document.getElementById('squad-list').innerHTML = state.squad.map((p, i) => `<div class="squad-slot"><span><b>[${p.role}]</b> ${p.name}</span><button onclick="removePlayer(${i})" style="color:red; cursor:pointer;">×</button></div>`).join('');
+        document.getElementById('pos-tracker').innerHTML = `
+            <div>GK: ${counts.GK}/1</div><div>DEF: ${counts.DEF}/6</div><div>MID: ${counts.MID}/2</div>
+            <div>FWD: ${counts.FWD}/6</div><div>SUB: ${counts.SUB}/3</div>
+        `;
+        document.getElementById('squad-list').innerHTML = state.squad.map((p, i) => `
+            <div class="squad-slot">
+                <span><b>[${p.role}]</b> ${p.name}</span>
+                <button onclick="removePlayer(${i})" style="color:red; border:none; background:none; cursor:pointer;">×</button>
+            </div>`).join('');
     }
 
     function removePlayer(idx) {
@@ -265,43 +232,36 @@
     }
 
     async function saveTeamToSheet() {
-        if (!checkMarketStatus()) return alert("Market is currently closed.");
-        if (state.squad.length < 18) return alert("You need 18 players.");
-
-        let manager = localStorage.getItem('fantasy_manager') || prompt("Manager Name:");
-        if (!manager) return;
-        let pin = prompt("Enter a 4-digit PIN/Password to secure your team:");
-        if (!pin) return;
-
-        localStorage.setItem('fantasy_manager', manager);
+        if (state.squad.length < 18) return alert("Need 18 players.");
+        let manager = prompt("Manager Name:");
+        let pin = prompt("Set/Enter 4-digit PIN:");
+        if (!manager || !pin) return;
 
         const order = ['GK', 'DEF', 'MID', 'FWD', 'SUB'];
-        let sortedNames = [];
+        let names = [];
         order.forEach(role => {
-            const names = state.squad.filter(p => p.role === role).map(p => p.name);
-            sortedNames.push(...names);
+            const pNames = state.squad.filter(p => p.role === role).map(p => p.name);
+            names.push(...pNames);
         });
 
         try {
             await fetch(APPS_SCRIPT_URL, {
                 method: 'POST',
                 mode: 'no-cors',
-                body: JSON.stringify({ manager: manager, pin: pin, squad: sortedNames })
+                body: JSON.stringify({ manager, pin, squad: names })
             });
-            alert("Team saved successfully!");
-        } catch (e) { alert("Error saving team."); }
+            alert("Team saved!");
+        } catch (e) { alert("Error saving."); }
     }
 
     async function loadExistingTeam() {
-        let manager = prompt("Enter Manager Name:");
-        if (!manager) return;
-        let pass = prompt("Enter PIN:");
-        if (!pass) return;
+        let manager = prompt("Manager Name:");
+        let pass = prompt("PIN:");
+        if (!manager || !pass) return;
 
         try {
             const res = await fetch(`${APPS_SCRIPT_URL}?manager=${encodeURIComponent(manager)}&pass=${encodeURIComponent(pass)}`);
             const data = await res.json();
-            
             if (data.success) {
                 state.squad = []; state.budget = 100.0;
                 const roles = ['GK', 'DEF','DEF','DEF','DEF','DEF','DEF', 'MID','MID', 'FWD','FWD','FWD','FWD','FWD','FWD', 'SUB','SUB','SUB'];
@@ -310,9 +270,8 @@
                     if (p) { state.squad.push({...p, role: roles[i]}); state.budget -= p.price; }
                 });
                 updateUI();
-                alert("Team Loaded!");
-            } else { alert("Login Failed: " + data.msg); }
-        } catch (e) { alert("Error loading team."); }
+            } else { alert(data.msg); }
+        } catch (e) { alert("Error loading."); }
     }
 
     function showPage(id) {
@@ -320,7 +279,7 @@
         document.getElementById('page-' + id).classList.remove('hidden');
     }
 
-    function resetSquad() { if(confirm("Clear squad?")) { state.squad = []; state.budget = 100.0; updateUI(); } }
+    function resetSquad() { if(confirm("Reset?")) { state.squad = []; state.budget = 100.0; updateUI(); } }
     init();
 </script>
 </body>
