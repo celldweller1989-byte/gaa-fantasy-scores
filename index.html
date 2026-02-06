@@ -5,117 +5,98 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GAA FANTASY FOOTBALL</title>
     <style>
-        :root { --orange: #f37021; --dark: #1a1a1a; --cream: #f4f1de; --white: #ffffff; --green: #256129; --line: rgba(255,255,255,0.85); --red: #dc3545; --blue: #007bff; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--cream); margin: 0; padding: 0; color: var(--dark); overflow-x: hidden; }
+        :root { --orange: #f37021; --dark: #1a1a1a; --cream: #f4f1de; --white: #ffffff; --green: #256129; --line: rgba(255,255,255,0.8); --blue: #007bff; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--cream); margin: 0; padding: 0; color: var(--dark); }
         
-        .header { background: var(--orange); padding: 10px; text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
-        .header img { max-height: 50px; }
+        /* Banner Header */
+        .header { background: var(--orange); padding: 15px; text-align: center; display: flex; align-items: center; justify-content: center; gap: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
+        .header img { height: 60px; border-radius: 5px; }
+        .header h1 { color: white; margin: 0; font-size: 24px; text-transform: uppercase; letter-spacing: 1px; }
 
-        .container { padding: 10px; max-width: 1400px; margin: auto; }
-        .main-layout { display: flex; flex-direction: column; gap: 15px; }
-        @media (min-width: 1100px) { .main-layout { display: grid; grid-template-columns: 380px 1fr 320px; } }
+        .container { padding: 15px; max-width: 1500px; margin: auto; }
+        .main-layout { display: grid; grid-template-columns: 1fr 380px 300px; gap: 20px; }
+        @media (max-width: 1100px) { .main-layout { grid-template-columns: 1fr; } }
 
-        /* --- Pitch Styles --- */
-        .pitch-container { position: relative; width: 100%; max-width: 700px; margin: auto; }
+        .panel { background: var(--white); border-radius: 8px; padding: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+
+        /* Market Table & Hover Stats */
+        .scroll-box { max-height: 700px; overflow-y: auto; border: 1px solid #ddd; }
+        table { width: 100%; border-collapse: collapse; font-size: 12px; }
+        th { background: #f4f4f4; padding: 10px; text-align: left; position: sticky; top: 0; z-index: 10; border-bottom: 2px solid #ddd; }
+        td { padding: 10px 8px; border-bottom: 1px solid #eee; position: relative; }
+        
+        .player-info b { color: var(--blue); cursor: help; }
+        .stats-tooltip { 
+            visibility: hidden; position: absolute; left: 110%; top: 0; background: #333; color: #fff; 
+            padding: 10px; border-radius: 5px; z-index: 100; width: 150px; font-size: 11px; opacity: 0; transition: 0.2s;
+        }
+        td:hover .stats-tooltip { visibility: visible; opacity: 1; }
+
+        .btn-pos { padding: 6px 4px; font-size: 10px; cursor: pointer; border: 1px solid #ccc; background: white; font-weight: bold; flex: 1; }
+        .btn-pref { background: #fff5ee; border-color: var(--orange); color: var(--orange); }
+
+        /* Compact Pitch */
+        .pitch-container { width: 100%; position: sticky; top: 20px; }
         .pitch { 
-            background: var(--green); 
-            width: 100%; 
-            aspect-ratio: 1 / 1.5; 
-            border: 3px solid white;
-            position: relative;
+            background: var(--green); width: 100%; aspect-ratio: 1 / 1.4; 
+            border: 3px solid white; position: relative; border-radius: 5px;
             background-image: linear-gradient(0deg, transparent 49.8%, var(--line) 50%, transparent 50.2%);
         }
+        .pitch-grid { display: flex; flex-direction: column; height: 100%; justify-content: space-around; padding: 5px 0; }
+        .pitch-row { display: flex; justify-content: center; gap: 8%; width: 100%; }
 
-        .marking { position: absolute; width: 100%; border-top: 1.5px solid var(--line); pointer-events: none; }
-        .m-13 { top: 8.5%; } .m-20 { top: 13.5%; } .m-45 { top: 30%; } .m-65 { top: 43%; }
-        .m-13-b { bottom: 8.5%; border-top:none; border-bottom: 1.5px solid var(--line); }
-        .m-20-b { bottom: 13.5%; border-top:none; border-bottom: 1.5px solid var(--line); }
-        
-        .pitch-grid { display: flex; flex-direction: column; height: 100%; justify-content: space-between; padding: 2% 0; position: relative; z-index: 5; }
-        
-        /* Spacing out positions horizontally */
-        .pitch-row { display: flex; justify-content: space-around; align-items: center; width: 100%; height: 13%; padding: 0 5%; box-sizing: border-box; }
+        .slot { width: 55px; height: 55px; position: relative; display: flex; align-items: center; justify-content: center; }
+        .player-disc { width: 100%; height: 100%; cursor: grab; display: flex; flex-direction: column; align-items: center; }
+        .player-disc img { width: 45px; height: 45px; object-fit: contain; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4)); }
+        .player-label { position: absolute; bottom: -5px; background: rgba(0,0,0,0.8); color: white; padding: 1px 4px; border-radius: 3px; font-size: 8px; pointer-events: none; }
+        .empty-marker { width: 35px; height: 35px; border: 1.5px dashed rgba(255,255,255,0.3); border-radius: 50%; }
 
-        .slot { 
-            width: 20%; max-width: 65px; aspect-ratio: 1/1;
-            display: flex; align-items: center; justify-content: center;
-            position: relative; border-radius: 50%;
-        }
-        .slot.drag-over { background: rgba(255,255,255,0.25); border: 2px dashed white; }
+        .bench-area { background: #111; padding: 10px; display: flex; justify-content: center; gap: 15px; border-radius: 0 0 5px 5px; }
 
-        .player-disc { width: 100%; height: 100%; cursor: grab; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        .player-disc img { width: 95%; height: 95%; object-fit: contain; filter: drop-shadow(0 4px 5px rgba(0,0,0,0.5)); pointer-events: none; }
-        
-        .empty-marker { width: 35px; height: 35px; border: 1.5px dashed rgba(255,255,255,0.2); border-radius: 50%; pointer-events: none; }
-
-        .player-label { 
-            position: absolute; bottom: -8px; background: rgba(0,0,0,0.85); color: white; 
-            padding: 1px 5px; border-radius: 3px; font-size: 9px; font-weight: bold;
-            white-space: nowrap; pointer-events: none; z-index: 10;
-        }
-
-        .bench-container { background: #111; padding: 15px; border-radius: 0 0 8px 8px; border-top: 2px solid #333; }
-        .bench-row { display: flex; justify-content: center; gap: 30px; }
-
-        /* --- Panel & UI --- */
-        .panel { background: var(--white); border-radius: 8px; padding: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-        .scroll-box { max-height: 550px; overflow-y: auto; border: 1px solid #eee; border-radius: 4px; }
-        table { width: 100%; border-collapse: collapse; font-size: 11px; }
-        th { background: #f8f8f8; padding: 10px; text-align: left; position: sticky; top: 0; border-bottom: 1px solid #ddd; }
-        td { padding: 10px 8px; border-bottom: 1px solid #eee; }
-        
-        .btn-add { background: var(--blue); color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 10px; font-weight: bold; }
-        .btn-add:hover { background: #0056b3; }
-
-        .timer-box { background: var(--dark); color: #fff; padding: 10px; text-align: center; border-radius: 8px; margin-bottom: 10px; font-size: 13px; border-bottom: 3px solid var(--orange); }
-        #countdown { color: var(--orange); font-weight: bold; }
+        /* Budget & Stats */
+        .budget-card { text-align: center; }
+        .budget-val { font-size: 32px; font-weight: bold; color: var(--green); }
     </style>
 </head>
 <body>
 
 <div class="header">
-    <img src="https://via.placeholder.com/400x60?text=GAA+FANTASY" alt="GAA Fantasy">
+    <img src="https://via.placeholder.com/60x60?text=GAA" alt="Logo">
+    <h1>GAA Fantasy Management</h1>
 </div>
 
 <div class="container">
-    <div class="timer-box">MARKET CLOSES: <span id="countdown"></span></div>
-    
     <div class="main-layout">
         <div class="panel">
-            <h3 style="margin-top:0;">Player Market</h3>
-            <div style="display:flex; gap:5px; margin-bottom:10px;">
+            <div style="display:flex; gap:10px; margin-bottom:15px;">
                 <input type="text" id="search-name" placeholder="Search Player..." oninput="filterPlayers()" style="flex:2; padding:10px; border:1px solid #ccc; border-radius:5px;">
                 <select id="filter-county" onchange="filterPlayers()" style="flex:1; padding:10px; border:1px solid #ccc; border-radius:5px;"><option value="">All Counties</option></select>
             </div>
             <div class="scroll-box">
                 <table>
-                    <thead><tr><th>Player</th><th>Price</th><th>Action</th></tr></thead>
+                    <thead><tr><th>Player</th><th>Price</th><th>Assign Position</th></tr></thead>
                     <tbody id="market-body"></tbody>
                 </table>
             </div>
         </div>
 
         <div class="pitch-container">
-            <div class="pitch">
-                <div class="marking m-13"></div><div class="marking m-20"></div>
-                <div class="marking m-45"></div><div class="marking m-65"></div>
-                <div class="marking m-13-b"></div><div class="marking m-20-b"></div>
+            <div class="pitch" id="main-pitch">
                 <div class="pitch-grid" id="pitch-board"></div>
             </div>
-            <div class="bench-container">
-                <div class="bench-row" id="bench-list"></div>
-            </div>
+            <div class="bench-area" id="bench-list"></div>
+            <p style="font-size: 11px; text-align: center; color: #666; margin-top: 10px;">Drag badges to swap or reposition players.</p>
         </div>
 
         <div class="panel">
-            <div id="budget-val" style="font-size:28px; font-weight:bold; color:var(--green); text-align:center;">100.0m</div>
-            <p style="text-align:center; font-size:11px; color:#666; margin-bottom:20px;">BUDGET REMAINING</p>
-            
-            <div id="squad-count" style="font-size:13px; margin-bottom:10px; font-weight:bold;">Players: 0 / 18</div>
-            <div id="county-info" style="font-size:11px; color:#555; line-height:1.4; margin-bottom:20px;"></div>
-
-            <button onclick="saveTeam()" style="width:100%; padding:15px; background:var(--green); color:white; border:none; border-radius:5px; font-weight:bold; cursor:pointer; font-size:16px;">SAVE SQUAD</button>
-            <button onclick="resetSquad()" style="width:100%; margin-top:10px; background:none; border:none; color:var(--red); font-size:11px; cursor:pointer;">Reset Draft</button>
+            <div class="budget-card">
+                <div class="budget-val" id="budget-display">100.0m</div>
+                <p style="font-size: 12px; color: #666; margin: 0;">TOTAL BUDGET REMAINING</p>
+            </div>
+            <hr>
+            <div id="county-summary" style="font-size: 12px; line-height: 1.8;"></div>
+            <button onclick="saveTeam()" style="width:100%; padding:15px; background:var(--green); color:white; border:none; border-radius:5px; font-weight:bold; cursor:pointer; font-size:16px; margin-top:20px;">SUBMIT SQUAD</button>
+            <button onclick="resetSquad()" style="width:100%; margin-top:10px; background:none; border:none; color:red; cursor:pointer; font-size:11px;">Clear All Selections</button>
         </div>
     </div>
 </div>
@@ -125,16 +106,8 @@
     let allPlayers = [], state = { budget: 100.0, squad: [] };
     const LIMITS = { GK: 1, DEF: 6, MID: 2, FWD: 6, SUB: 3, COUNTY: 3 };
 
-    const deadline = new Date("Feb 13, 2026 23:00:00").getTime();
-    setInterval(() => {
-        const dist = deadline - new Date().getTime();
-        if (dist < 0) { document.getElementById("countdown").innerHTML = "CLOSED"; return; }
-        const d = Math.floor(dist/86400000), h = Math.floor((dist%86400000)/3600000), m = Math.floor((dist%3600000)/60000), s = Math.floor((dist%60000)/1000);
-        document.getElementById("countdown").innerHTML = `${d}d ${h}h ${m}m ${s}s`;
-    }, 1000);
-
     async function init() {
-        const res = await fetch(SCORERS_URL + '?nocache=' + new Date().getTime());
+        const res = await fetch(SCORERS_URL + '?t=' + Date.now());
         const text = await res.text();
         const rows = text.split('\n').map(r => r.split(','));
         const counties = new Set();
@@ -146,7 +119,8 @@
                 id: i, county: rows[i][0].trim(), name: (rows[i][1]+" "+rows[i][2]).trim(),
                 prefPos: rows[i][3].trim().toUpperCase(), 
                 price: Math.max(3.0, 5.5 + (parseInt(rows[i][8])||0)*0.05),
-                badge: rows[i][14] ? rows[i][14].trim() : ''
+                badge: rows[i][14] ? rows[i][14].trim() : '',
+                stats: `App: ${rows[i][7] || 0} | Goals: ${rows[i][4] || 0} | Points: ${rows[i][5] || 0}`
             });
         }
         [...counties].sort().forEach(c => { let o = document.createElement('option'); o.value = o.text = c; document.getElementById('filter-county').add(o); });
@@ -161,39 +135,37 @@
         
         document.getElementById('market-body').innerHTML = filtered.map(p => `
             <tr>
-                <td><b>${p.name}</b><br><small>${p.county} (${p.prefPos})</small></td>
-                <td>${p.price.toFixed(1)}m</td>
-                <td><button class="btn-add" onclick="addPlayer(${p.id})">ADD</button></td>
+                <td class="player-info">
+                    <b>${p.name}</b><br><small>${p.county}</small>
+                    <div class="stats-tooltip">${p.stats}</div>
+                </td>
+                <td><b>${p.price.toFixed(1)}m</b></td>
+                <td>
+                    <div style="display:flex; gap:2px;">
+                        ${['GK','DEF','MID','FWD','SUB'].map(r => `
+                            <button class="btn-pos ${p.prefPos===r?'btn-pref':''}" onclick="addPlayer(${p.id}, '${r}')">${r}</button>
+                        `).join('')}
+                    </div>
+                </td>
             </tr>
         `).join('');
     }
 
-    function addPlayer(id) {
+    function addPlayer(id, role) {
         const p = allPlayers.find(x => x.id === id);
         if (state.squad.length >= 18) return alert("Squad full!");
-        if (state.budget < p.price) return alert("Insufficient budget!");
+        if (state.budget < p.price) return alert("Budget exceeded!");
         if (state.squad.find(x => x.id === id)) return alert("Already in squad!");
-        
-        // Find first role with a vacancy
-        const roles = [p.prefPos, 'GK', 'DEF', 'MID', 'FWD', 'SUB'];
-        let assignedRole = null;
-        for(let r of roles) {
-            if(state.squad.filter(x => x.role === r).length < LIMITS[r]) {
-                assignedRole = r; break;
-            }
-        }
-        if(!assignedRole) return alert("No available slots for this position!");
-        if(state.squad.filter(x => x.county === p.county).length >= LIMITS.COUNTY) return alert("Max 3 per county!");
+        if (state.squad.filter(x => x.role === role).length >= LIMITS[role]) return alert(role + " positions are full!");
+        if (state.squad.filter(x => x.county === p.county).length >= 3) return alert("Max 3 players per county!");
 
-        state.squad.push({...p, role: assignedRole});
+        state.squad.push({...p, role});
         state.budget -= p.price;
         updateUI();
     }
 
     function updateUI() {
-        document.getElementById('budget-val').innerText = `${state.budget.toFixed(1)}m`;
-        document.getElementById('squad-count').innerText = `Players: ${state.squad.length} / 18`;
-        
+        document.getElementById('budget-display').innerText = `${state.budget.toFixed(1)}m`;
         const formation = [
             {role: 'GK', count: 1}, {role: 'DEF', count: 3}, {role: 'DEF', count: 3},
             {role: 'MID', count: 2}, {role: 'FWD', count: 3}, {role: 'FWD', count: 3}
@@ -201,12 +173,17 @@
         
         let html = "";
         let tracker = { GK:0, DEF:0, MID:0, FWD:0, SUB:0 };
-        
         formation.forEach(row => {
             html += `<div class="pitch-row">`;
             for(let i=0; i<row.count; i++) {
                 const p = state.squad.filter(p => p.role === row.role)[tracker[row.role]];
-                html += renderSlot(p, row.role, tracker[row.role]);
+                html += `<div class="slot" ondragover="allowDrop(event)" ondrop="drop(event, '${row.role}')">
+                    ${p ? `
+                        <div class="player-disc" draggable="true" ondragstart="drag(event, ${p.id})" onclick="removePlayer(${p.id})">
+                            <img src="${p.badge}">
+                            <div class="player-label">${p.name.split(' ').pop()}</div>
+                        </div>` : `<div class="empty-marker"></div>`}
+                </div>`;
                 if(p) tracker[row.role]++;
             }
             html += `</div>`;
@@ -216,21 +193,15 @@
         let subHtml = "";
         for(let i=0; i<3; i++) {
             const p = state.squad.filter(p => p.role === 'SUB')[i];
-            subHtml += renderSlot(p, 'SUB', i);
+            subHtml += `<div class="slot" ondragover="allowDrop(event)" ondrop="drop(event, 'SUB')">
+                ${p ? `
+                    <div class="player-disc" draggable="true" ondragstart="drag(event, ${p.id})" onclick="removePlayer(${p.id})">
+                        <img src="${p.badge}">
+                        <div class="player-label">${p.name.split(' ').pop()}</div>
+                    </div>` : `<div class="empty-marker"></div>`}
+            </div>`;
         }
         document.getElementById('bench-list').innerHTML = subHtml;
-    }
-
-    function renderSlot(p, role, index) {
-        return `
-            <div class="slot" data-role="${role}" ondragover="e=>e.preventDefault()" ondrop="dropPlayer(event, '${role}')">
-                ${p ? `
-                    <div class="player-disc" draggable="true" ondragstart="dragPlayer(event, ${p.id})" onclick="removePlayer(${p.id})">
-                        <img src="${p.badge}" onerror="this.src='https://ui-avatars.com/api/?name=${p.county[0]}'">
-                        <div class="player-label">${p.name.split(' ').pop()}</div>
-                    </div>
-                ` : `<div class="empty-marker"></div>`}
-            </div>`;
     }
 
     function removePlayer(id) {
@@ -240,20 +211,20 @@
         updateUI();
     }
 
-    // Drag Logic
-    function dragPlayer(e, id) { e.dataTransfer.setData("playerId", id); }
-    function dropPlayer(e, newRole) {
+    function drag(e, id) { e.dataTransfer.setData("text", id); }
+    function allowDrop(e) { e.preventDefault(); }
+    function drop(e, newRole) {
         e.preventDefault();
-        const id = parseInt(e.dataTransfer.getData("playerId"));
+        const id = parseInt(e.dataTransfer.getData("text"));
         const p = state.squad.find(x => x.id === id);
         if(p.role === newRole) return;
-        if(state.squad.filter(x => x.role === newRole).length >= LIMITS[newRole]) return alert(newRole + " is full!");
+        if(state.squad.filter(x => x.role === newRole).length >= LIMITS[newRole]) return alert(newRole + " full!");
         p.role = newRole;
         updateUI();
     }
 
     function resetSquad() { if(confirm("Clear squad?")) { state.squad = []; state.budget = 100.0; updateUI(); } }
-    function saveTeam() { alert(state.squad.length < 18 ? "Squad incomplete!" : "Squad saved!"); }
+    function saveTeam() { alert(state.squad.length < 18 ? "Squad incomplete!" : "Squad submitted successfully!"); }
 
     init();
 </script>
