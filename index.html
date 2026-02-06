@@ -147,19 +147,21 @@
             if(!rows[i][0]) continue;
             counties.add(rows[i][0].trim());
             allPlayers.push({
-                id: i, county: rows[i][0].trim(), name: (rows[i][1]+" "+rows[i][2]).trim(),
+                id: i, 
+                county: rows[i][0].trim(), 
+                name: (rows[i][1]+" "+rows[i][2]).trim(),
                 prefPos: rows[i][3].trim().toUpperCase(), 
-                price: Math.max(3.0, 5.5 + (parseInt(rows[i][8])||0)*0.05),
+                price: parseFloat(rows[i][10]) || 5.0, // Mapping Price to Column K (Index 10)
                 goals: rows[i][4] || 0,     // Col E
                 points: rows[i][5] || 0,    // Col F
                 clean: rows[i][6] || 0,     // Col G
+                red: rows[i][7] || 0,       // Col H
+                pointsTotal: rows[i][8] || 0, // Col I
                 onePts: rows[i][11] || 0,   // Col L
                 twoPts: rows[i][12] || 0,   // Col M
-                red: rows[i][13] || 0,      // Col N (Mapping Red Cards to N)
-                loss: rows[i][14] || 0,     // Col O
                 win: rows[i][15] || 0,      // Col P
-                badge: rows[i][14] ? rows[i][14].trim() : '', // Note: Badge is usually farther right, adjust if needed
-                pointsTotal: rows[i][8] || 0
+                loss: rows[i][16] || 0,     // Col Q
+                badge: rows[i][14] ? rows[i][14].trim() : '' // Col O
             });
         }
         [...counties].sort().forEach(c => { let o = document.createElement('option'); o.value = o.text = c; document.getElementById('filter-county').add(o); });
@@ -183,16 +185,16 @@
                             <div class="stat-line"><span>Goals:</span> <span>${p.goals}</span></div>
                             <div class="stat-line"><span>Points:</span> <span>${p.points}</span></div>
                             ${p.prefPos === 'GK' ? `<div class="stat-line"><span>Clean Sheets:</span> <span>${p.clean}</span></div>` : ''}
-                            <div class="stat-line"><span>1 Pointers:</span> <span>${p.onePts}</span></div>
-                            <div class="stat-line"><span>2 Pointers:</span> <span>${p.twoPts}</span></div>
                             <div class="stat-line"><span>Red Cards:</span> <span>${p.red}</span></div>
+                            <div class="stat-line"><span>1 pointer:</span> <span>${p.onePts}</span></div>
+                            <div class="stat-line"><span>2 pointer:</span> <span>${p.twoPts}</span></div>
                             <div class="stat-line"><span>Win:</span> <span>${p.win}</span></div>
-                            <div class="stat-line"><span>Loss:</span> <span>${p.loss}</span></div>
-                            <div class="stat-line" style="margin-top:5px; color:var(--orange)"><span>Season Pts:</span> <span>${p.pointsTotal}</span></div>
+                            <div class="stat-line"><span>Lost:</span> <span>${p.loss}</span></div>
+                            <div class="stat-line" style="margin-top:5px; color:var(--orange)"><span>Total Points:</span> <span>${p.pointsTotal}</span></div>
                         </div>
                     </div>
                 </td>
-                <td>${p.price.toFixed(1)}m</td>
+                <td>${parseFloat(p.price).toFixed(1)}m</td>
                 <td style="display:flex; gap:2px;">
                     ${['GK','DEF','MID','FWD','SUB'].map(r => `<button class="btn-pos ${p.prefPos===r?'btn-pref':''}" onclick="addPlayer(${p.id},'${r}')">${r}</button>`).join('')}
                 </td>
@@ -284,7 +286,7 @@
         let names = [];
         order.forEach(r => names.push(...state.squad.filter(p => p.role === r).map(p => p.name)));
         try {
-            await fetch(APPS_SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ manager, pin, squad: names }) });
+            await fetch(APPS_SCRIPT_URL, { method: 'POST', body: JSON.stringify({ manager, pin, squad: names }) });
             alert("Team successfully submitted!");
         } catch (e) { alert("Save failed."); }
     }
