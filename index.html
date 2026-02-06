@@ -5,122 +5,131 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GAA FANTASY FOOTBALL</title>
     <style>
-        :root { --orange: #f37021; --dark: #1a1a1a; --cream: #f4f1de; --white: #ffffff; --green: #2e7d32; --pitch-lines: rgba(255,255,255,0.8); --red: #dc3545; --blue: #007bff; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--cream); margin: 0; padding: 0; color: var(--dark); }
+        :root { --orange: #f37021; --dark: #1a1a1a; --cream: #f4f1de; --white: #ffffff; --green: #2e7d32; --pitch-lines: rgba(255,255,255,0.9); --red: #dc3545; --blue: #007bff; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--cream); margin: 0; padding: 0; color: var(--dark); overflow-x: hidden; }
         
-        .header { background: var(--orange); padding: 15px 10px; text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
-        .header img { max-height: 80px; }
+        .header { background: var(--orange); padding: 10px; text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
+        .header img { max-height: 60px; }
 
         nav { display: flex; justify-content: center; background: var(--dark); position: sticky; top: 0; z-index: 100; }
-        .nav-link { color: white; padding: 12px 15px; text-decoration: none; font-weight: bold; cursor: pointer; border: none; background: none; font-size: 12px; text-transform: uppercase; }
+        .nav-link { color: white; padding: 12px 15px; text-decoration: none; font-weight: bold; cursor: pointer; border: none; background: none; font-size: 11px; text-transform: uppercase; }
         .nav-link.active { background: var(--orange); }
         
         .container { padding: 10px; max-width: 1400px; margin: auto; }
         .main-layout { display: flex; flex-direction: column; gap: 15px; }
-        @media (min-width: 1100px) { .main-layout { display: grid; grid-template-columns: 1fr 450px 320px; } }
+        @media (min-width: 1100px) { .main-layout { display: grid; grid-template-columns: 380px 1fr 320px; } }
 
         .panel { background: var(--white); border-radius: 8px; padding: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
 
-        /* --- Pitch Styles --- */
+        /* --- GAA Tactical Pitch --- */
         .pitch { 
             background: var(--green); 
             width: 100%; 
-            aspect-ratio: 2/3.2; 
+            aspect-ratio: 1 / 1.4; 
             border-radius: 8px; 
             position: relative; 
-            border: 3px solid white;
-            overflow: hidden;
-            background-image: linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px);
-            background-size: 100% 10%;
+            border: 4px solid white;
+            background-image: 
+                linear-gradient(var(--pitch-lines) 2px, transparent 2px),
+                linear-gradient(90deg, var(--pitch-lines) 2px, transparent 2px);
+            background-size: 100% 15%, 100% 100%; /* Marking out the zones */
         }
-        .mid-line { position: absolute; top: 50%; width: 100%; border-top: 2px solid var(--pitch-lines); }
-        .pitch-grid { display: flex; flex-direction: column; height: 100%; justify-content: space-around; padding: 10px 0; position: relative; z-index: 2; }
-        .pitch-row { display: flex; justify-content: center; gap: 12px; width: 100%; }
         
-        /* Player Icons */
+        /* GAA Markings */
+        .pitch::before { content: ""; position: absolute; top: 14%; width: 100%; border-top: 2px solid var(--pitch-lines); } /* 21m */
+        .pitch::after { content: ""; position: absolute; bottom: 14%; width: 100%; border-top: 2px solid var(--pitch-lines); } /* 21m bottom */
+        .sixty-five { position: absolute; top: 35%; width: 100%; border-top: 1px dashed var(--pitch-lines); }
+        .sixty-five.bottom { top: 65%; }
+        .half-way { position: absolute; top: 50%; width: 100%; border-top: 3px solid var(--pitch-lines); }
+
+        .pitch-grid { display: flex; flex-direction: column; height: 100%; justify-content: space-between; padding: 2% 0; position: relative; z-index: 5; }
+        .pitch-row { display: flex; justify-content: center; align-items: center; gap: 5%; width: 100%; height: 12%; }
+        .row-label { position: absolute; left: 5px; font-size: 8px; color: rgba(255,255,255,0.6); text-transform: uppercase; font-weight: bold; pointer-events: none; }
+
+        /* Transparent Player Icons */
         .player-disc { 
-            width: 60px; height: 60px; background: white; border-radius: 50%; 
+            width: 18%; max-width: 70px; aspect-ratio: 1/1;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
-            font-size: 9px; text-align: center; border: 2px solid #fff; box-shadow: 0 3px 6px rgba(0,0,0,0.4);
             cursor: pointer; transition: transform 0.2s; position: relative;
         }
-        .player-disc:hover { transform: scale(1.1); }
-        .player-disc img { width: 35px; height: 35px; object-fit: contain; }
-        .player-disc.empty { background: rgba(0,0,0,0.2); border: 1px dashed rgba(255,255,255,0.5); color: #ccc; }
-        .player-name-label { position: absolute; bottom: -18px; background: rgba(0,0,0,0.7); color: white; padding: 1px 4px; border-radius: 3px; font-size: 8px; white-space: nowrap; max-width: 70px; overflow: hidden; }
+        .player-disc img { width: 85%; height: 85%; object-fit: contain; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.4)); }
+        .player-disc.empty { border: 2px dashed rgba(255,255,255,0.3); border-radius: 50%; opacity: 0.5; }
+        .player-disc.empty::after { content: "+"; color: white; font-size: 20px; }
+        
+        .player-label { 
+            position: absolute; bottom: -12px; background: rgba(0,0,0,0.8); color: white; 
+            padding: 2px 6px; border-radius: 4px; font-size: 9px; font-weight: bold;
+            white-space: nowrap; box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
 
-        .bench-area { background: #222; padding: 15px 10px; border-radius: 0 0 8px 8px; display: flex; justify-content: center; gap: 20px; margin-top: -5px; }
+        .bench-container { background: #1a1a1a; padding: 15px; border-radius: 0 0 8px 8px; margin-top: -5px; }
+        .bench-title { color: #aaa; font-size: 10px; text-transform: uppercase; text-align: center; margin-bottom: 10px; letter-spacing: 1px; }
+        .bench-row { display: flex; justify-content: center; gap: 20px; }
 
-        /* --- Market/Timer --- */
-        .timer-box { background: var(--dark); color: #fff; padding: 10px; text-align: center; border-radius: 8px; margin-bottom: 10px; border-bottom: 3px solid var(--orange); }
+        /* --- UI Elements --- */
+        .timer-box { background: var(--dark); color: #fff; padding: 10px; text-align: center; border-radius: 8px; margin-bottom: 10px; border-bottom: 3px solid var(--orange); font-size: 14px; }
         #countdown { color: var(--orange); font-weight: bold; font-family: monospace; }
-        .scroll-box { max-height: 650px; overflow-y: auto; }
+        .scroll-box { max-height: 500px; overflow-y: auto; }
         table { width: 100%; border-collapse: collapse; font-size: 12px; }
-        th { background: #f8f8f8; padding: 8px; text-align: left; position: sticky; top: 0; border-bottom: 2px solid #ddd; }
-        td { padding: 10px 8px; border-bottom: 1px solid #eee; }
-        .btn-pos { padding: 8px 4px; font-size: 10px; cursor: pointer; border: 1px solid #ddd; flex: 1; font-weight: bold; background: #fff; }
-        .btn-pref { border-color: var(--orange); color: var(--orange); background: #fff5ee; }
+        th { background: #eee; padding: 10px; text-align: left; position: sticky; top: 0; z-index: 10; }
+        td { padding: 10px; border-bottom: 1px solid #eee; }
+        .btn-pos { padding: 6px 2px; font-size: 10px; cursor: pointer; border: 1px solid #ddd; flex: 1; font-weight: bold; background: white; }
+        .btn-pref { background: #fff5ee; border-color: var(--orange); color: var(--orange); }
         .hidden { display: none; }
     </style>
 </head>
 <body>
 
 <div class="header">
-    <img src="https://lh3.googleusercontent.com/d/1JGqYSa8yysXfOEtRYxafMAD7BPV7YJLI" alt="GAA Fantasy" onerror="this.src='https://via.placeholder.com/400x80?text=GAA+FANTASY'">
+    <img src="https://lh3.googleusercontent.com/d/1JGqYSa8yysXfOEtRYxafMAD7BPV7YJLI" alt="GAA Fantasy" onerror="this.src='https://via.placeholder.com/400x60?text=GAA+FANTASY'">
 </div>
 
 <nav>
-    <button class="nav-link active" onclick="showPage('market')">Squad & Pitch</button>
+    <button class="nav-link active" onclick="showPage('market')">Tactics Board</button>
     <button class="nav-link" onclick="showPage('rules')">Rules</button>
 </nav>
 
 <div class="container">
     <div id="page-market" class="page">
-        <div class="timer-box">TRANSFER WINDOW CLOSES: <span id="countdown"></span></div>
+        <div class="timer-box">DEADLINE: <span id="countdown"></span></div>
         
         <div class="main-layout">
             <div class="panel">
                 <div style="display:flex; gap:5px; margin-bottom:10px;">
                     <input type="text" id="search-name" placeholder="Search Player..." oninput="filterPlayers()" style="flex:2; padding:10px; border:1px solid #ccc; border-radius:5px;">
-                    <select id="filter-county" onchange="filterPlayers()" style="flex:1; padding:10px; border:1px solid #ccc; border-radius:5px;"><option value="">All Counties</option></select>
+                    <select id="filter-county" onchange="filterPlayers()" style="flex:1; padding:10px; border:1px solid #ccc; border-radius:5px;"><option value="">All</option></select>
                 </div>
                 <div class="scroll-box">
                     <table>
-                        <thead><tr><th>Player</th><th>Price</th><th>Add to Slot</th></tr></thead>
+                        <thead><tr><th>Player</th><th>Price</th><th>Add</th></tr></thead>
                         <tbody id="market-body"></tbody>
                     </table>
                 </div>
             </div>
 
-            <div id="pitch-container">
+            <div id="tactics-board">
                 <div class="pitch">
-                    <div class="mid-line"></div>
-                    <div class="pitch-grid" id="pitch-board"></div>
+                    <div class="sixty-five"></div>
+                    <div class="half-way"></div>
+                    <div class="sixty-five bottom"></div>
+                    
+                    <div class="pitch-grid" id="pitch-board">
+                        </div>
                 </div>
-                <div class="bench-area" id="bench-list"></div>
+                <div class="bench-container">
+                    <div class="bench-title">Substitutes (3)</div>
+                    <div class="bench-row" id="bench-list"></div>
+                </div>
             </div>
 
             <div class="panel">
-                <button onclick="loadExistingTeam()" style="width:100%; padding:12px; background:var(--blue); color:white; border:none; margin-bottom:15px; border-radius:5px; font-weight:bold; cursor:pointer;">LOAD SAVED TEAM</button>
-                <div id="budget-val" style="font-size:22px; font-weight:bold; color:var(--green); text-align:center; margin-bottom:5px;">Budget: 100.0m</div>
-                <p style="text-align:center; font-size:11px; color:#666; margin-bottom:15px;">Max 3 per County | 18 Players Total</p>
-                <div id="selection-summary" style="font-size:12px; color:#444; line-height:1.6; border-top:1px solid #eee; padding-top:10px;"></div>
-                <button id="btn-save" class="btn-submit" onclick="saveTeamToSheet()" style="width:100%; padding:15px; background:var(--green); color:white; border:none; border-radius:5px; font-weight:bold; margin-top:15px; cursor:pointer;">SAVE TRANSFERS</button>
-                <button onclick="resetSquad()" style="width:100%; margin-top:10px; background:none; border:none; color:var(--red); cursor:pointer; font-size:12px;">Reset Draft</button>
+                <button onclick="loadExistingTeam()" style="width:100%; padding:12px; background:var(--blue); color:white; border:none; margin-bottom:15px; border-radius:5px; font-weight:bold;">LOAD CURRENT TEAM</button>
+                <div id="budget-val" style="font-size:24px; font-weight:bold; color:var(--green); text-align:center; margin-bottom:5px;">100.0m</div>
+                <p style="text-align:center; font-size:11px; color:#666; margin-bottom:20px;">BUDGET REMAINING</p>
+                <div id="county-status" style="font-size:12px; border-top:1px solid #eee; padding-top:10px;"></div>
+                <button id="btn-save" onclick="saveTeamToSheet()" style="width:100%; padding:15px; background:var(--green); color:white; border:none; border-radius:5px; font-weight:bold; margin-top:20px; font-size:16px;">SAVE SQUAD</button>
+                <button onclick="resetSquad()" style="width:100%; margin-top:10px; background:none; border:none; color:var(--red); font-size:12px;">Reset Draft</button>
             </div>
-        </div>
-    </div>
-
-    <div id="page-rules" class="page hidden">
-        <div class="panel">
-            <h2>Competition Rules</h2>
-            <ul>
-                <li><strong>Squad:</strong> 15 starters + 3 substitutes.</li>
-                <li><strong>County Limit:</strong> Maximum of 3 players from any one county.</li>
-                <li><strong>Budget:</strong> Total team cost must not exceed 100.0m.</li>
-                <li><strong>Transfers:</strong> 3 transfers allowed per week.</li>
-                <li><strong>Deadline:</strong> Market closes Friday, Feb 13th @ 11:00 PM.</li>
-            </ul>
         </div>
     </div>
 </div>
@@ -133,16 +142,10 @@
     let state = { budget: 100.0, squad: [] };
     const LIMITS = { GK: 1, DEF: 6, MID: 2, FWD: 6, SUB: 3, COUNTY: 3 };
 
-    // Deadline Timer
     const deadline = new Date("Feb 13, 2026 23:00:00").getTime();
     setInterval(() => {
-        const now = new Date().getTime();
-        const dist = deadline - now;
-        if (dist < 0) { 
-            document.getElementById("countdown").innerHTML = "CLOSED"; 
-            document.getElementById("btn-save").disabled = true;
-            return; 
-        }
+        const dist = deadline - new Date().getTime();
+        if (dist < 0) { document.getElementById("countdown").innerHTML = "CLOSED"; return; }
         const d = Math.floor(dist/86400000), h = Math.floor((dist%86400000)/3600000), m = Math.floor((dist%3600000)/60000), s = Math.floor((dist%60000)/1000);
         document.getElementById("countdown").innerHTML = `${d}d ${h}h ${m}m ${s}s`;
     }, 1000);
@@ -184,11 +187,11 @@
 
     function addPlayer(id, role) {
         const p = allPlayers.find(x => x.id === id);
-        if (state.squad.length >= 18) return alert("Squad is full!");
-        if (state.budget < p.price) return alert("Insufficient budget!");
-        if (state.squad.find(x => x.id === id)) return alert("Player already in squad!");
-        if (state.squad.filter(x => x.role === role).length >= LIMITS[role]) return alert(`No ${role} slots available!`);
-        if (state.squad.filter(x => x.county === p.county).length >= 3) return alert("Maximum of 3 players from " + p.county);
+        if (state.squad.length >= 18) return alert("Full Squad!");
+        if (state.budget < p.price) return alert("Budget Exceeded!");
+        if (state.squad.find(x => x.id === id)) return alert("Already selected!");
+        if (state.squad.filter(x => x.role === role).length >= LIMITS[role]) return alert(`${role} position is full!`);
+        if (state.squad.filter(x => x.county === p.county).length >= 3) return alert("Max 3 players per county!");
         
         state.squad.push({...p, role});
         state.budget -= p.price;
@@ -203,43 +206,46 @@
     }
 
     function updateUI() {
-        document.getElementById('budget-val').innerText = `Budget: ${state.budget.toFixed(1)}m`;
+        document.getElementById('budget-val').innerText = `${state.budget.toFixed(1)}m`;
         
-        // Pitch Rows (GAA Formation)
+        // Formation Definition
         const rows = [
-            {role: 'GK', count: 1}, {role: 'DEF', count: 3}, {role: 'DEF', count: 3},
-            {role: 'MID', count: 2}, {role: 'FWD', count: 3}, {role: 'FWD', count: 3}
+            {role: 'GK', count: 1, label: 'Goalkeeper'},
+            {role: 'DEF', count: 3, label: 'Full Back Line'},
+            {role: 'DEF', count: 3, label: 'Half Back Line'},
+            {role: 'MID', count: 2, label: 'Midfield'},
+            {role: 'FWD', count: 3, label: 'Half Forward Line'},
+            {role: 'FWD', count: 3, label: 'Full Forward Line'}
         ];
         
         let html = "";
         let used = { GK:0, DEF:0, MID:0, FWD:0, SUB:0 };
         
         rows.forEach(row => {
-            html += `<div class="pitch-row">`;
+            html += `<div class="pitch-row"><span class="row-label">${row.label}</span>`;
             for(let i=0; i<row.count; i++) {
                 const p = state.squad.filter(p => p.role === row.role)[used[row.role]];
                 if(p) {
                     html += `<div class="player-disc" onclick="removePlayer(${p.id})">
                                 <img src="${p.badge}" onerror="this.src='https://ui-avatars.com/api/?name=${p.county[0]}&background=f37021&color=fff'">
-                                <div class="player-name-label">${p.name.split(' ').pop()}</div>
+                                <div class="player-label">${p.name.split(' ').pop()}</div>
                              </div>`;
                     used[row.role]++;
                 } else {
-                    html += `<div class="player-disc empty">${row.role}</div>`;
+                    html += `<div class="player-disc empty"></div>`;
                 }
             }
             html += `</div>`;
         });
         document.getElementById('pitch-board').innerHTML = html;
 
-        // Subs
         let subHtml = "";
         for(let i=0; i<3; i++) {
             const p = state.squad.filter(p => p.role === 'SUB')[i];
             subHtml += p ? `<div class="player-disc" onclick="removePlayer(${p.id})">
-                                <img src="${p.badge}" onerror="this.src='https://ui-avatars.com/api/?name=${p.county[0]}&background=f37021&color=fff'">
-                                <div class="player-name-label">${p.name.split(' ').pop()}</div>
-                             </div>` : `<div class="player-disc empty">SUB</div>`;
+                                <img src="${p.badge}">
+                                <div class="player-label">${p.name.split(' ').pop()}</div>
+                             </div>` : `<div class="player-disc empty"></div>`;
         }
         document.getElementById('bench-list').innerHTML = subHtml;
     }
@@ -247,41 +253,34 @@
     async function loadExistingTeam() {
         let manager = prompt("Manager Name:"), pin = prompt("PIN:");
         if (!manager || !pin) return;
-        try {
-            const res = await fetch(`${APPS_SCRIPT_URL}?manager=${encodeURIComponent(manager)}&pass=${encodeURIComponent(pin)}`);
-            const data = await res.json();
-            if (data.success) {
-                state.squad = []; state.budget = 100.0;
-                const roles = ['GK','DEF','DEF','DEF','DEF','DEF','DEF','MID','MID','FWD','FWD','FWD','FWD','FWD','FWD','SUB','SUB','SUB'];
-                data.squad.forEach((name, i) => {
-                    const p = allPlayers.find(x => x.name.trim() === name.trim());
-                    if (p) { state.squad.push({...p, role: roles[i]}); state.budget -= p.price; }
-                });
-                updateUI();
-            } else { alert(data.msg); }
-        } catch (e) { alert("Error loading."); }
+        const res = await fetch(`${APPS_SCRIPT_URL}?manager=${encodeURIComponent(manager)}&pass=${encodeURIComponent(pin)}`);
+        const data = await res.json();
+        if (data.success) {
+            state.squad = []; state.budget = 100.0;
+            const roles = ['GK','DEF','DEF','DEF','DEF','DEF','DEF','MID','MID','FWD','FWD','FWD','FWD','FWD','FWD','SUB','SUB','SUB'];
+            data.squad.forEach((name, i) => {
+                const p = allPlayers.find(x => x.name.trim() === name.trim());
+                if (p) { state.squad.push({...p, role: roles[i]}); state.budget -= p.price; }
+            });
+            updateUI();
+        } else { alert(data.msg); }
     }
 
     async function saveTeamToSheet() {
-        if (state.squad.length < 18) return alert("Squad incomplete (18 required)");
+        if (state.squad.length < 18) return alert("Select 18 players first.");
         let manager = prompt("Manager Name:"), pin = prompt("PIN:");
-        if (!manager || !pin) return;
         const order = ['GK','DEF','MID','FWD','SUB'];
         let names = [];
         order.forEach(r => names.push(...state.squad.filter(p => p.role === r).map(p => p.name)));
-        try {
-            await fetch(APPS_SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ manager, pin, squad: names }) });
-            alert("Team successfully submitted!");
-        } catch (e) { alert("Save failed."); }
+        await fetch(APPS_SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ manager, pin, squad: names }) });
+        alert("Squad Saved!");
     }
 
     function showPage(id) {
         document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
         document.getElementById('page-' + id).classList.remove('hidden');
-        document.querySelectorAll('.nav-link').forEach(n => n.classList.remove('active'));
-        if(event) event.target.classList.add('active');
     }
-    
+
     function resetSquad() { if(confirm("Clear current draft?")) { state.squad = []; state.budget = 100.0; updateUI(); } }
     init();
 </script>
