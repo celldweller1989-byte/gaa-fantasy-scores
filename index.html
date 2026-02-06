@@ -8,7 +8,6 @@
         :root { --orange: #f37021; --dark: #1a1a1a; --cream: #f4f1de; --white: #ffffff; --green: #2e7d32; --pitch-lines: rgba(255,255,255,0.8); }
         body { font-family: 'Segoe UI', sans-serif; background: var(--cream); margin: 0; padding: 0; color: var(--dark); }
         
-        /* Header & Nav */
         .header { background: var(--orange); padding: 10px; text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
         .header img { max-height: 100px; border-radius: 5px; }
         nav { display: flex; justify-content: center; background: var(--dark); position: sticky; top: 0; z-index: 100; }
@@ -21,7 +20,6 @@
 
         .panel { background: var(--white); border-radius: 8px; padding: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); height: fit-content; }
 
-        /* Pitch UI */
         .pitch { 
             background: var(--green); width: 100%; aspect-ratio: 2/3.2; border-radius: 8px; 
             position: relative; border: 3px solid white; overflow: hidden; 
@@ -39,7 +37,6 @@
 
         .bench-area { background: #222; padding: 12px; border-radius: 0 0 8px 8px; display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; margin-top: -5px; }
 
-        /* Market & Filters */
         .filter-row { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; }
         .filter-row input, .filter-row select { padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 12px; flex: 1; min-width: 80px; }
         .scroll-box { max-height: 550px; overflow-y: auto; }
@@ -51,7 +48,6 @@
         .is-pref { border: 2px solid var(--orange) !important; color: var(--orange); background: #fff5ee !important; }
         .btn-assign:disabled { opacity: 0.3; cursor: not-allowed; }
 
-        /* Market Intel Box */
         .intel-box { background: var(--dark); color: white; border-radius: 8px; padding: 15px; margin-top: 15px; border-top: 4px solid var(--orange); min-height: 420px; }
         .intel-box h3 { margin: 0 0 10px 0; font-size: 12px; color: var(--orange); text-transform: uppercase; border-bottom: 1px solid #333; padding-bottom: 5px; }
         .intel-item { display: flex; align-items: center; padding: 5px 0; border-bottom: 1px solid #222; font-size: 10px; }
@@ -121,36 +117,12 @@
             </div>
         </div>
     </div>
-
-    <div id="page-rules" class="page hidden">
-        <div class="rules-grid">
-            <div class="rules-card">
-                <h3>Market & Value</h3>
-                <ul class="rules-list">
-                    <li><span>10% Global Discount</span><b>Baseline K * 0.90</b></li>
-                    <li><span>Performance (+3 Pts)</span><b>+0.25m</b></li>
-                    <li><span>Performance (-3 Pts)</span><b>-0.25m</b></li>
-                    <li><span>Max Per County</span><b>3 Players</b></li>
-                </ul>
-            </div>
-            <div class="rules-card">
-                <h3>Scoring Logic</h3>
-                <ul class="rules-list">
-                    <li><span>Goal (E)</span><b>+3 Pts</b></li>
-                    <li><span>Point (F)</span><b>+1 Pt</b></li>
-                    <li><span>Match Win (P)</span><b>+2 Pts</b></li>
-                    <li><span>Clean Sheet (G)</span><b>+5 Pts</b></li>
-                    <li><span>Red Card (H)</span><b>-3 Pts</b></li>
-                    <li><span>GK Conceded (R)</span><b>-1 Pt / Goal</b></li>
-                </ul>
-            </div>
-        </div>
-    </div>
 </div>
 
 <script>
     const SCORERS_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTcdzjZ4zYlGgFe5acS8xOb1vHR9b8i98UudIOe-iC9Z1d6x6AY5zATgX217cNjcNtAGDLJ56y8Jr8N/pub?output=csv';
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwIQR9qEu34e19W0IKdMqvJr53Zp3VM7VARt_lLfym_LZ_l0bjt8SuYL90LohMFjq6s/exec'; 
+    // UPDATED WITH YOUR NEW URL
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzcq5ZDLeNISMzUStMewlSJvBS3Y_3zJW-SM8xlVbgmkxh3_tpbcQIgul-qhKcd_Vmd/exec'; 
     
     let allPlayers = [], squad = [], budget = 100.0, intelIndex = 0;
 
@@ -164,34 +136,36 @@
     ];
 
     async function init() {
-        const res = await fetch(SCORERS_URL + '&t=' + new Date().getTime());
-        const text = await res.text();
-        const rows = text.split('\n').map(r => r.split(','));
-        const counties = new Set();
-        
-        for(let i=1; i<rows.length; i++) {
-            if(!rows[i][0]) continue;
-            counties.add(rows[i][0].trim());
-            let totalScore = parseInt(rows[i][8]) || 0;
-            let basePriceK = parseFloat(rows[i][10]) || 5.0;
-            let currentPrice = (basePriceK * 0.90) + (Math.floor(totalScore / 3) * 0.25);
+        try {
+            const res = await fetch(SCORERS_URL + '&t=' + new Date().getTime());
+            const text = await res.text();
+            const rows = text.split('\n').map(r => r.split(','));
+            const counties = new Set();
+            
+            for(let i=1; i<rows.length; i++) {
+                if(!rows[i][0]) continue;
+                counties.add(rows[i][0].trim());
+                let totalScore = parseInt(rows[i][8]) || 0;
+                let basePriceK = parseFloat(rows[i][10]) || 5.0;
+                let currentPrice = (basePriceK * 0.90) + (Math.floor(totalScore / 3) * 0.25);
 
-            allPlayers.push({
-                id: i, 
-                county: rows[i][0].trim(), 
-                name: (rows[i][1]+" "+rows[i][2]).trim(),
-                prefPos: rows[i][3].trim().toUpperCase(), 
-                points: rows[i][5] || 0,
-                totalScore: totalScore,
-                price: currentPrice,
-                badge: rows[i][14] ? rows[i][14].trim() : 'https://ui-avatars.com/api/?name=GAA'
-            });
-        }
-        const coSelect = document.getElementById('filter-county');
-        [...counties].sort().forEach(c => { let o = document.createElement('option'); o.value=o.text=c; coSelect.add(o); });
-        
-        updateUI(); filterPlayers(); updateIntel();
-        setInterval(() => { intelIndex = (intelIndex + 1) % 5; updateIntel(); }, 6000);
+                allPlayers.push({
+                    id: i, 
+                    county: rows[i][0].trim(), 
+                    name: (rows[i][1]+" "+rows[i][2]).trim(),
+                    prefPos: rows[i][3].trim().toUpperCase(), 
+                    points: rows[i][5] || 0,
+                    totalScore: totalScore,
+                    price: currentPrice,
+                    badge: rows[i][14] ? rows[i][14].trim() : 'https://ui-avatars.com/api/?name=GAA'
+                });
+            }
+            const coSelect = document.getElementById('filter-county');
+            [...counties].sort().forEach(c => { let o = document.createElement('option'); o.value=o.text=c; coSelect.add(o); });
+            
+            updateUI(); filterPlayers(); updateIntel();
+            setInterval(() => { intelIndex = (intelIndex + 1) % 5; updateIntel(); }, 6000);
+        } catch (e) { console.error("Init failed", e); }
     }
 
     function filterPlayers() {
@@ -217,10 +191,9 @@
     }
 
     function addPlayer(id, role) {
-        if (squad.some(s => s.id === id)) return alert("Player already in squad!");
-        
+        if (squad.some(s => s.id === id)) return;
         const p = allPlayers.find(x => x.id === id);
-        if (squad.length >= 18) return alert("Squad Full (18 Max)!");
+        if (squad.length >= 18) return alert("Squad Full!");
         if (budget < p.price) return alert("Over Budget!");
         if (squad.filter(s => s.county === p.county).length >= 3) return alert("Max 3 per county!");
         
@@ -257,11 +230,12 @@
         const name = document.getElementById('sub-mgr-name').value.trim();
         const pin = document.getElementById('sub-mgr-pin').value.trim();
         const status = document.getElementById('status-msg');
-        if(!name || pin.length < 4) return alert("Missing name or PIN.");
-        if(squad.length < 18) return alert("Squad incomplete (18 required).");
+        
+        if(!name || pin.length < 4) return alert("Enter Name and 4+ digit PIN.");
+        if(squad.length < 18) return alert("Pick 18 players first.");
 
         document.getElementById('btn-submit').disabled = true;
-        status.innerText = "Submitting... Please wait.";
+        status.innerText = "Connecting to Google...";
 
         const roles = ['GK', 'DEF', 'MID', 'FWD', 'SUB'];
         const sortedNames = [];
@@ -271,16 +245,23 @@
         });
 
         try {
+            // Using a basic fetch to handle Google's redirection
             await fetch(SCRIPT_URL, {
                 method: 'POST',
                 mode: 'no-cors',
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ manager: name, pin: pin, squad: sortedNames })
             });
+            
+            // Because of 'no-cors', we can't read the response, so we assume success if it doesn't catch
             status.style.color = "green";
-            status.innerText = "Success! Team saved.";
-            alert("Team Submitted Successfully!");
+            status.innerText = "TEAM SUBMITTED! Check your sheet.";
+            alert("Submission sent! Check your Google Sheet now.");
+            document.getElementById('btn-submit').disabled = false;
         } catch (e) {
-            alert("Error. Ensure script is deployed to 'Anyone'.");
+            status.style.color = "red";
+            status.innerText = "Error: " + e.message;
+            alert("Failed: " + e.message);
             document.getElementById('btn-submit').disabled = false;
         }
     }
