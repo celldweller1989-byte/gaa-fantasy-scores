@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GAA FANTASY FOOTBALL</title>
     <style>
-        :root { --orange: #f37021; --dark: #1a1a1a; --cream: #f4f1de; --white: #ffffff; --green: #2e7d32; --pitch-lines: rgba(255,255,255,0.9); --red: #dc3545; --blue: #007bff; }
+        :root { --orange: #f37021; --dark: #1a1a1a; --cream: #f4f1de; --white: #ffffff; --green: #256129; --line: rgba(255,255,255,0.85); --red: #dc3545; --blue: #007bff; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--cream); margin: 0; padding: 0; color: var(--dark); overflow-x: hidden; }
         
         .header { background: var(--orange); padding: 10px; text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
@@ -21,59 +21,59 @@
 
         .panel { background: var(--white); border-radius: 8px; padding: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
 
-        /* --- GAA Tactical Pitch --- */
+        /* --- Formalized GAA Pitch --- */
+        .pitch-container { position: relative; width: 100%; max-width: 600px; margin: auto; }
         .pitch { 
             background: var(--green); 
             width: 100%; 
-            aspect-ratio: 1 / 1.4; 
-            border-radius: 8px; 
-            position: relative; 
-            border: 4px solid white;
-            background-image: 
-                linear-gradient(var(--pitch-lines) 2px, transparent 2px),
-                linear-gradient(90deg, var(--pitch-lines) 2px, transparent 2px);
-            background-size: 100% 15%, 100% 100%; /* Marking out the zones */
+            aspect-ratio: 1 / 1.5; 
+            border: 3px solid white;
+            position: relative;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            background-image: linear-gradient(0deg, transparent 49%, var(--line) 49.5%, var(--line) 50.5%, transparent 51%); /* Center Line */
         }
+
+        /* Accurate Field Markings */
+        .marking { position: absolute; width: 100%; border-top: 1.5px solid var(--line); pointer-events: none; }
+        .m-13 { top: 8.5%; } .m-20 { top: 13.5%; } .m-45 { top: 30%; } .m-65 { top: 43%; }
+        .m-13-b { bottom: 8.5%; border-top:none; border-bottom: 1.5px solid var(--line); }
+        .m-20-b { bottom: 13.5%; border-top:none; border-bottom: 1.5px solid var(--line); }
+        .m-45-b { bottom: 30%; border-top:none; border-bottom: 1.5px solid var(--line); }
+        .m-65-b { bottom: 43%; border-top:none; border-bottom: 1.5px solid var(--line); }
         
-        /* GAA Markings */
-        .pitch::before { content: ""; position: absolute; top: 14%; width: 100%; border-top: 2px solid var(--pitch-lines); } /* 21m */
-        .pitch::after { content: ""; position: absolute; bottom: 14%; width: 100%; border-top: 2px solid var(--pitch-lines); } /* 21m bottom */
-        .sixty-five { position: absolute; top: 35%; width: 100%; border-top: 1px dashed var(--pitch-lines); }
-        .sixty-five.bottom { top: 65%; }
-        .half-way { position: absolute; top: 50%; width: 100%; border-top: 3px solid var(--pitch-lines); }
+        /* The D's */
+        .arc { position: absolute; left: 50%; transform: translateX(-50%); width: 25%; aspect-ratio: 2/1; border: 1.5px solid var(--line); border-top: 0; border-radius: 0 0 100px 100px; top: 13.5%; }
+        .arc.bottom { top: auto; bottom: 13.5%; border-radius: 100px 100px 0 0; border-top: 1.5px solid var(--line); border-bottom: 0; }
 
         .pitch-grid { display: flex; flex-direction: column; height: 100%; justify-content: space-between; padding: 2% 0; position: relative; z-index: 5; }
-        .pitch-row { display: flex; justify-content: center; align-items: center; gap: 5%; width: 100%; height: 12%; }
-        .row-label { position: absolute; left: 5px; font-size: 8px; color: rgba(255,255,255,0.6); text-transform: uppercase; font-weight: bold; pointer-events: none; }
+        .pitch-row { display: flex; justify-content: center; align-items: center; gap: 5%; width: 100%; height: 13%; }
 
         /* Transparent Player Icons */
         .player-disc { 
-            width: 18%; max-width: 70px; aspect-ratio: 1/1;
+            width: 18%; max-width: 65px; aspect-ratio: 1/1;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             cursor: pointer; transition: transform 0.2s; position: relative;
         }
-        .player-disc img { width: 85%; height: 85%; object-fit: contain; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.4)); }
-        .player-disc.empty { border: 2px dashed rgba(255,255,255,0.3); border-radius: 50%; opacity: 0.5; }
-        .player-disc.empty::after { content: "+"; color: white; font-size: 20px; }
+        .player-disc img { width: 95%; height: 95%; object-fit: contain; filter: drop-shadow(0 4px 5px rgba(0,0,0,0.5)); }
+        .player-disc.empty { border: 2px dashed rgba(255,255,255,0.2); border-radius: 50%; }
         
         .player-label { 
-            position: absolute; bottom: -12px; background: rgba(0,0,0,0.8); color: white; 
-            padding: 2px 6px; border-radius: 4px; font-size: 9px; font-weight: bold;
-            white-space: nowrap; box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            position: absolute; bottom: -8px; background: rgba(0,0,0,0.85); color: white; 
+            padding: 1px 5px; border-radius: 3px; font-size: 9px; font-weight: bold;
+            white-space: nowrap; pointer-events: none;
         }
 
-        .bench-container { background: #1a1a1a; padding: 15px; border-radius: 0 0 8px 8px; margin-top: -5px; }
-        .bench-title { color: #aaa; font-size: 10px; text-transform: uppercase; text-align: center; margin-bottom: 10px; letter-spacing: 1px; }
-        .bench-row { display: flex; justify-content: center; gap: 20px; }
+        .bench-container { background: #111; padding: 15px; border-radius: 0 0 8px 8px; border-top: 2px solid #333; }
+        .bench-row { display: flex; justify-content: center; gap: 15px; }
 
-        /* --- UI Elements --- */
-        .timer-box { background: var(--dark); color: #fff; padding: 10px; text-align: center; border-radius: 8px; margin-bottom: 10px; border-bottom: 3px solid var(--orange); font-size: 14px; }
-        #countdown { color: var(--orange); font-weight: bold; font-family: monospace; }
+        /* --- Standard UI --- */
+        .timer-box { background: var(--dark); color: #fff; padding: 10px; text-align: center; border-radius: 8px; margin-bottom: 10px; font-size: 13px; }
+        #countdown { color: var(--orange); font-weight: bold; }
         .scroll-box { max-height: 500px; overflow-y: auto; }
-        table { width: 100%; border-collapse: collapse; font-size: 12px; }
-        th { background: #eee; padding: 10px; text-align: left; position: sticky; top: 0; z-index: 10; }
-        td { padding: 10px; border-bottom: 1px solid #eee; }
-        .btn-pos { padding: 6px 2px; font-size: 10px; cursor: pointer; border: 1px solid #ddd; flex: 1; font-weight: bold; background: white; }
+        table { width: 100%; border-collapse: collapse; font-size: 11px; }
+        th { background: #f4f4f4; padding: 10px; text-align: left; position: sticky; top: 0; z-index: 10; border-bottom: 1px solid #ddd; }
+        td { padding: 8px; border-bottom: 1px solid #eee; }
+        .btn-pos { padding: 5px 2px; font-size: 9px; cursor: pointer; border: 1px solid #ccc; flex: 1; font-weight: bold; background: white; }
         .btn-pref { background: #fff5ee; border-color: var(--orange); color: var(--orange); }
         .hidden { display: none; }
     </style>
@@ -85,50 +85,54 @@
 </div>
 
 <nav>
-    <button class="nav-link active" onclick="showPage('market')">Tactics Board</button>
+    <button class="nav-link active" onclick="showPage('market')">Squad Selection</button>
     <button class="nav-link" onclick="showPage('rules')">Rules</button>
 </nav>
 
 <div class="container">
     <div id="page-market" class="page">
-        <div class="timer-box">DEADLINE: <span id="countdown"></span></div>
+        <div class="timer-box">TRANSFER WINDOW CLOSES: <span id="countdown"></span></div>
         
         <div class="main-layout">
             <div class="panel">
                 <div style="display:flex; gap:5px; margin-bottom:10px;">
-                    <input type="text" id="search-name" placeholder="Search Player..." oninput="filterPlayers()" style="flex:2; padding:10px; border:1px solid #ccc; border-radius:5px;">
-                    <select id="filter-county" onchange="filterPlayers()" style="flex:1; padding:10px; border:1px solid #ccc; border-radius:5px;"><option value="">All</option></select>
+                    <input type="text" id="search-name" placeholder="Search..." oninput="filterPlayers()" style="flex:2; padding:10px; border:1px solid #ccc; border-radius:5px;">
+                    <select id="filter-county" onchange="filterPlayers()" style="flex:1; padding:10px; border:1px solid #ccc; border-radius:5px;"><option value="">All Counties</option></select>
                 </div>
                 <div class="scroll-box">
                     <table>
-                        <thead><tr><th>Player</th><th>Price</th><th>Add</th></tr></thead>
+                        <thead><tr><th>Player</th><th>Price</th><th>Action</th></tr></thead>
                         <tbody id="market-body"></tbody>
                     </table>
                 </div>
             </div>
 
-            <div id="tactics-board">
+            <div class="pitch-container">
                 <div class="pitch">
-                    <div class="sixty-five"></div>
-                    <div class="half-way"></div>
-                    <div class="sixty-five bottom"></div>
+                    <div class="marking m-13"></div><div class="marking m-20"></div>
+                    <div class="marking m-45"></div><div class="marking m-65"></div>
+                    <div class="arc"></div>
                     
-                    <div class="pitch-grid" id="pitch-board">
-                        </div>
+                    <div class="marking m-13-b"></div><div class="marking m-20-b"></div>
+                    <div class="marking m-45-b"></div><div class="marking m-65-b"></div>
+                    <div class="arc bottom"></div>
+
+                    <div class="pitch-grid" id="pitch-board"></div>
                 </div>
                 <div class="bench-container">
-                    <div class="bench-title">Substitutes (3)</div>
                     <div class="bench-row" id="bench-list"></div>
                 </div>
             </div>
 
             <div class="panel">
-                <button onclick="loadExistingTeam()" style="width:100%; padding:12px; background:var(--blue); color:white; border:none; margin-bottom:15px; border-radius:5px; font-weight:bold;">LOAD CURRENT TEAM</button>
-                <div id="budget-val" style="font-size:24px; font-weight:bold; color:var(--green); text-align:center; margin-bottom:5px;">100.0m</div>
-                <p style="text-align:center; font-size:11px; color:#666; margin-bottom:20px;">BUDGET REMAINING</p>
-                <div id="county-status" style="font-size:12px; border-top:1px solid #eee; padding-top:10px;"></div>
-                <button id="btn-save" onclick="saveTeamToSheet()" style="width:100%; padding:15px; background:var(--green); color:white; border:none; border-radius:5px; font-weight:bold; margin-top:20px; font-size:16px;">SAVE SQUAD</button>
-                <button onclick="resetSquad()" style="width:100%; margin-top:10px; background:none; border:none; color:var(--red); font-size:12px;">Reset Draft</button>
+                <button onclick="loadExistingTeam()" style="width:100%; padding:12px; background:var(--blue); color:white; border:none; margin-bottom:15px; border-radius:5px; font-weight:bold; cursor:pointer;">LOAD SAVED TEAM</button>
+                <div style="text-align:center;">
+                    <div id="budget-val" style="font-size:28px; font-weight:bold; color:var(--green);">100.0m</div>
+                    <p style="font-size:11px; color:#666; margin-top:0;">REMAINING BUDGET</p>
+                </div>
+                <div id="status-box" style="margin-top:20px; font-size:12px; border-top:1px dotted #ccc; padding-top:15px;"></div>
+                <button id="btn-save" onclick="saveTeamToSheet()" style="width:100%; padding:15px; background:var(--green); color:white; border:none; border-radius:5px; font-weight:bold; margin-top:20px; font-size:16px; cursor:pointer;">SAVE TEAM</button>
+                <button onclick="resetSquad()" style="width:100%; margin-top:10px; background:none; border:none; color:var(--red); font-size:11px; cursor:pointer;">Clear All</button>
             </div>
         </div>
     </div>
@@ -142,6 +146,7 @@
     let state = { budget: 100.0, squad: [] };
     const LIMITS = { GK: 1, DEF: 6, MID: 2, FWD: 6, SUB: 3, COUNTY: 3 };
 
+    // Deadline Timer
     const deadline = new Date("Feb 13, 2026 23:00:00").getTime();
     setInterval(() => {
         const dist = deadline - new Date().getTime();
@@ -176,7 +181,7 @@
         const filtered = allPlayers.filter(p => p.name.toLowerCase().includes(nameQ) && (!coQ || p.county === coQ));
         document.getElementById('market-body').innerHTML = filtered.map(p => `
             <tr>
-                <td><b>${p.name}</b><br><small>${p.county} (${p.prefPos})</small></td>
+                <td><b>${p.name}</b><br><small>${p.county}</small></td>
                 <td>${p.price.toFixed(1)}m</td>
                 <td style="display:flex; gap:2px;">
                     ${['GK','DEF','MID','FWD','SUB'].map(r => `<button class="btn-pos ${p.prefPos===r?'btn-pref':''}" onclick="addPlayer(${p.id},'${r}')">${r}</button>`).join('')}
@@ -187,11 +192,11 @@
 
     function addPlayer(id, role) {
         const p = allPlayers.find(x => x.id === id);
-        if (state.squad.length >= 18) return alert("Full Squad!");
-        if (state.budget < p.price) return alert("Budget Exceeded!");
-        if (state.squad.find(x => x.id === id)) return alert("Already selected!");
-        if (state.squad.filter(x => x.role === role).length >= LIMITS[role]) return alert(`${role} position is full!`);
-        if (state.squad.filter(x => x.county === p.county).length >= 3) return alert("Max 3 players per county!");
+        if (state.squad.length >= 18) return alert("Squad full!");
+        if (state.budget < p.price) return alert("Budget exceeded!");
+        if (state.squad.find(x => x.id === id)) return alert("Player already in squad!");
+        if (state.squad.filter(x => x.role === role).length >= LIMITS[role]) return alert(`${role} slots full!`);
+        if (state.squad.filter(x => x.county === p.county).length >= 3) return alert("Max 3 from same county!");
         
         state.squad.push({...p, role});
         state.budget -= p.price;
@@ -208,21 +213,16 @@
     function updateUI() {
         document.getElementById('budget-val').innerText = `${state.budget.toFixed(1)}m`;
         
-        // Formation Definition
-        const rows = [
-            {role: 'GK', count: 1, label: 'Goalkeeper'},
-            {role: 'DEF', count: 3, label: 'Full Back Line'},
-            {role: 'DEF', count: 3, label: 'Half Back Line'},
-            {role: 'MID', count: 2, label: 'Midfield'},
-            {role: 'FWD', count: 3, label: 'Half Forward Line'},
-            {role: 'FWD', count: 3, label: 'Full Forward Line'}
+        const formation = [
+            {role: 'GK', count: 1}, {role: 'DEF', count: 3}, {role: 'DEF', count: 3},
+            {role: 'MID', count: 2}, {role: 'FWD', count: 3}, {role: 'FWD', count: 3}
         ];
         
         let html = "";
         let used = { GK:0, DEF:0, MID:0, FWD:0, SUB:0 };
         
-        rows.forEach(row => {
-            html += `<div class="pitch-row"><span class="row-label">${row.label}</span>`;
+        formation.forEach(row => {
+            html += `<div class="pitch-row">`;
             for(let i=0; i<row.count; i++) {
                 const p = state.squad.filter(p => p.role === row.role)[used[row.role]];
                 if(p) {
@@ -267,13 +267,14 @@
     }
 
     async function saveTeamToSheet() {
-        if (state.squad.length < 18) return alert("Select 18 players first.");
+        if (state.squad.length < 18) return alert("Squad incomplete!");
         let manager = prompt("Manager Name:"), pin = prompt("PIN:");
+        if (!manager || !pin) return;
         const order = ['GK','DEF','MID','FWD','SUB'];
         let names = [];
         order.forEach(r => names.push(...state.squad.filter(p => p.role === r).map(p => p.name)));
         await fetch(APPS_SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ manager, pin, squad: names }) });
-        alert("Squad Saved!");
+        alert("Team Saved!");
     }
 
     function showPage(id) {
@@ -281,7 +282,7 @@
         document.getElementById('page-' + id).classList.remove('hidden');
     }
 
-    function resetSquad() { if(confirm("Clear current draft?")) { state.squad = []; state.budget = 100.0; updateUI(); } }
+    function resetSquad() { if(confirm("Reset Squad?")) { state.squad = []; state.budget = 100.0; updateUI(); } }
     init();
 </script>
 </body>
