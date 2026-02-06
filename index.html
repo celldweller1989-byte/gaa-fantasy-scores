@@ -27,15 +27,17 @@
         th { position: sticky; top: 0; background: #f8f8f8; padding: 12px; text-align: left; font-size: 10px; border-bottom: 2px solid #ddd; z-index: 5; }
         td { padding: 12px; border-bottom: 1px solid #eee; font-size: 13px; vertical-align: middle; }
         
-        /* Tooltip & Player Cell */
         .player-cell { display: flex; align-items: center; position: relative; cursor: help; }
         .county-badge { width: 35px; height: 35px; object-fit: contain; margin-right: 12px; }
         .tooltip { visibility: hidden; width: 200px; background-color: var(--dark); color: #fff; text-align: left; border-radius: 6px; padding: 12px; position: absolute; z-index: 100; bottom: 125%; left: 0; opacity: 0; transition: opacity 0.3s; box-shadow: 0 4px 15px rgba(0,0,0,0.3); font-size: 11px; line-height: 1.6; }
         .player-cell:hover .tooltip { visibility: visible; opacity: 1; }
 
         .btn-group { display: flex; gap: 2px; }
-        .btn-pos { border: 1px solid #ddd; background: #f9f9f9; padding: 6px 2px; border-radius: 4px; font-size: 9px; cursor: pointer; flex: 1; }
-        .btn-pos:hover { background: var(--orange); color: white; }
+        .btn-pos { border: 1px solid #ddd; background: #f9f9f9; padding: 6px 2px; border-radius: 4px; font-size: 9px; cursor: pointer; flex: 1; transition: 0.2s; }
+        .btn-pos:hover { background: #e0e0e0; }
+        
+        /* Highlight for Preferred Position */
+        .btn-pref { border: 2px solid var(--orange); color: var(--orange); font-weight: bold; background: #fff5ee; }
 
         .squad-slot { display: flex; justify-content: space-between; background: #f9f9f9; padding: 8px; margin-bottom: 5px; border-radius: 4px; border-left: 4px solid var(--orange); align-items: center; font-size: 12px; }
         .pos-tracker { font-size: 11px; background: #fff3cd; padding: 10px; border-radius: 5px; margin-bottom: 15px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; }
@@ -49,7 +51,7 @@
 <body>
 
 <div class="header">
-    <img src="https://lh3.googleusercontent.com/d/1JGqYSa8yysXfOEtRYxafMAD7BPV7YJLI" alt="GAA Fantasy Football Banner">
+    <img src="https://lh3.googleusercontent.com/d/1JGqYSa8yysXfOEtRYxafMAD7BPV7YJLI" alt="GAA Fantasy Football Banner" onerror="this.src='https://via.placeholder.com/600x120?text=GAA+FANTASY+FOOTBALL'">
 </div>
 
 <nav>
@@ -80,7 +82,7 @@
                                 <th>Player (Hover for Stats)</th>
                                 <th>Pts</th>
                                 <th>Value</th>
-                                <th style="width: 180px;">Assign</th>
+                                <th style="width: 200px;">Assign (Orange = Pref)</th>
                             </tr>
                         </thead>
                         <tbody id="market-body"></tbody>
@@ -103,7 +105,7 @@
         </div>
     </div>
     
-    <div id="page-rules" class="page hidden"><div class="panel"><h2>Rules</h2><p>Select 18 players within the 100m budget.</p></div></div>
+    <div id="page-rules" class="page hidden"><div class="panel"><h2>Rules</h2><p>Select 18 players. Max 2 per county. 100m Budget.</p></div></div>
 </div>
 
 <script>
@@ -134,17 +136,18 @@
             const countyName = col[0].trim();
             counties.add(countyName);
 
-            // Columns mapping: E=4, F=5, G=6, H=7, L=11, M=12, O=14
+            // Mapping: D=3 (Pref Pos), E=4, F=5, G=6, H=7, L=11, M=12, O=14
             allPlayers.push({
                 id: i,
                 county: countyName,
                 name: (col[1] + " " + col[2]).trim(),
-                prefPos: (col[3] || "").trim().toUpperCase(),
+                prefPos: (col[3] || "").trim().toUpperCase(), 
                 totalPts: parseInt(col[8]) || 0,
                 price: Math.max(3.0, 5.5 + ((parseInt(col[8]) || 0) * 0.05)),
                 badge: col[14] ? col[14].trim() : '',
                 statsHTML: `
                     <strong>${col[1]} ${col[2]} (${countyName})</strong><hr>
+                    Preferred Pos: ${col[3] || 'N/A'}<br>
                     Goals: ${col[4] || 0}<br>
                     Points: ${col[5] || 0}<br>
                     Frees: ${col[6] || 0}<br>
@@ -178,23 +181,28 @@
     }
 
     function renderMarket(data) {
-        document.getElementById('market-body').innerHTML = data.map(p => `
+        document.getElementById('market-body').innerHTML = data.map(p => {
+            const roles = ['GK','DEF','MID','FWD','SUB'];
+            const buttons = roles.map(role => {
+                // Check if this button matches the preferred position from Column D
+                const isPref = (p.prefPos === role);
+                return `<button class="btn-pos ${isPref ? 'btn-pref' : ''}" onclick="addPlayer(${p.id}, '${role}')">${role}</button>`;
+            }).join('');
+
+            return `
             <tr>
                 <td>
                     <div class="player-cell">
                         <img src="${p.badge}" class="county-badge" onerror="this.src='https://ui-avatars.com/api/?name=${p.county[0]}&background=f37021&color=fff'">
-                        <div><b>${p.name}</b><br><small>${p.county}</small></div>
+                        <div><b>${p.name}</b><br><small>${p.county} (${p.prefPos})</small></div>
                         <div class="tooltip">${p.statsHTML}</div>
                     </div>
                 </td>
                 <td>${p.totalPts}</td>
                 <td>${p.price.toFixed(2)}m</td>
-                <td>
-                    <div class="btn-group">
-                        ${['GK','DEF','MID','FWD','SUB'].map(role => `<button class="btn-pos" onclick="addPlayer(${p.id}, '${role}')">${role}</button>`).join('')}
-                    </div>
-                </td>
-            </tr>`).join('');
+                <td><div class="btn-group">${buttons}</div></td>
+            </tr>`;
+        }).join('');
     }
 
     function addPlayer(id, role) {
@@ -270,6 +278,7 @@
                     if (p) { state.squad.push({...p, role: roles[i]}); state.budget -= p.price; }
                 });
                 updateUI();
+                alert("Team Loaded!");
             } else { alert(data.msg); }
         } catch (e) { alert("Error loading."); }
     }
