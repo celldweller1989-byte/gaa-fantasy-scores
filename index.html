@@ -8,7 +8,6 @@
         :root { --orange: #f37021; --dark: #1a1a1a; --cream: #f4f1de; --white: #ffffff; --green: #28a745; --red: #dc3545; --grey: #777; --blue: #007bff; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--cream); margin: 0; padding: 0; color: var(--dark); }
         
-        /* Updated Header for Google Drive Image */
         .header { 
             background: var(--orange); 
             padding: 20px 10px; 
@@ -64,7 +63,7 @@
         .hidden { display: none; }
         
         .btn-submit { width: 100%; padding: 12px; background: var(--green); color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; margin-top: 10px; }
-        .btn-submit:disabled { background: #ccc; cursor: not-allowed; }
+        .btn-load { width: 100%; padding: 10px; background: var(--blue); color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; margin-bottom: 10px; }
         .btn-reset { width: 100%; padding: 8px; background: #eee; border: 1px solid #ccc; cursor: pointer; margin-top: 5px; font-size: 11px; }
         
         #market-status-msg { font-size: 12px; text-align: center; font-weight: bold; margin-top: 10px; }
@@ -81,10 +80,7 @@
 <nav>
     <button class="nav-link" onclick="showPage('rules')">Rules</button>
     <button class="nav-link active" id="nav-market" onclick="showPage('market')">Team</button>
-    <button class="nav-link" onclick="showPage('leaderboard')">Leaderboard</button>
-    <button class="nav-link" onclick="showPage('leaderboard')">Videos</button>
-    <button class="nav-link" onclick="showPage('leaderboard')">News</button>
-      <button class="nav-link" onclick="showPage('leaderboard')">Orchard Fans Forum</button>
+    <button class="nav-link" onclick="window.open('https://your-forum-link.com')">Forum</button>
 </nav>
 
 <div class="container">
@@ -119,6 +115,7 @@
             </div>
 
             <div class="panel">
+                <button class="btn-load" onclick="loadExistingTeam()">LOAD MY TEAM</button>
                 <h3>Your Squad</h3>
                 <div class="pos-tracker" id="pos-tracker">
                     <div>GK: 0/1</div><div>DEF: 0/6</div><div>MID: 0/2</div>
@@ -134,12 +131,11 @@
     </div>
 
     <div id="page-rules" class="page hidden"><div class="panel"><h2>Rules</h2><p>Big Win: +5 | Win: +2 | Loss: -2 | Big Loss: -5</p></div></div>
-    <div id="page-leaderboard" class="page hidden"><div class="panel"><h2>Leaderboard</h2><p>Submission data will appear here once published.</p></div></div>
 </div>
 
 <script>
     const SCORERS_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTcdzjZ4zYlGgFe5acS8xOb1vHR9b8i98UudIOe-iC9Z1d6x6AY5zATgX217cNjcNtAGDLJ56y8Jr8N/pub?output=csv';
-    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxuMaD1xTPhUNTp6AVB_PzKHnlnK_KTxJEuhNRap9Dr6Xx-QwgmMoj35V-5pWed9Zwm/exec';
+    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxQz1sBTHdKn1vfbB2EnMmTw0ekA2PQGC9Lo4XMVicbMwfZH9G6OONmvDBktCr7lKxc/exec';
     
     let allPlayers = [];
     let state = { budget: 100.0, squad: [] };
@@ -203,15 +199,14 @@
             let price = 5.5 + (totalPts * 0.05);
             counties.add(col[0].trim());
             allPlayers.push({
-                id: i,
-                county: col[0].trim(),
+                id: i, county: col[0].trim(),
                 name: (col[1] + " " + col[2]).trim(),
                 prefPos: (col[3] || "").trim().toUpperCase(),
                 badge: getDirectImg(col[14]), 
                 totalPts: totalPts,
                 price: Math.max(3.0, price),
                 result: displayResult,
-                statsHTML: `<strong>${col[0].trim()}</strong><br>Goals: ${col[4]||0}<br>1-pt: ${col[11]||0}<br>2-pt: ${col[12]||0}`
+                statsHTML: `<strong>${col[0].trim()}</strong><br>Goals: ${col[4]||0}<br>Pts: ${totalPts}`
             });
         }
         const countySelect = document.getElementById('filter-county');
@@ -225,37 +220,22 @@
 
     function filterPlayers() {
         const nameQuery = document.getElementById('search-name').value.toLowerCase();
-        const countyQuery = document.getElementById('filter-county').value;
-        const posQuery = document.getElementById('filter-pos').value;
-        const filtered = allPlayers.filter(p => {
-            return p.name.toLowerCase().includes(nameQuery) && (!countyQuery || p.county === countyQuery) && (!posQuery || p.prefPos === posQuery);
-        });
+        const filtered = allPlayers.filter(p => p.name.toLowerCase().includes(nameQuery));
         renderMarket(filtered);
     }
 
     function renderMarket(data) {
-        document.getElementById('market-body').innerHTML = data.map(p => {
-            const ptSymbol = p.totalPts >= 0 ? '▲' : '▼';
-            const priceSymbol = p.price > 5.5 ? '▲' : (p.price < 5.5 ? '▼' : '');
-            const resClass = p.result.includes('WIN') ? 'res-win' : 'res-loss';
-            return `
+        document.getElementById('market-body').innerHTML = data.map(p => `
             <tr>
-                <td>
-                    <div class="player-cell">
-                        <img src="${p.badge}" class="county-badge" onerror="this.src='https://ui-avatars.com/api/?name=${p.county[0]}&background=f37021&color=fff'">
-                        <div><b>${p.name}</b><br><span class="result-badge ${resClass}">${p.result || 'N/A'}</span></div>
-                        <div class="tooltip">${p.statsHTML}</div>
-                    </div>
-                </td>
-                <td><span class="${p.totalPts >= 0 ? 'trend-up' : 'trend-down'}">${ptSymbol} ${p.totalPts}</span></td>
-                <td><span class="${p.price > 5.5 ? 'trend-up' : 'trend-down'}">${priceSymbol} ${p.price.toFixed(2)}m</span></td>
+                <td><div class="player-cell"><b>${p.name}</b><br><small>${p.county}</small></div></td>
+                <td>${p.totalPts}</td>
+                <td>${p.price.toFixed(2)}m</td>
                 <td>
                     <div class="btn-group">
-                        ${['GK','DEF','MID','FWD','SUB'].map(role => `<button class="btn-pos ${p.prefPos===role?'btn-pref':''}" onclick="addPlayer(${p.id}, '${role}')">${role}</button>`).join('')}
+                        ${['GK','DEF','MID','FWD','SUB'].map(role => `<button class="btn-pos" onclick="addPlayer(${p.id}, '${role}')">${role}</button>`).join('')}
                     </div>
                 </td>
-            </tr>`;
-        }).join('');
+            </tr>`).join('');
     }
 
     function addPlayer(id, role) {
@@ -263,11 +243,8 @@
         if (state.squad.length >= 18) return alert("Squad full!");
         if (state.budget < p.price) return alert("Insufficient budget!");
         if (state.squad.find(x => x.id === id)) return alert("Player already in squad!");
-        const currentInRole = state.squad.filter(x => x.role === role).length;
-        if (currentInRole >= LIMITS[role]) return alert(`${role} position is full!`);
-        const currentFromCounty = state.squad.filter(x => x.county === p.county).length;
-        if (currentFromCounty >= LIMITS.COUNTY) return alert(`Max 2 players per county! (${p.county} full)`);
-
+        if (state.squad.filter(x => x.role === role).length >= LIMITS[role]) return alert(`${role} position is full!`);
+        
         state.squad.push({ ...p, role });
         state.budget -= p.price;
         updateUI();
@@ -277,12 +254,8 @@
         document.getElementById('budget-val').innerText = `Budget: ${state.budget.toFixed(2)}m`;
         const counts = { GK: 0, DEF: 0, MID: 0, FWD: 0, SUB: 0 };
         state.squad.forEach(p => counts[p.role]++);
-        document.getElementById('pos-tracker').innerHTML = `
-            <div>GK: ${counts.GK}/1</div><div>DEF: ${counts.DEF}/6</div><div>MID: ${counts.MID}/2</div>
-            <div>FWD: ${counts.FWD}/6</div><div>SUB: ${counts.SUB}/3</div><div>Total: ${state.squad.length}/18</div>`;
-        document.getElementById('squad-list').innerHTML = state.squad.map((p, i) => `
-            <div class="squad-slot"><span><b>[${p.role}]</b> ${p.name} <small>(${p.county})</small></span><button onclick="removePlayer(${i})" style="border:none; background:none; color:red; cursor:pointer;">×</button></div>
-        `).join('');
+        document.getElementById('pos-tracker').innerHTML = `<div>GK: ${counts.GK}/1</div><div>DEF: ${counts.DEF}/6</div><div>MID: ${counts.MID}/2</div><div>FWD: ${counts.FWD}/6</div><div>SUB: ${counts.SUB}/3</div>`;
+        document.getElementById('squad-list').innerHTML = state.squad.map((p, i) => `<div class="squad-slot"><span><b>[${p.role}]</b> ${p.name}</span><button onclick="removePlayer(${i})" style="color:red; cursor:pointer;">×</button></div>`).join('');
     }
 
     function removePlayer(idx) {
@@ -293,48 +266,58 @@
 
     async function saveTeamToSheet() {
         if (!checkMarketStatus()) return alert("Market is currently closed.");
-        if (state.squad.length < 18) return alert("You need a full 18-man squad to save.");
+        if (state.squad.length < 18) return alert("You need 18 players.");
 
-        let managerName = localStorage.getItem('fantasy_manager');
-        if (!managerName) {
-            managerName = prompt("Enter your Manager Name:");
-            if (!managerName) return;
-            localStorage.setItem('fantasy_manager', managerName);
-        }
+        let manager = localStorage.getItem('fantasy_manager') || prompt("Manager Name:");
+        if (!manager) return;
+        let pin = prompt("Enter a 4-digit PIN/Password to secure your team:");
+        if (!pin) return;
+
+        localStorage.setItem('fantasy_manager', manager);
 
         const order = ['GK', 'DEF', 'MID', 'FWD', 'SUB'];
-        const sortedSquadNames = [];
+        let sortedNames = [];
         order.forEach(role => {
-            const players = state.squad.filter(p => p.role === role).map(p => p.name);
-            sortedSquadNames.push(...players);
+            const names = state.squad.filter(p => p.role === role).map(p => p.name);
+            sortedNames.push(...names);
         });
-
-        const lastSaved = JSON.parse(localStorage.getItem('last_saved_squad') || "[]");
-        if (lastSaved.length > 0) {
-            const changes = sortedSquadNames.filter(name => !lastSaved.includes(name)).length;
-            if (changes > 2) return alert(`Limit exceeded: ${changes} changes. Only 2 allowed.`);
-        }
 
         try {
             await fetch(APPS_SCRIPT_URL, {
                 method: 'POST',
                 mode: 'no-cors',
-                body: JSON.stringify({ manager: managerName, squad: sortedSquadNames })
+                body: JSON.stringify({ manager: manager, pin: pin, squad: sortedNames })
             });
+            alert("Team saved successfully!");
+        } catch (e) { alert("Error saving team."); }
+    }
+
+    async function loadExistingTeam() {
+        let manager = prompt("Enter Manager Name:");
+        if (!manager) return;
+        let pass = prompt("Enter PIN:");
+        if (!pass) return;
+
+        try {
+            const res = await fetch(`${APPS_SCRIPT_URL}?manager=${encodeURIComponent(manager)}&pass=${encodeURIComponent(pass)}`);
+            const data = await res.json();
             
-            localStorage.setItem('last_saved_squad', JSON.stringify(sortedSquadNames));
-            alert("Team saved!");
-        } catch (e) {
-            alert("Save failed. Please try again.");
-        }
+            if (data.success) {
+                state.squad = []; state.budget = 100.0;
+                const roles = ['GK', 'DEF','DEF','DEF','DEF','DEF','DEF', 'MID','MID', 'FWD','FWD','FWD','FWD','FWD','FWD', 'SUB','SUB','SUB'];
+                data.squad.forEach((name, i) => {
+                    const p = allPlayers.find(x => x.name === name.trim());
+                    if (p) { state.squad.push({...p, role: roles[i]}); state.budget -= p.price; }
+                });
+                updateUI();
+                alert("Team Loaded!");
+            } else { alert("Login Failed: " + data.msg); }
+        } catch (e) { alert("Error loading team."); }
     }
 
     function showPage(id) {
         document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
         document.getElementById('page-' + id).classList.remove('hidden');
-        document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
-        const activeBtn = Array.from(document.querySelectorAll('.nav-link')).find(b => b.textContent.toLowerCase().includes(id));
-        if(activeBtn) activeBtn.classList.add('active');
     }
 
     function resetSquad() { if(confirm("Clear squad?")) { state.squad = []; state.budget = 100.0; updateUI(); } }
