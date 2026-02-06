@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GAA FANTASY FOOTBALL v1.3</title>
+    <title>GAA FANTASY FOOTBALL v1.4</title>
     <style>
         :root { --orange: #f37021; --dark: #1a1a1a; --cream: #f4f1de; --white: #ffffff; --green: #2e7d32; --pitch-lines: rgba(255,255,255,0.8); --red: #dc3545; --blue: #007bff; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--cream); margin: 0; padding: 0; color: var(--dark); }
@@ -125,7 +125,7 @@
     </div>
 </div>
 
-<div class="version-stamp">v1.3 - List Fix</div>
+<div class="version-stamp">v1.4 - List Restore</div>
 
 <script>
     const SCORERS_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTcdzjZ4zYlGgFe5acS8xOb1vHR9b8i98UudIOe-iC9Z1d6x6AY5zATgX217cNjcNtAGDLJ56y8Jr8N/pub?output=csv';
@@ -151,32 +151,38 @@
             const rows = text.split('\n').filter(r => r.trim() !== "").map(r => r.split(','));
             const counties = new Set();
             
-            allPlayers = []; // Reset list
+            allPlayers = []; 
             for(let i=1; i<rows.length; i++) {
                 if(!rows[i][0] || rows[i][0].trim() === "") continue;
                 
                 const co = rows[i][0].trim();
                 counties.add(co);
                 
+                // RESTORED Price Calculation using Column I (Index 8)
+                let ptsTotal = parseInt(rows[i][8]) || 0;
+                let calcPrice = 5.5 + (ptsTotal * 0.05);
+                if (calcPrice < 3.0) calcPrice = 3.0;
+
                 allPlayers.push({
                     id: i, 
                     county: co, 
                     name: ((rows[i][1]||"") + " " + (rows[i][2]||"")).trim(),
                     prefPos: (rows[i][3] || "FWD").trim().toUpperCase(), 
-                    price: parseFloat(rows[i][10]) || 5.0, 
+                    price: calcPrice, 
                     goals: rows[i][4] || "0", 
                     points: rows[i][5] || "0", 
                     clean: rows[i][6] || "0", 
                     apps: rows[i][7] || "0",
-                    pointsTotal: rows[i][8] || "0",
+                    pointsTotal: ptsTotal,
                     yellow: rows[i][11] || "0", 
                     red: rows[i][12] || "0",
                     badge: rows[i][14] ? rows[i][14].trim() : '',
-                    win: rows[i][18] || "0", 
-                    loss: rows[i][19] || "0"
+                    win: rows[i][18] || "0", // Column S
+                    loss: rows[i][19] || "0" // Column T
                 });
             }
             const select = document.getElementById('filter-county');
+            select.innerHTML = '<option value="">All Counties</option>';
             [...counties].sort().forEach(c => { 
                 let o = document.createElement('option'); 
                 o.value = o.text = c; 
@@ -186,6 +192,7 @@
             filterPlayers();
         } catch (err) {
             console.error("Failed to load players:", err);
+            alert("Error loading player data. Check your internet connection.");
         }
     }
 
@@ -195,6 +202,8 @@
         const filtered = allPlayers.filter(p => p.name.toLowerCase().includes(nameQ) && (!coQ || p.county === coQ));
         
         const tbody = document.getElementById('market-body');
+        if (!tbody) return;
+        
         tbody.innerHTML = filtered.map(p => `
             <tr>
                 <td>
@@ -243,7 +252,9 @@
     }
 
     function updateUI() {
-        document.getElementById('budget-val').innerText = `Budget: ${state.budget.toFixed(1)}m`;
+        const budgetElem = document.getElementById('budget-val');
+        if(budgetElem) budgetElem.innerText = `Budget: ${state.budget.toFixed(1)}m`;
+        
         const rows = [{role:'GK',count:1}, {role:'DEF',count:3}, {role:'DEF',count:3}, {role:'MID',count:2}, {role:'FWD',count:3}, {role:'FWD',count:3}];
         let html = "";
         let used = { GK:0, DEF:0, MID:0, FWD:0, SUB:0 };
@@ -261,7 +272,9 @@
             }
             html += `</div>`;
         });
-        document.getElementById('pitch-board').innerHTML = html;
+        const pitchBoard = document.getElementById('pitch-board');
+        if(pitchBoard) pitchBoard.innerHTML = html;
+
         let subHtml = "";
         for(let i=0; i<3; i++) {
             const p = state.squad.filter(p => p.role === 'SUB')[i];
@@ -270,7 +283,8 @@
                                 <div class="player-name-label">${p.name.split(' ').pop()}</div>
                              </div>` : `<div class="player-disc empty">SUB</div>`;
         }
-        document.getElementById('bench-list').innerHTML = subHtml;
+        const benchList = document.getElementById('bench-list');
+        if(benchList) benchList.innerHTML = subHtml;
     }
 
     function showPage(id) {
