@@ -138,7 +138,7 @@
         const dist = deadline - now;
         if (dist < 0) { document.getElementById("countdown").innerHTML = "CLOSED"; return; }
         const d = Math.floor(dist/86400000), h = Math.floor((dist%86400000)/3600000), m = Math.floor((dist%3600000)/60000), s = Math.floor((dist%60000)/1000);
-        document.getElementById("countdown").innerHTML = `${d}d ${h}h ${m}s`;
+        document.getElementById("countdown").innerHTML = `${d}d ${h}h ${m}m ${s}s`;
     }, 1000);
 
     async function init() {
@@ -158,8 +158,8 @@
                 clean: rows[i][6] || 0, apps: rows[i][7] || 0,
                 pointsTotal: rows[i][8] || 0,
                 badge: rows[i][14] ? rows[i][14].trim() : '',
-                colS: rows[i][18] || '-', // Column S
-                colT: rows[i][19] || '-'  // Column T
+                win: rows[i][18] || 0, // Column S
+                loss: rows[i][19] || 0  // Column T
             });
         }
         [...counties].sort().forEach(c => { let o = document.createElement('option'); o.value = o.text = c; document.getElementById('filter-county').add(o); });
@@ -186,8 +186,8 @@
                             <div class="stat-line"><span>Clean Sheets:</span> <span>${p.clean}</span></div>
                             <div class="stat-line"><span>Yellow Cards:</span> <span>${p.yellow}</span></div>
                             <div class="stat-line"><span>Red Cards:</span> <span>${p.red}</span></div>
-                            <div class="stat-line"><span>S Stats:</span> <span>${p.colS}</span></div>
-                            <div class="stat-line"><span>T Stats:</span> <span>${p.colT}</span></div>
+                            <div class="stat-line"><span>Win:</span> <span>${p.win}</span></div>
+                            <div class="stat-line"><span>Loss:</span> <span>${p.loss}</span></div>
                             <div class="stat-line" style="margin-top:5px; color:var(--orange)"><span>Season Pts:</span> <span>${p.pointsTotal}</span></div>
                         </div>
                     </div>
