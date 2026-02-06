@@ -158,8 +158,8 @@
                 clean: rows[i][6] || 0, apps: rows[i][7] || 0,
                 pointsTotal: rows[i][8] || 0,
                 badge: rows[i][14] ? rows[i][14].trim() : '',
-                win: rows[i][18] || 0, // Column S (Index 18)
-                loss: rows[i][19] || 0  // Column T (Index 19)
+                win: rows[i][15] || 0, // Column P (Index 15)
+                loss: rows[i][16] || 0  // Column Q (Index 16)
             });
         }
         [...counties].sort().forEach(c => { let o = document.createElement('option'); o.value = o.text = c; document.getElementById('filter-county').add(o); });
