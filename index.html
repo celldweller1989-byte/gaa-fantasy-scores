@@ -17,11 +17,14 @@
         
         .container { padding: 10px; max-width: 1300px; margin: auto; }
         
-        /* Mobile First Layout */
+        /* Mobile First Layout - Updated for 3 columns on Desktop */
         .main-layout { display: flex; flex-direction: column; gap: 15px; }
-        @media (min-width: 992px) { .main-layout { display: grid; grid-template-columns: 1fr 360px; } }
+        @media (min-width: 992px) { 
+            .main-layout { display: grid; grid-template-columns: 1fr 300px 320px; align-items: start; } 
+        }
 
         .panel { background: var(--white); border-radius: 8px; padding: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        .panel h3 { margin-top: 0; font-size: 16px; border-bottom: 2px solid var(--orange); padding-bottom: 5px; }
 
         .filter-bar { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
         .filter-bar input, .filter-bar select { padding: 12px; border: 1px solid #ccc; border-radius: 5px; flex: 1; min-width: 140px; font-size: 14px; }
@@ -44,6 +47,8 @@
         .btn-pref { border: 2px solid var(--orange); color: var(--orange); background: #fff5ee; }
 
         .squad-slot { display: flex; justify-content: space-between; background: #f9f9f9; padding: 10px; margin-bottom: 5px; border-radius: 4px; border-left: 4px solid var(--orange); align-items: center; font-size: 13px; }
+        .prev-slot { background: #f0f0f0; border-left: 4px solid var(--grey); color: #666; font-size: 11px; padding: 6px; margin-bottom: 3px; border-radius: 3px; }
+        
         .pos-tracker { font-size: 12px; background: #fff3cd; padding: 10px; border-radius: 5px; margin-bottom: 15px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; text-align: center; }
         
         .btn-submit { width: 100%; padding: 15px; background: var(--green); color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 10px; font-size: 16px; }
@@ -79,6 +84,7 @@
 
         <div class="main-layout">
             <div class="panel">
+                <h3>Player Market</h3>
                 <div class="scroll-box">
                     <table>
                         <thead>
@@ -94,8 +100,15 @@
                 </div>
             </div>
 
+            <div id="prev-team-panel" class="panel hidden">
+                <h3>Last Week's Team</h3>
+                <div id="prev-team-list" style="max-height: 600px; overflow-y: auto;"></div>
+                <button class="btn-reset" onclick="hidePrevTeam()">Hide Reference</button>
+            </div>
+
             <div class="panel">
                 <button class="btn-load" onclick="loadExistingTeam()">LOAD PREVIOUS TEAM</button>
+                <h3>Your Current Selection</h3>
                 <div class="pos-tracker" id="pos-tracker">
                     <div>GK: 0/1</div><div>DEF: 0/6</div><div>MID: 0/2</div>
                     <div>FWD: 0/6</div><div>SUB: 0/3</div><div>Total: 0/18</div>
@@ -103,7 +116,7 @@
                 <div id="budget-val" style="font-weight:bold; margin-bottom:10px; font-size: 1.2em; color: var(--green); text-align:center;">Budget: 100.00m</div>
                 <div id="squad-list"></div>
                 <button id="btn-save" class="btn-submit" onclick="saveTeamToSheet()">SAVE WEEKLY TEAM</button>
-                <button class="btn-reset" onclick="resetSquad()">RESET SQUAD</button>
+                <button class="btn-reset" onclick="resetSquad()">RESET DRAFT</button>
             </div>
         </div>
     </div>
@@ -127,7 +140,7 @@
     
     let allPlayers = [];
     let state = { budget: 100.0, squad: [] };
-    const LIMITS = { GK: 1, DEF: 6, MID: 2, FWD: 6, SUB: 3, COUNTY: 3 }; // County limit updated to 3
+    const LIMITS = { GK: 1, DEF: 6, MID: 2, FWD: 6, SUB: 3, COUNTY: 3 };
 
     async function init() {
         try {
@@ -141,13 +154,11 @@
         const rows = csvText.split('\n').map(row => row.split(','));
         allPlayers = [];
         const counties = new Set();
-
         for (let i = 1; i < rows.length; i++) {
             const col = rows[i];
             if (!col[0]) continue;
             const countyName = col[0].trim();
             counties.add(countyName);
-
             allPlayers.push({
                 id: i,
                 county: countyName,
@@ -156,15 +167,9 @@
                 totalPts: parseInt(col[8]) || 0,
                 price: Math.max(3.0, 5.5 + ((parseInt(col[8]) || 0) * 0.05)),
                 badge: col[14] ? col[14].trim() : '',
-                statsHTML: `
-                    <strong>${col[1]} ${col[2]}</strong><br>
-                    Pos: ${col[3] || 'N/A'}<br>
-                    Goals: ${col[4] || 0} | Pts: ${col[5] || 0}<br>
-                    Frees: ${col[6] || 0} | 45s: ${col[7] || 0}
-                `
+                statsHTML: `<strong>${col[1]} ${col[2]}</strong><br>Pos: ${col[3] || 'N/A'}<br>Goals: ${col[4] || 0} | Pts: ${col[5] || 0}`
             });
         }
-        
         const countySelect = document.getElementById('filter-county');
         [...counties].sort().forEach(c => {
             const opt = document.createElement('option');
@@ -178,7 +183,6 @@
         const nameQ = document.getElementById('search-name').value.toLowerCase();
         const countyQ = document.getElementById('filter-county').value;
         const posQ = document.getElementById('filter-pos').value;
-
         const filtered = allPlayers.filter(p => 
             p.name.toLowerCase().includes(nameQ) && 
             (!countyQ || p.county === countyQ) && 
@@ -194,20 +198,7 @@
                 const isPref = (p.prefPos === role);
                 return `<button class="btn-pos ${isPref ? 'btn-pref' : ''}" onclick="addPlayer(${p.id}, '${role}')">${role}</button>`;
             }).join('');
-
-            return `
-            <tr>
-                <td>
-                    <div class="player-cell">
-                        <img src="${p.badge}" class="county-badge" onerror="this.src='https://ui-avatars.com/api/?name=${p.county[0]}&background=f37021&color=fff'">
-                        <div><b>${p.name}</b><br><small>${p.county}</small></div>
-                        <div class="tooltip">${p.statsHTML}</div>
-                    </div>
-                </td>
-                <td style="text-align:center">${p.totalPts}</td>
-                <td style="text-align:center">${p.price.toFixed(1)}m</td>
-                <td><div class="btn-group">${buttons}</div></td>
-            </tr>`;
+            return `<tr><td><div class="player-cell"><img src="${p.badge}" class="county-badge" onerror="this.src='https://ui-avatars.com/api/?name=${p.county[0]}&background=f37021&color=fff'"><div><b>${p.name}</b><br><small>${p.county}</small></div><div class="tooltip">${p.statsHTML}</div></div></td><td style="text-align:center">${p.totalPts}</td><td style="text-align:center">${p.price.toFixed(1)}m</td><td><div class="btn-group">${buttons}</div></td></tr>`;
         }).join('');
     }
 
@@ -218,7 +209,6 @@
         if (state.squad.find(x => x.id === id)) return alert("Already in squad!");
         if (state.squad.filter(x => x.role === role).length >= LIMITS[role]) return alert(`${role} slot full!`);
         if (state.squad.filter(x => x.county === p.county).length >= LIMITS.COUNTY) return alert(`Max 3 players per county allowed!`);
-
         state.squad.push({ ...p, role });
         state.budget -= p.price;
         updateUI();
@@ -228,15 +218,8 @@
         document.getElementById('budget-val').innerText = `Budget: ${state.budget.toFixed(2)}m`;
         const counts = { GK: 0, DEF: 0, MID: 0, FWD: 0, SUB: 0 };
         state.squad.forEach(p => counts[p.role]++);
-        document.getElementById('pos-tracker').innerHTML = `
-            <div>GK: ${counts.GK}/1</div><div>DEF: ${counts.DEF}/6</div><div>MID: ${counts.MID}/2</div>
-            <div>FWD: ${counts.FWD}/6</div><div>SUB: ${counts.SUB}/3</div>
-        `;
-        document.getElementById('squad-list').innerHTML = state.squad.map((p, i) => `
-            <div class="squad-slot">
-                <span><b>${p.name}</b> <small>(${p.role})</small></span>
-                <button onclick="removePlayer(${i})" style="color:red; border:none; background:none; cursor:pointer; font-size: 20px;">×</button>
-            </div>`).join('');
+        document.getElementById('pos-tracker').innerHTML = `<div>GK: ${counts.GK}/1</div><div>DEF: ${counts.DEF}/6</div><div>MID: ${counts.MID}/2</div><div>FWD: ${counts.FWD}/6</div><div>SUB: ${counts.SUB}/3</div>`;
+        document.getElementById('squad-list').innerHTML = state.squad.map((p, i) => `<div class="squad-slot"><span><b>${p.name}</b> <small>(${p.role})</small></span><button onclick="removePlayer(${i})" style="color:red; border:none; background:none; cursor:pointer; font-size: 20px;">×</button></div>`).join('');
     }
 
     function removePlayer(idx) {
@@ -245,58 +228,61 @@
         updateUI();
     }
 
+    async function loadExistingTeam() {
+        let manager = prompt("Manager Name:");
+        let pass = prompt("PIN:");
+        if (!manager || !pass) return;
+        try {
+            const res = await fetch(`${APPS_SCRIPT_URL}?manager=${encodeURIComponent(manager)}&pass=${encodeURIComponent(pass)}`);
+            const data = await res.json();
+            if (data.success) {
+                // Display the reference panel
+                const prevPanel = document.getElementById('prev-team-panel');
+                const prevList = document.getElementById('prev-team-list');
+                prevPanel.classList.remove('hidden');
+                
+                // Format the names for display
+                const roles = ['GK', 'DEF','DEF','DEF','DEF','DEF','DEF', 'MID','MID', 'FWD','FWD','FWD','FWD','FWD','FWD', 'SUB','SUB','SUB'];
+                prevList.innerHTML = data.squad.map((name, i) => `
+                    <div class="prev-slot">
+                        <strong>${roles[i]}:</strong> ${name}
+                    </div>
+                `).join('');
+
+                alert("Reference Team Loaded! You can now use the Market to build your new 18-player squad for this week.");
+            } else { alert(data.msg); }
+        } catch (e) { alert("Error loading."); }
+    }
+
+    function hidePrevTeam() {
+        document.getElementById('prev-team-panel').classList.add('hidden');
+    }
+
     async function saveTeamToSheet() {
         if (state.squad.length < 18) return alert("Need 18 players to save.");
         let manager = prompt("Manager Name:");
         let pin = prompt("Enter PIN:");
         if (!manager || !pin) return;
-
         const order = ['GK', 'DEF', 'MID', 'FWD', 'SUB'];
         let names = [];
         order.forEach(role => {
             const pNames = state.squad.filter(p => p.role === role).map(p => p.name);
             names.push(...pNames);
         });
-
         try {
-            await fetch(APPS_SCRIPT_URL, {
-                method: 'POST',
-                mode: 'no-cors',
-                body: JSON.stringify({ manager, pin, squad: names })
-            });
+            await fetch(APPS_SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ manager, pin, squad: names }) });
             alert("Team saved! (Max 3 transfers allowed per week)");
         } catch (e) { alert("Save error."); }
-    }
-
-    async function loadExistingTeam() {
-        let manager = prompt("Manager Name:");
-        let pass = prompt("PIN:");
-        if (!manager || !pass) return;
-
-        try {
-            const res = await fetch(`${APPS_SCRIPT_URL}?manager=${encodeURIComponent(manager)}&pass=${encodeURIComponent(pass)}`);
-            const data = await res.json();
-            if (data.success) {
-                state.squad = []; state.budget = 100.0;
-                const roles = ['GK', 'DEF','DEF','DEF','DEF','DEF','DEF', 'MID','MID', 'FWD','FWD','FWD','FWD','FWD','FWD', 'SUB','SUB','SUB'];
-                data.squad.forEach((name, i) => {
-                    const p = allPlayers.find(x => x.name === name.trim());
-                    if (p) { state.squad.push({...p, role: roles[i]}); state.budget -= p.price; }
-                });
-                updateUI();
-                alert("Team Loaded!");
-            } else { alert(data.msg); }
-        } catch (e) { alert("Error loading."); }
     }
 
     function showPage(id) {
         document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
         document.getElementById('page-' + id).classList.remove('hidden');
         document.querySelectorAll('.nav-link').forEach(n => n.classList.remove('active'));
-        event.target.classList.add('active');
+        if(event) event.target.classList.add('active');
     }
 
-    function resetSquad() { if(confirm("Clear current squad?")) { state.squad = []; state.budget = 100.0; updateUI(); } }
+    function resetSquad() { if(confirm("Clear draft?")) { state.squad = []; state.budget = 100.0; updateUI(); } }
     init();
 </script>
 </body>
