@@ -25,11 +25,12 @@
         /* Hover Stats Logic */
         .player-info-cell { position: relative; display: flex; align-items: center; cursor: help; }
         .stats-popup { 
-            visibility: hidden; width: 180px; background-color: #222; color: #fff; text-align: left; 
-            border-radius: 6px; padding: 10px; position: absolute; z-index: 1000; left: 10px; top: 30px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.4); opacity: 0; transition: opacity 0.3s; pointer-events: none;
-            font-size: 11px; border: 1px solid var(--orange);
+            visibility: hidden; width: 200px; background-color: #222; color: #fff; text-align: left; 
+            border-radius: 6px; padding: 12px; position: absolute; z-index: 1000; left: 10px; top: 30px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5); opacity: 0; transition: opacity 0.2s; pointer-events: none;
+            font-size: 11px; border: 1.5px solid var(--orange); line-height: 1.5;
         }
+        .stats-popup strong { color: var(--orange); font-size: 12px; border-bottom: 1px solid #444; display: block; margin-bottom: 5px; padding-bottom: 2px; }
         .player-info-cell:hover .stats-popup { visibility: visible; opacity: 1; }
 
         /* Pitch UI */
@@ -67,7 +68,6 @@
         .timer-sidebar { background: var(--dark); color: #fff; padding: 10px; text-align: center; border-radius: 5px; margin-top: 10px; }
         .hidden { display: none; }
 
-        /* Rules */
         .rules-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; margin-top: 10px; }
         .rule-card { border-left: 4px solid var(--orange); padding: 12px; background: #fff; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         .rule-list { list-style: none; padding: 0; font-size: 12px; line-height: 1.8; }
@@ -181,8 +181,11 @@
             allPlayers.push({
                 id: i, county: rows[i][0].trim(), name: (rows[i][1]+" "+rows[i][2]).trim(),
                 prefPos: rows[i][3].trim().toUpperCase(), price: parseFloat(rows[i][10]) || 5.0,
-                goals: parseInt(rows[i][4]) || 0, points: parseInt(rows[i][5]) || 0,
-                pointsTotal: parseInt(rows[i][8]) || 0, badge: rows[i][14] ? rows[i][14].trim() : ''
+                colE: rows[i][4] || 0, colF: rows[i][5] || 0, colG: rows[i][6] || 0,
+                colH: rows[i][7] || 0, pointsTotal: parseInt(rows[i][8]) || 0,
+                colL: rows[i][11] || 0, colM: rows[i][12] || 0, 
+                colP: rows[i][15] || 0, colQ: rows[i][16] || 0, colR: rows[i][17] || 0,
+                badge: rows[i][14] ? rows[i][14].trim() : ''
             });
         }
         const coSelect = document.getElementById('filter-county');
@@ -202,15 +205,24 @@
         
         document.getElementById('market-body').innerHTML = filtered.map(p => {
             const buttons = ['GK', 'DEF', 'MID', 'FWD', 'SUB'].map(pos => `<button class="btn-assign ${p.prefPos === pos ? 'is-pref' : ''}" onclick="addPlayer(${p.id}, '${pos}')">${pos}</button>`).join('');
+            
+            // Generate Hover Content
+            let statsContent = "";
+            if(p.prefPos === 'GK') {
+                statsContent = `Clean Sheets: ${p.colG}<br>Saves: ${p.colR}`;
+            } else {
+                statsContent = `Goals: ${p.colE} | Points: ${p.colF}<br>Assists: ${p.colH}<br>Turnovers: ${p.colL} | Blocks: ${p.colM}<br>Yellow: ${p.colP} | Red: ${p.colQ}`;
+            }
+
             return `<tr>
                 <td>
                     <div class="player-info-cell">
                         <img src="${p.badge}" class="table-badge" onerror="this.src='https://ui-avatars.com/api/?name=${p.county[0]}'">
                         <b>${p.name}</b>
                         <div class="stats-popup">
-                            <strong>${p.name}</strong><br>
-                            Goals: ${p.goals} | Points: ${p.points}<br>
-                            <strong>Total Score: ${p.pointsTotal}</strong>
+                            <strong>${p.name} (${p.prefPos})</strong>
+                            ${statsContent}<br>
+                            <span style="color:var(--orange)"><strong>Season Score: ${p.pointsTotal}</strong></span>
                         </div>
                     </div>
                 </td>
@@ -255,12 +267,12 @@
         switch(intelIndex) {
             case 0: label="Top Performers"; sorted=[...allPlayers].sort((a,b)=>b.pointsTotal-a.pointsTotal); suffix="pts"; break;
             case 1: label="Strugglers"; sorted=[...allPlayers].sort((a,b)=>a.pointsTotal-b.pointsTotal); suffix="pts"; break;
-            case 2: label="Golden Boot"; sorted=[...allPlayers].sort((a,b)=>b.goals-a.goals); suffix="gls"; break;
-            case 3: label="Sharp Shooters"; sorted=[...allPlayers].sort((a,b)=>b.points-a.points); suffix="pts"; break;
+            case 2: label="Golden Boot"; sorted=[...allPlayers].sort((a,b)=>b.colE-a.colE); suffix="gls"; break;
+            case 3: label="Sharp Shooters"; sorted=[...allPlayers].sort((a,b)=>b.colF-a.colF); suffix="pts"; break;
             case 4: label="Top GKs"; sorted=allPlayers.filter(p=>p.prefPos==='GK').sort((a,b)=>b.pointsTotal-a.pointsTotal); suffix="pts"; break;
         }
         title.innerText = label;
-        content.innerHTML = sorted.slice(0, 10).map(p => `<div class="intel-item"><img src="${p.badge}"><span>${p.name}</span><span class="p-stat">${intelIndex===2?p.goals:intelIndex===3?p.points:p.pointsTotal}${suffix}</span></div>`).join('');
+        content.innerHTML = sorted.slice(0, 10).map(p => `<div class="intel-item"><img src="${p.badge}"><span>${p.name}</span><span class="p-stat">${intelIndex===2?p.colE:intelIndex===3?p.colF:p.pointsTotal}${suffix}</span></div>`).join('');
     }
 
     function showPage(id) {
