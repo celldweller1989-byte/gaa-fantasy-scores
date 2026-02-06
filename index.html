@@ -25,7 +25,7 @@
         /* Stats Popup */
         .player-info-cell { position: relative; display: flex; align-items: center; cursor: help; }
         .stats-popup { 
-            visibility: hidden; width: 210px; background-color: #222; color: #fff; text-align: left; 
+            visibility: hidden; width: 220px; background-color: #222; color: #fff; text-align: left; 
             border-radius: 6px; padding: 12px; position: absolute; z-index: 1000; left: 20px; top: 30px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.5); opacity: 0; transition: opacity 0.3s; pointer-events: none;
             font-size: 11px; border: 1.5px solid var(--orange); line-height: 1.6;
@@ -55,7 +55,6 @@
         table { width: 100%; border-collapse: collapse; font-size: 11px; }
         th { background: #f8f8f8; padding: 8px; text-align: left; position: sticky; top: 0; z-index: 5; border-bottom: 2px solid #ddd; }
         td { padding: 8px 6px; border-bottom: 1px solid #eee; }
-        .table-badge { width: 22px; height: 22px; margin-right: 8px; }
 
         .btn-assign { padding: 4px 2px; font-size: 9px; cursor: pointer; border: 1px solid #ddd; background: #fff; flex: 1; font-weight: bold; }
         .is-pref { border: 2px solid var(--orange) !important; color: var(--orange); background: #fff5ee !important; }
@@ -71,8 +70,10 @@
         .hidden { display: none; }
 
         /* Rules */
-        .rules-card { background: #fff; padding: 20px; border-radius: 8px; border-top: 4px solid var(--orange); box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 20px; }
-        .rules-list li { padding: 10px 0; border-bottom: 1px solid #f9f9f9; display: flex; justify-content: space-between; font-size: 13px; }
+        .rules-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px; }
+        .rules-card { background: #fff; padding: 20px; border-radius: 8px; border-top: 4px solid var(--orange); box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .rules-list li { padding: 8px 0; border-bottom: 1px solid #f9f9f9; display: flex; justify-content: space-between; font-size: 12px; }
+        .rules-list { list-style: none; padding: 0; margin: 0; }
     </style>
 </head>
 <body>
@@ -82,7 +83,7 @@
 
 <nav>
     <button class="nav-link active" id="nav-market" onclick="showPage('market')">Squad & Pitch</button>
-    <button class="nav-link" id="nav-rules" onclick="showPage('rules')">Full Rules</button>
+    <button class="nav-link" id="nav-rules" onclick="showPage('rules')">Full Scoring Rules</button>
 </nav>
 
 <div class="container">
@@ -102,7 +103,7 @@
                 </div>
                 <div class="scroll-box">
                     <table>
-                        <thead><tr><th>Player</th><th>Price</th><th>Assign to Slot</th></tr></thead>
+                        <thead><tr><th>Player</th><th>Mkt Value</th><th>Assign</th></tr></thead>
                         <tbody id="market-body"></tbody>
                     </table>
                 </div>
@@ -120,7 +121,7 @@
                 <div id="budget-val" style="font-size:22px; font-weight:bold; color:var(--green); text-align:center;">Budget: 100.00m</div>
                 <div class="submit-section">
                     <input type="text" id="sub-mgr-name" placeholder="Manager Name">
-                    <input type="password" id="sub-mgr-pin" placeholder="5-Digit PIN" maxlength="5">
+                    <input type="password" id="sub-mgr-pin" placeholder="PIN / Password" maxlength="10">
                     <button onclick="saveTeamToSheet()" style="width:100%; padding:12px; background:var(--green); color:white; border:none; border-radius:5px; font-weight:bold; cursor:pointer;">SUBMIT TEAM</button>
                 </div>
                 <div class="intel-box">
@@ -132,20 +133,34 @@
     </div>
 
     <div id="page-rules" class="page hidden">
-        <div class="rules-card">
-            <h3>Price Calculation</h3>
-            <ul class="rules-list">
-                <li><span>Accumulated Pts (+3)</span><b>+0.25m Value</b></li>
-                <li><span>Accumulated Pts (-3)</span><b>-0.25m Value</b></li>
-                <li><span>Max Per County</span><b>3 Players</b></li>
-            </ul>
+        <div class="rules-grid">
+            <div class="rules-card">
+                <h3>Market & Value</h3>
+                <ul class="rules-list">
+                    <li><span>10% Global Discount</span><b>Baseline K * 0.90</b></li>
+                    <li><span>Performance (+3 Pts)</span><b>+0.25m</b></li>
+                    <li><span>Performance (-3 Pts)</span><b>-0.25m</b></li>
+                    <li><span>Max Per County</span><b>3 Players</b></li>
+                </ul>
+            </div>
+            <div class="rules-card">
+                <h3>Scoring Logic</h3>
+                <ul class="rules-list">
+                    <li><span>Goal (E)</span><b>+3 Pts</b></li>
+                    <li><span>Point (F)</span><b>+1 Pt</b></li>
+                    <li><span>Match Win (P)</span><b>+2 Pts</b></li>
+                    <li><span>Clean Sheet (G)</span><b>+5 Pts</b></li>
+                    <li><span>Red Card (H)</span><b>-3 Pts</b></li>
+                    <li><span>GK Conceded (R)</span><b>-1 Pt / Goal</b></li>
+                </ul>
+            </div>
         </div>
     </div>
 </div>
 
 <script>
     const SCORERS_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTcdzjZ4zYlGgFe5acS8xOb1vHR9b8i98UudIOe-iC9Z1d6x6AY5zATgX217cNjcNtAGDLJ56y8Jr8N/pub?output=csv';
-    const SCRIPT_URL = 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE'; 
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyab5CudbbFiwHLQ5E4CfkTYHPY5Dj_I3AGd5b3cxSzyFf7Mu-WGoRJbj10l7k0ktZW/exec'; 
     
     let allPlayers = [], squad = [], budget = 100.0, intelIndex = 0;
 
@@ -169,8 +184,10 @@
             counties.add(rows[i][0].trim());
             
             let totalScore = parseInt(rows[i][8]) || 0;
-            let basePrice = parseFloat(rows[i][10]) || 5.0;
-            let currentPrice = basePrice + (Math.floor(totalScore / 3) * 0.25);
+            let basePriceK = parseFloat(rows[i][10]) || 5.0;
+            
+            // MATH: (Baseline * 0.9) + (Floor(Total Score / 3) * 0.25)
+            let currentPrice = (basePriceK * 0.90) + (Math.floor(totalScore / 3) * 0.25);
 
             allPlayers.push({
                 id: i, 
@@ -186,7 +203,7 @@
                 onePointer: rows[i][11] || 0,
                 twoPointer: rows[i][12] || 0,
                 win: rows[i][15] || 0,
-                lost: rows[i][16] || 0, // Column Q
+                lost: rows[i][16] || 0, 
                 gkConceded: rows[i][17] || 0,
                 badge: rows[i][14] ? rows[i][14].trim() : ''
             });
@@ -216,23 +233,19 @@
                 <td>
                     <div class="player-info-cell">
                         <img src="${p.badge}" class="table-badge" onerror="this.src='https://ui-avatars.com/api/?name=${p.county[0]}'">
-                        <b>${p.name} ${isSelected ? '✔️' : ''}</b>
+                        <b>${p.name}</b>
                         <div class="stats-popup">
                             <strong>${p.name}</strong>
                             <div class="stat-row"><span>Goals (E)</span><span>${p.goals}</span></div>
                             <div class="stat-row"><span>Points (F)</span><span>${p.points}</span></div>
                             <div class="stat-row"><span>Clean Sheet (G)</span><span>${p.cleanSheet}</span></div>
-                            <div class="stat-row"><span>Red Card (H)</span><span style="color:red">${p.redCard}</span></div>
-                            <div class="stat-row"><span>1 Pointer (L)</span><span>${p.onePointer}</span></div>
-                            <div class="stat-row"><span>2 Pointer (M)</span><span>${p.twoPointer}</span></div>
-                            <div class="stat-row"><span>Match Win (P)</span><span>${p.win}</span></div>
                             <div class="stat-row"><span>Match Loss (Q)</span><span>${p.lost}</span></div>
-                            <div class="stat-row"><span>GK Conceded (R)</span><span>${p.gkConceded}</span></div>
                             <div class="stat-row total-row"><span>Total Score (I)</span><span>${p.totalScore}</span></div>
+                            <div class="stat-row" style="color:var(--green)"><span>Market Price</span><span>${p.price.toFixed(2)}m</span></div>
                         </div>
                     </div>
                 </td>
-                <td>${p.price.toFixed(2)}m</td>
+                <td><b>${p.price.toFixed(2)}m</b></td>
                 <td><div style="display:flex; gap:2px;">${buttons}</div></td>
             </tr>`;
         }).join('');
@@ -276,10 +289,32 @@
     async function saveTeamToSheet() {
         const name = document.getElementById('sub-mgr-name').value.trim();
         const pin = document.getElementById('sub-mgr-pin').value.trim();
-        if(!name || pin.length !== 5) return alert("Missing name or 5-digit PIN.");
-        if(squad.length < 18) return alert("Squad incomplete.");
-        const data = { manager: name, pin: pin, team: squad.map(p => ({ name: p.name, role: p.assignedRole, price: p.price })) };
-        try { await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(data) }); alert("Submitted!"); } catch (e) { alert("Error."); }
+        if(!name || pin.length < 4) return alert("Missing name or PIN.");
+        if(squad.length < 18) return alert("Squad must have 18 players.");
+
+        // YOUR SCRIPT EXPECTS A FLAT ARRAY OF 18 NAMES
+        const squadNames = squad.map(p => p.name);
+
+        const data = { 
+            manager: name, 
+            pin: pin, 
+            squad: squadNames 
+        };
+
+        try { 
+            const response = await fetch(SCRIPT_URL, { 
+                method: 'POST', 
+                body: JSON.stringify(data) 
+            });
+            const resData = await response.json();
+            if(resData.result === "success") {
+                alert("Team Submitted Successfully!");
+            } else {
+                alert("Error: " + resData.message);
+            }
+        } catch (e) { 
+            alert("Submission failed. Ensure your script is deployed to 'Anyone'."); 
+        }
     }
 
     function updateIntel() {
