@@ -8,9 +8,30 @@
         :root { --orange: #f37021; --dark: #1a1a1a; --cream: #f4f1de; --white: #ffffff; --green: #28a745; --red: #dc3545; --grey: #777; --blue: #007bff; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--cream); margin: 0; padding: 0; color: var(--dark); }
         .header { background: var(--orange); color: white; padding: 20px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+        .logo-container { padding: 10px 0; }
+        .logo { height: 100px; /* Adjust height as needed */ vertical-align: middle; }
         nav { display: flex; justify-content: center; background: var(--dark); padding: 0; position: sticky; top: 0; z-index: 100; flex-wrap: wrap; }
         .nav-link { color: white; padding: 15px 20px; text-decoration: none; font-weight: bold; cursor: pointer; transition: 0.3s; border: none; background: none; font-size: 13px; text-transform: uppercase; }
         .nav-link.active { background: var(--orange); }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="logo-container">
+            <!-- Image source updated to your hosted URL -->
+            <img src="https://i.postimg.cc/28yKYj7D/Chat-GPT-Image-Feb-6-2026-02-34-21-PM.png" alt="GAA Fantasy Football Logo" class="logo">
+        </div>
+        <h1>GAA FANTASY FOOTBALL</h1>
+    </div>
+
+    <nav>
+        <a href="#" class="nav-link active">Home</a>
+        <a href="#" class="nav-link">My Team</a>
+        <a href="#" class="nav-link">Leagues</a>
+        <a href="#" class="nav-link">Stats</a>
+        <a href="#" class="nav-link">News</a>
+    </nav>
         
         .container { padding: 15px; max-width: 1300px; margin: auto; }
         .main-layout { display: grid; grid-template-columns: 1fr 360px; gap: 20px; }
