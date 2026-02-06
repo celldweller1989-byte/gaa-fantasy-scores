@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GAA FANTASY FOOTBALL</title>
+    <title>GAA FANTASY FOOTBALL v1.2</title>
     <style>
         :root { --orange: #f37021; --dark: #1a1a1a; --cream: #f4f1de; --white: #ffffff; --green: #2e7d32; --pitch-lines: rgba(255,255,255,0.8); --red: #dc3545; --blue: #007bff; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--cream); margin: 0; padding: 0; color: var(--dark); }
@@ -61,6 +61,9 @@
         .timer-sidebar { background: var(--dark); color: #fff; padding: 12px; text-align: center; border-radius: 5px; margin-top: 15px; border-left: 4px solid var(--orange); }
         #countdown { color: var(--orange); font-weight: bold; font-family: monospace; display: block; font-size: 16px; margin-top: 4px; }
         
+        /* Version Stamp */
+        .version-stamp { position: fixed; bottom: 5px; right: 5px; font-size: 10px; color: #999; pointer-events: none; }
+
         .hidden { display: none; }
     </style>
 </head>
@@ -124,6 +127,8 @@
     </div>
 </div>
 
+<div class="version-stamp">v1.2 - Win/Loss Updated</div>
+
 <script>
     const SCORERS_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTcdzjZ4zYlGgFe5acS8xOb1vHR9b8i98UudIOe-iC9Z1d6x6AY5zATgX217cNjcNtAGDLJ56y8Jr8N/pub?output=csv';
     const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxQz1sBTHdKn1vfbB2EnMmTw0ekA2PQGC9Lo4XMVicbMwfZH9G6OONmvDBktCr7lKxc/exec';
@@ -142,20 +147,27 @@
     }, 1000);
 
     async function init() {
-        const res = await fetch(SCORERS_URL + '&t=' + new Date().getTime());
+        // Cache buster added to URL (?cb=...) to force fresh data load
+        const res = await fetch(SCORERS_URL + '?cb=' + new Date().getTime());
         const text = await res.text();
         const rows = text.split('\n').map(r => r.split(','));
         const counties = new Set();
+        
         for(let i=1; i<rows.length; i++) {
             if(!rows[i][0]) continue;
             counties.add(rows[i][0].trim());
             allPlayers.push({
-                id: i, county: rows[i][0].trim(), name: (rows[i][1]+" "+rows[i][2]).trim(),
+                id: i, 
+                county: rows[i][0].trim(), 
+                name: (rows[i][1]+" "+rows[i][2]).trim(),
                 prefPos: rows[i][3].trim().toUpperCase(), 
                 price: Math.max(3.0, 5.5 + (parseInt(rows[i][8])||0)*0.05),
-                goals: rows[i][4] || 0, points: rows[i][5] || 0, 
-                yellow: rows[i][11] || 0, red: rows[i][12] || 0,
-                clean: rows[i][6] || 0, apps: rows[i][7] || 0,
+                goals: rows[i][4] || 0, 
+                points: rows[i][5] || 0, 
+                yellow: rows[i][11] || 0, 
+                red: rows[i][12] || 0,
+                clean: rows[i][6] || 0, 
+                apps: rows[i][7] || 0,
                 pointsTotal: rows[i][8] || 0,
                 badge: rows[i][14] ? rows[i][14].trim() : '',
                 win: rows[i][18] || 0, // Column S
@@ -186,9 +198,9 @@
                             <div class="stat-line"><span>Clean Sheets:</span> <span>${p.clean}</span></div>
                             <div class="stat-line"><span>Yellow Cards:</span> <span>${p.yellow}</span></div>
                             <div class="stat-line"><span>Red Cards:</span> <span>${p.red}</span></div>
-                            <div class="stat-line"><span>Win:</span> <span>${p.win}</span></div>
+                            <div class="stat-line" style="border-top: 1px solid #444; padding-top: 3px;"><span>Win:</span> <span>${p.win}</span></div>
                             <div class="stat-line"><span>Loss:</span> <span>${p.loss}</span></div>
-                            <div class="stat-line" style="margin-top:5px; color:var(--orange)"><span>Season Pts:</span> <span>${p.pointsTotal}</span></div>
+                            <div class="stat-line" style="margin-top:5px; color:var(--orange); font-weight: bold;"><span>Season Pts:</span> <span>${p.pointsTotal}</span></div>
                         </div>
                     </div>
                 </td>
@@ -256,6 +268,7 @@
         document.querySelectorAll('.nav-link').forEach(n => n.classList.remove('active'));
         if(event) event.target.classList.add('active');
     }
+    
     function resetSquad() { if(confirm("Clear current draft?")) { state.squad = []; state.budget = 100.0; updateUI(); } }
     
     async function loadExistingTeam() {
