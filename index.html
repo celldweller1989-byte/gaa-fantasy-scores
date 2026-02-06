@@ -53,6 +53,9 @@
         th { background: #f8f8f8; padding: 8px; text-align: left; position: sticky; top: 0; z-index: 5; border-bottom: 2px solid #ddd; }
         td { padding: 8px 6px; border-bottom: 1px solid #eee; }
 
+        /* Table Badge Styling */
+        .table-badge { width: 22px; height: 22px; vertical-align: middle; margin-right: 8px; object-fit: contain; }
+
         .btn-assign { padding: 4px 2px; font-size: 9px; cursor: pointer; border: 1px solid #ddd; background: #fff; flex: 1; font-weight: bold; }
         .is-pref { border: 2px solid var(--orange) !important; color: var(--orange); background: #fff5ee !important; }
 
@@ -227,7 +230,14 @@
         document.getElementById('market-body').innerHTML = filtered.map(p => {
             const positions = ['GK', 'DEF', 'MID', 'FWD', 'SUB'];
             const buttons = positions.map(pos => `<button class="btn-assign ${p.prefPos === pos ? 'is-pref' : ''}" onclick="addPlayer(${p.id}, '${pos}')">${pos}</button>`).join('');
-            return `<tr><td><b>${p.name}</b></td><td>${p.price.toFixed(1)}m</td><td><div style="display:flex; gap:2px;">${buttons}</div></td></tr>`;
+            return `<tr>
+                <td>
+                    <img src="${p.badge}" class="table-badge" onerror="this.src='https://ui-avatars.com/api/?name=${p.county[0]}'">
+                    <b>${p.name}</b>
+                </td>
+                <td>${p.price.toFixed(1)}m</td>
+                <td><div style="display:flex; gap:2px;">${buttons}</div></td>
+            </tr>`;
         }).join('');
     }
 
