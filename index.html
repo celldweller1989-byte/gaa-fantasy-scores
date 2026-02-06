@@ -46,7 +46,7 @@
         
         /* Stats Tooltip */
         .stats-popup { 
-            visibility: hidden; width: 180px; background-color: #222; color: #fff; text-align: left; 
+            visibility: hidden; width: 190px; background-color: #222; color: #fff; text-align: left; 
             border-radius: 6px; padding: 10px; position: absolute; z-index: 100; left: 110%; top: 0;
             box-shadow: 0 4px 15px rgba(0,0,0,0.4); opacity: 0; transition: opacity 0.3s; pointer-events: none;
             font-size: 11px; line-height: 1.4; border: 1px solid var(--orange);
@@ -138,7 +138,7 @@
         const dist = deadline - now;
         if (dist < 0) { document.getElementById("countdown").innerHTML = "CLOSED"; return; }
         const d = Math.floor(dist/86400000), h = Math.floor((dist%86400000)/3600000), m = Math.floor((dist%3600000)/60000), s = Math.floor((dist%60000)/1000);
-        document.getElementById("countdown").innerHTML = `${d}d ${h}h ${m}m ${s}s`;
+        document.getElementById("countdown").innerHTML = `${d}d ${h}h ${m}s`;
     }, 1000);
 
     async function init() {
@@ -157,7 +157,9 @@
                 yellow: rows[i][11] || 0, red: rows[i][12] || 0,
                 clean: rows[i][6] || 0, apps: rows[i][7] || 0,
                 pointsTotal: rows[i][8] || 0,
-                badge: rows[i][14] ? rows[i][14].trim() : ''
+                badge: rows[i][14] ? rows[i][14].trim() : '',
+                colS: rows[i][18] || '-', // Column S
+                colT: rows[i][19] || '-'  // Column T
             });
         }
         [...counties].sort().forEach(c => { let o = document.createElement('option'); o.value = o.text = c; document.getElementById('filter-county').add(o); });
@@ -184,6 +186,8 @@
                             <div class="stat-line"><span>Clean Sheets:</span> <span>${p.clean}</span></div>
                             <div class="stat-line"><span>Yellow Cards:</span> <span>${p.yellow}</span></div>
                             <div class="stat-line"><span>Red Cards:</span> <span>${p.red}</span></div>
+                            <div class="stat-line"><span>S Stats:</span> <span>${p.colS}</span></div>
+                            <div class="stat-line"><span>T Stats:</span> <span>${p.colT}</span></div>
                             <div class="stat-line" style="margin-top:5px; color:var(--orange)"><span>Season Pts:</span> <span>${p.pointsTotal}</span></div>
                         </div>
                     </div>
@@ -254,7 +258,6 @@
     }
     function resetSquad() { if(confirm("Clear current draft?")) { state.squad = []; state.budget = 100.0; updateUI(); } }
     
-    // Saving and Loading functions left as-is from your script
     async function loadExistingTeam() {
         let manager = prompt("Manager Name:"), pin = prompt("PIN:");
         if (!manager || !pin) return;
