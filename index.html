@@ -63,7 +63,6 @@
         
         .hidden { display: none; }
 
-        /* Filter Row Styles */
         .filter-row { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; }
         .filter-row input, .filter-row select { padding: 10px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; }
     </style>
@@ -178,6 +177,7 @@
                 twoPts: rows[i][12] || 0,
                 win: rows[i][15] || 0,
                 loss: rows[i][16] || 0,
+                conceded: rows[i][17] || 0, // Mapping Column R (Index 17)
                 badge: rows[i][14] ? rows[i][14].trim() : ''
             });
         }
@@ -209,6 +209,7 @@
                             <div class="stat-line"><span>Goals:</span> <span>${p.goals}</span></div>
                             <div class="stat-line"><span>Points:</span> <span>${p.points}</span></div>
                             ${p.prefPos === 'GK' ? `<div class="stat-line"><span>Clean Sheets:</span> <span>${p.clean}</span></div>` : ''}
+                            ${p.prefPos === 'GK' ? `<div class="stat-line"><span>Conceded:</span> <span>${p.conceded}</span></div>` : ''}
                             <div class="stat-line"><span>Red Cards:</span> <span>${p.red}</span></div>
                             <div class="stat-line"><span>1 pointer:</span> <span>${p.onePts}</span></div>
                             <div class="stat-line"><span>2 pointer:</span> <span>${p.twoPts}</span></div>
