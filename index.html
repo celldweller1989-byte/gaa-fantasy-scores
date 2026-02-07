@@ -26,9 +26,14 @@
         
         .tooltip-content {
             display: none; position: absolute; left: 110%; top: 0; 
-            background: var(--dark); color: white; padding: 10px; border-radius: 5px;
-            z-index: 1000; min-width: 180px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); border-left: 3px solid var(--orange);
+            background: var(--dark); color: white; padding: 12px; border-radius: 8px;
+            z-index: 1000; min-width: 200px; box-shadow: 0 8px 25px rgba(0,0,0,0.5); 
+            border-left: 4px solid var(--orange); font-size: 11px; line-height: 1.4;
         }
+        .tooltip-content hr { border: 0; border-top: 1px solid #444; margin: 8px 0; }
+        .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
+        .stat-label { color: #aaa; }
+        .stat-val { color: var(--orange); font-weight: bold; text-align: right; }
         .player-info-cell:hover .tooltip-content { display: block; }
 
         .pitch { 
@@ -155,17 +160,27 @@
             for(let i=1; i<rows.length; i++) {
                 if(!rows[i][0]) continue;
                 counties.add(rows[i][0].trim());
+                
                 let totalScore = parseInt(rows[i][8]) || 0;
                 let basePriceK = parseFloat(rows[i][10]) || 5.0;
                 let currentPrice = (basePriceK * 0.90) + (Math.floor(totalScore / 3) * 0.25);
+                let pos = rows[i][3].trim().toUpperCase();
 
                 allPlayers.push({
                     id: i, 
                     county: rows[i][0].trim(), 
                     name: (rows[i][1]+" "+rows[i][2]).trim(),
-                    prefPos: rows[i][3].trim().toUpperCase(), 
-                    points: rows[i][5] || 0,
-                    totalScore: totalScore,
+                    prefPos: pos, 
+                    goals: rows[i][4] || 0,        // Col E
+                    points: rows[i][5] || 0,       // Col F
+                    redCards: rows[i][7] || 0,     // Col H
+                    totalScore: totalScore,        // Col I
+                    p1: rows[i][11] || 0,          // Col L
+                    p2: rows[i][12] || 0,          // Col M
+                    wins: rows[i][15] || 0,        // Col P
+                    losses: rows[i][16] || 0,      // Col Q
+                    cleanSheets: pos === 'GK' ? (rows[i][6] || 0) : null, // Col G
+                    goalsConceded: pos === 'GK' ? (rows[i][17] || 0) : null, // Col R
                     price: currentPrice,
                     badge: rows[i][14] ? rows[i][14].trim() : 'https://ui-avatars.com/api/?name=GAA'
                 });
@@ -191,6 +206,12 @@
                 `<button class="btn-assign ${p.prefPos === role ? 'is-pref' : ''}" 
                 onclick="addPlayer(${p.id}, '${role}')" ${isSelected ? 'disabled' : ''}>${role}</button>`
             ).join('');
+
+            // GK Specific Stats
+            const gkStats = p.prefPos === 'GK' ? `
+                <div class="stat-label">Clean Sheets:</div><div class="stat-val">${p.cleanSheets}</div>
+                <div class="stat-label">Goals Conceded:</div><div class="stat-val">${p.goalsConceded}</div>
+            ` : '';
             
             return `<tr>
                 <td>
@@ -198,11 +219,22 @@
                         <img src="${p.badge}" class="county-mini-badge">
                         <div><b>${p.name}</b><br><small>${p.county}</small></div>
                         <div class="tooltip-content">
-                            <strong>${p.name}</strong><br>
-                            County: ${p.county}<br>
-                            Pos: ${p.prefPos}<br>
-                            Season Score: ${p.totalScore}<br>
-                            Price: ${p.price.toFixed(2)}m
+                            <strong style="color:var(--orange); font-size:13px;">${p.name}</strong><br>
+                            <small>${p.county} (${p.prefPos})</small>
+                            <hr>
+                            <div class="stat-grid">
+                                <div class="stat-label">Goals:</div><div class="stat-val">${p.goals}</div>
+                                <div class="stat-label">Points:</div><div class="stat-val">${p.points}</div>
+                                <div class="stat-label">1 Pointers:</div><div class="stat-val">${p.p1}</div>
+                                <div class="stat-label">2 Pointers:</div><div class="stat-val">${p.p2}</div>
+                                <div class="stat-label">Red Cards:</div><div class="stat-val">${p.redCards}</div>
+                                <div class="stat-label">Record (W/L):</div><div class="stat-val">${p.wins}/${p.losses}</div>
+                                ${gkStats}
+                            </div>
+                            <hr>
+                            <div class="stat-grid">
+                                <div class="stat-label">Season Total:</div><div class="stat-val" style="font-size:14px;">${p.totalScore}</div>
+                            </div>
                         </div>
                     </div>
                 </td>
