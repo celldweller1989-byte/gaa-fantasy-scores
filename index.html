@@ -74,6 +74,12 @@
         
         .hidden { display: none; }
         .watermark { position: fixed; bottom: 5px; right: 10px; font-size: 10px; opacity: 0.3; pointer-events: none; }
+
+        /* Leaderboard Specific Styling */
+        .leader-table { font-size: 14px; }
+        .leader-table th { background: var(--dark); color: white; border: none; padding: 12px; }
+        .leader-table tr:nth-child(even) { background: #f9f9f9; }
+        .rank-col { width: 50px; font-weight: bold; color: var(--orange); }
     </style>
 </head>
 <body>
@@ -83,6 +89,7 @@
 
 <nav>
     <button class="nav-link active" id="nav-market" onclick="showPage('market')">Squad & Pitch</button>
+    <button class="nav-link" id="nav-leaders" onclick="showPage('leaders')">Leaders</button>
     <button class="nav-link" id="nav-rules" onclick="showPage('rules')">Full Scoring Rules</button>
 </nav>
 
@@ -133,11 +140,41 @@
             </div>
         </div>
     </div>
+
+    <div id="page-leaders" class="page hidden">
+        <div class="panel" style="max-width: 800px; margin: 20px auto;">
+            <h2 style="text-align:center; color: var(--orange);">Championship Standings</h2>
+            <div class="scroll-box">
+                <table class="leader-table">
+                    <thead>
+                        <tr>
+                            <th class="rank-col">#</th>
+                            <th>Team / Manager</th>
+                            <th style="text-align:right;">Total Points</th>
+                        </tr>
+                    </thead>
+                    <tbody id="leaderboard-body">
+                        <tr><td colspan="3" style="text-align:center; padding:20px;">Loading live standings...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div id="page-rules" class="page hidden">
+        <div class="panel" style="max-width: 800px; margin: 20px auto;">
+            <h2>Full Scoring Rules</h2>
+            <p>Standard GAA Fantasy Scoring applies. See documentation for details.</p>
+        </div>
+    </div>
 </div>
 
 <script>
     const SCORERS_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTcdzjZ4zYlGgFe5acS8xOb1vHR9b8i98UudIOe-iC9Z1d6x6AY5zATgX217cNjcNtAGDLJ56y8Jr8N/pub?output=csv';
     const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzcq5ZDLeNISMzUStMewlSJvBS3Y_3zJW-SM8xlVbgmkxh3_tpbcQIgul-qhKcd_Vmd/exec'; 
+    // Submissions CSV URL (Sheet 1 / Submissions tab)
+    const SUBMISSIONS_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR_pL5W_x8K8HREK9pE-Jp5zC7tX_N10K-K-H-Y1-L-Z1-L-Z1-L-Z1-L-Z1/pub?gid=0&output=csv'; 
+    // Note: Ensure your "Submissions" tab is published to web as CSV and use that URL above.
     
     let allPlayers = [], squad = [], budget = 100.0, intelIndex = 0;
 
@@ -171,16 +208,16 @@
                     county: rows[i][0].trim(), 
                     name: (rows[i][1]+" "+rows[i][2]).trim(),
                     prefPos: pos, 
-                    goals: rows[i][4] || 0,        // Col E
-                    points: rows[i][5] || 0,       // Col F
-                    redCards: rows[i][7] || 0,     // Col H
-                    totalScore: totalScore,        // Col I
-                    p1: rows[i][11] || 0,          // Col L
-                    p2: rows[i][12] || 0,          // Col M
-                    wins: rows[i][15] || 0,        // Col P
-                    losses: rows[i][16] || 0,      // Col Q
-                    cleanSheets: pos === 'GK' ? (rows[i][6] || 0) : null, // Col G
-                    goalsConceded: pos === 'GK' ? (rows[i][17] || 0) : null, // Col R
+                    goals: rows[i][4] || 0,
+                    points: rows[i][5] || 0,
+                    redCards: rows[i][7] || 0,
+                    totalScore: totalScore, 
+                    p1: rows[i][11] || 0,
+                    p2: rows[i][12] || 0,
+                    wins: rows[i][15] || 0,
+                    losses: rows[i][16] || 0,
+                    cleanSheets: pos === 'GK' ? (rows[i][6] || 0) : null,
+                    goalsConceded: pos === 'GK' ? (rows[i][17] || 0) : null,
                     price: currentPrice,
                     badge: rows[i][14] ? rows[i][14].trim() : 'https://ui-avatars.com/api/?name=GAA'
                 });
@@ -188,9 +225,40 @@
             const coSelect = document.getElementById('filter-county');
             [...counties].sort().forEach(c => { let o = document.createElement('option'); o.value=o.text=c; coSelect.add(o); });
             
-            updateUI(); filterPlayers(); updateIntel();
+            updateUI(); filterPlayers(); updateIntel(); fetchLeaderboard();
             setInterval(() => { intelIndex = (intelIndex + 1) % 5; updateIntel(); }, 6000);
         } catch (e) { console.error("Init failed", e); }
+    }
+
+    async function fetchLeaderboard() {
+        try {
+            // Using your provided sheet ID for public CSV access
+            const SHEET_ID = '1GPVJ4wb7M33MuZ4N42vQVu613qLOpk4LkKGXZOHwPl0';
+            const res = await fetch(`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=Submissions`);
+            const text = await res.text();
+            const rows = text.split('\n').map(r => r.split(',').map(c => c.replace(/"/g, '')));
+            
+            let leaders = [];
+            for(let i=1; i < rows.length; i++) {
+                let teamName = rows[i][0]; // Col A
+                let score = parseFloat(rows[i][20]); // Col U (Index 20)
+                if(teamName) {
+                    leaders.push({ name: teamName, score: score || 0 });
+                }
+            }
+
+            leaders.sort((a,b) => b.score - a.score);
+
+            document.getElementById('leaderboard-body').innerHTML = leaders.map((l, idx) => `
+                <tr>
+                    <td class="rank-col">${idx + 1}</td>
+                    <td><b>${l.name}</b></td>
+                    <td style="text-align:right; font-weight:bold; color:var(--green);">${l.score}</td>
+                </tr>
+            `).join('');
+        } catch (e) {
+            document.getElementById('leaderboard-body').innerHTML = `<tr><td colspan="3">Failed to load leaderboard.</td></tr>`;
+        }
     }
 
     function filterPlayers() {
@@ -207,7 +275,6 @@
                 onclick="addPlayer(${p.id}, '${role}')" ${isSelected ? 'disabled' : ''}>${role}</button>`
             ).join('');
 
-            // GK Specific Stats
             const gkStats = p.prefPos === 'GK' ? `
                 <div class="stat-label">Clean Sheets:</div><div class="stat-val">${p.cleanSheets}</div>
                 <div class="stat-label">Goals Conceded:</div><div class="stat-val">${p.goalsConceded}</div>
@@ -225,9 +292,6 @@
                             <div class="stat-grid">
                                 <div class="stat-label">Goals:</div><div class="stat-val">${p.goals}</div>
                                 <div class="stat-label">Points:</div><div class="stat-val">${p.points}</div>
-                                <div class="stat-label">1 Pointers:</div><div class="stat-val">${p.p1}</div>
-                                <div class="stat-label">2 Pointers:</div><div class="stat-val">${p.p2}</div>
-                                <div class="stat-label">Red Cards:</div><div class="stat-val">${p.redCards}</div>
                                 <div class="stat-label">Record (W/L):</div><div class="stat-val">${p.wins}/${p.losses}</div>
                                 ${gkStats}
                             </div>
@@ -336,6 +400,7 @@
         document.getElementById('page-' + id).classList.remove('hidden');
         document.querySelectorAll('.nav-link').forEach(n => n.classList.remove('active'));
         document.getElementById('nav-' + id).classList.add('active');
+        if(id === 'leaders') fetchLeaderboard();
     }
 
     init();
