@@ -169,13 +169,8 @@
 </div>
 
 <script>
-    // UPDATED PLAYER DATA SOURCE
     const SCORERS_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ-keWfosKhz4SMvgexBldlWakwobz195Ye8qvwiS4abZiy5_5d5iI6Iqv7k9O2bjImzomGa0VP8OsI/pub?output=csv';
-    
-    // Web App URL for submissions
     const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbAsMFwtPl7Lbbn5bNgmjM5DNh1nxouzOUqANeLKkq03ZgZtpXh6z5Qf3wE3o2hpx_0/exec'; 
-    
-    // Main Spreadsheet ID for Leaderboard
     const SHEET_ID = '1GPVJ4wb7M33MuZ4N42vQVu613qLOpk4LkKGXZOHwPl0';
     
     let allPlayers = [], squad = [], budget = 100.0, intelIndex = 0;
@@ -232,35 +227,49 @@
         } catch (e) { console.error("Init failed", e); }
     }
 
+    // --- INTEGRATED LEADERBOARD CODE START ---
     async function fetchLeaderboard() {
         try {
+            // Using gid=0 as the primary target for manager points
             const csvUrl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=0`;
             const res = await fetch(csvUrl + '&t=' + new Date().getTime());
             const text = await res.text();
             const rows = text.split('\n').map(r => r.split(',').map(c => c.replace(/"/g, '').trim()));
             
             let leaders = [];
+            // Assuming Manager Name is Col 0 and Points is Col 1 (or Col 20 based on previous logic)
+            // We loop through rows and skip the header
             for(let i=1; i < rows.length; i++) {
-                let teamName = rows[i][0]; 
-                let score = parseFloat(rows[i][20]); 
-                if(teamName) {
-                    leaders.push({ name: teamName, score: isNaN(score) ? 0 : score });
+                let teamName = rows[i][0]; // Manager column
+                let score = parseFloat(rows[i][1]); // Points column (adjust index if necessary)
+                
+                if(teamName && teamName !== "Manager" && !isNaN(score)) {
+                    leaders.push({ name: teamName, score: score });
                 }
             }
 
-            leaders.sort((a,b) => b.score - a.score);
+            // Remove duplicates (like TinTownRovers appearing multiple times in image)
+            const uniqueLeaders = Array.from(new Set(leaders.map(l => l.name)))
+                .map(name => {
+                    return leaders.find(l => l.name === name);
+                });
 
-            document.getElementById('leaderboard-body').innerHTML = leaders.map((l, idx) => `
+            // Sort by highest points
+            uniqueLeaders.sort((a,b) => b.score - a.score);
+
+            document.getElementById('leaderboard-body').innerHTML = uniqueLeaders.map((l, idx) => `
                 <tr>
                     <td class="rank-col">${idx + 1}</td>
                     <td><b>${l.name}</b></td>
-                    <td style="text-align:right; font-weight:bold; color:var(--green);">${l.score.toFixed(1)}</td>
+                    <td style="text-align:right; font-weight:bold; color:var(--green);">${l.score}</td>
                 </tr>
             `).join('');
         } catch (e) {
-            document.getElementById('leaderboard-body').innerHTML = `<tr><td colspan="3" style="text-align:center;">Failed to load leaderboard.</td></tr>`;
+            console.error("Leaderboard Error:", e);
+            document.getElementById('leaderboard-body').innerHTML = `<tr><td colspan="3" style="text-align:center; color:red;">Data Sync Error: Please refresh.</td></tr>`;
         }
     }
+    // --- INTEGRATED LEADERBOARD CODE END ---
 
     function filterPlayers() {
         const nameQ = document.getElementById('search-name').value.toLowerCase();
