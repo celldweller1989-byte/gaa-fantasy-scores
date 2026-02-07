@@ -19,36 +19,59 @@
         @media (min-width: 1100px) { .main-layout { grid-template-columns: 1fr 450px 320px; } }
 
         .panel { background: var(--white); border-radius: 8px; padding: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); height: fit-content; }
-        
-        /* Leaderboard Specific Styles */
-        .leaderboard-table { width: 100%; border-collapse: collapse; margin-top: 10px; background: white; border-radius: 8px; overflow: hidden; }
-        .leaderboard-table th { background: var(--dark); color: white; padding: 12px; text-align: left; }
-        .leaderboard-table td { padding: 12px; border-bottom: 1px solid #eee; font-size: 14px; }
-        .rank-col { font-weight: bold; color: var(--orange); width: 50px; }
-        .score-col { font-weight: bold; text-align: right; color: var(--green); }
-        .top-three { background: #fff5ee; }
 
-        /* Rest of your existing styles... */
+        /* Tooltip Styles */
         .player-info-cell { position: relative; cursor: help; display: flex; align-items: center; gap: 8px; }
         .county-mini-badge { width: 24px; height: 24px; object-fit: contain; }
-        .pitch { background: var(--green); width: 100%; aspect-ratio: 2/3.2; border-radius: 8px; position: relative; border: 3px solid white; overflow: hidden; background-image: linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px); background-size: 100% 10%; }
+        
+        .tooltip-content {
+            display: none; position: absolute; left: 110%; top: 0; 
+            background: var(--dark); color: white; padding: 12px; border-radius: 8px;
+            z-index: 1000; min-width: 200px; box-shadow: 0 8px 25px rgba(0,0,0,0.5); 
+            border-left: 4px solid var(--orange); font-size: 11px; line-height: 1.4;
+        }
+        .tooltip-content hr { border: 0; border-top: 1px solid #444; margin: 8px 0; }
+        .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
+        .stat-label { color: #aaa; }
+        .stat-val { color: var(--orange); font-weight: bold; text-align: right; }
+        .player-info-cell:hover .tooltip-content { display: block; }
+
+        .pitch { 
+            background: var(--green); width: 100%; aspect-ratio: 2/3.2; border-radius: 8px; 
+            position: relative; border: 3px solid white; overflow: hidden; 
+            background-image: linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px); 
+            background-size: 100% 10%; 
+        }
         .mid-line { position: absolute; top: 50%; width: 100%; border-top: 2px solid var(--pitch-lines); }
         .pitch-grid { display: flex; flex-direction: column; height: 100%; justify-content: space-around; padding: 5px 0; position: relative; z-index: 2; }
         .pitch-row { display: flex; justify-content: space-around; width: 95%; margin: 0 auto; }
+        
         .player-disc { width: 60px; height: 60px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 9px; cursor: pointer; position: relative; }
         .player-disc img { width: 45px; height: 45px; object-fit: contain; filter: drop-shadow(0 2px 3px rgba(0,0,0,0.4)); }
         .player-disc.empty { background: rgba(0,0,0,0.2); border: 1px dashed #ccc; border-radius: 50%; color: #eee; width: 50px; height: 50px; }
         .player-name-label { position: absolute; bottom: -8px; background: #000; color: #fff; padding: 1px 4px; border-radius: 3px; font-size: 8px; white-space: nowrap; border: 0.5px solid #555; }
+
         .bench-area { background: #222; padding: 12px; border-radius: 0 0 8px 8px; display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; margin-top: -5px; }
+
+        .filter-row { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; }
+        .filter-row input, .filter-row select { padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 12px; flex: 1; min-width: 80px; }
         .scroll-box { max-height: 550px; overflow-y: auto; }
         table { width: 100%; border-collapse: collapse; font-size: 11px; }
         th { background: #f8f8f8; padding: 8px; text-align: left; position: sticky; top: 0; z-index: 5; border-bottom: 2px solid #ddd; }
         td { padding: 8px 6px; border-bottom: 1px solid #eee; }
+
         .btn-assign { padding: 4px 2px; font-size: 9px; cursor: pointer; border: 1px solid #ddd; background: #fff; flex: 1; font-weight: bold; }
         .is-pref { border: 2px solid var(--orange) !important; color: var(--orange); background: #fff5ee !important; }
+        .btn-assign:disabled { opacity: 0.3; cursor: not-allowed; }
+
         .intel-box { background: var(--dark); color: white; border-radius: 8px; padding: 15px; margin-top: 15px; border-top: 4px solid var(--orange); min-height: 420px; }
+        .intel-box h3 { margin: 0 0 10px 0; font-size: 12px; color: var(--orange); text-transform: uppercase; border-bottom: 1px solid #333; padding-bottom: 5px; }
         .intel-item { display: flex; align-items: center; padding: 5px 0; border-bottom: 1px solid #222; font-size: 10px; }
         .p-stat { font-weight: bold; color: var(--orange); margin-left: auto; }
+
+        .submit-section { margin-top: 15px; padding-top: 15px; border-top: 2px solid #eee; }
+        .submit-section input { width: 100%; padding: 10px; margin-bottom: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        
         .hidden { display: none; }
         .watermark { position: fixed; bottom: 5px; right: 10px; font-size: 10px; opacity: 0.3; pointer-events: none; }
     </style>
@@ -60,7 +83,7 @@
 
 <nav>
     <button class="nav-link active" id="nav-market" onclick="showPage('market')">Squad & Pitch</button>
-    <button class="nav-link" id="nav-leaderboard" onclick="showPage('leaderboard'); fetchLeaderboard();">Leaderboard</button>
+    <button class="nav-link" id="nav-rules" onclick="showPage('rules')">Full Scoring Rules</button>
 </nav>
 
 <div class="container">
@@ -70,6 +93,13 @@
                 <div class="filter-row">
                     <input type="text" id="search-name" placeholder="Search Player Name..." oninput="filterPlayers()">
                     <select id="filter-county" onchange="filterPlayers()"><option value="">All Counties</option></select>
+                    <select id="filter-pos" onchange="filterPlayers()">
+                        <option value="">All Positions</option>
+                        <option value="GK">Goalkeeper</option>
+                        <option value="DEF">Defender</option>
+                        <option value="MID">Midfielder</option>
+                        <option value="FWD">Forward</option>
+                    </select>
                 </div>
                 <div class="scroll-box">
                     <table>
@@ -90,8 +120,8 @@
             <div class="panel">
                 <div id="budget-val" style="font-size:22px; font-weight:bold; color:var(--green); text-align:center;">Budget: 100.00m</div>
                 <div class="submit-section">
-                    <input type="text" id="sub-mgr-name" placeholder="Manager Name" style="width:100%; padding:8px; margin-top:10px;">
-                    <input type="password" id="sub-mgr-pin" placeholder="PIN" style="width:100%; padding:8px; margin:10px 0;">
+                    <input type="text" id="sub-mgr-name" placeholder="Manager Name">
+                    <input type="password" id="sub-mgr-pin" placeholder="PIN / Password" maxlength="10">
                     <button id="btn-submit" onclick="saveTeamToSheet()" style="width:100%; padding:12px; background:var(--green); color:white; border:none; border-radius:5px; font-weight:bold; cursor:pointer;">SUBMIT TEAM</button>
                     <div id="status-msg" style="margin-top:10px; font-size:12px; text-align:center; font-weight:bold;"></div>
                 </div>
@@ -103,59 +133,14 @@
             </div>
         </div>
     </div>
-
-    <div id="page-leaderboard" class="page hidden">
-        <div class="panel" style="max-width: 800px; margin: auto;">
-            <h2 style="text-align:center; color: var(--orange);">Global Standings</h2>
-            <div id="leaderboard-status" style="text-align:center; font-size: 12px; color: #666;">Loading latest scores...</div>
-            <table class="leaderboard-table">
-                <thead>
-                    <tr>
-                        <th>Rank</th>
-                        <th>Manager</th>
-                        <th style="text-align:right;">Total Score</th>
-                    </tr>
-                </thead>
-                <tbody id="leaderboard-body">
-                    </tbody>
-            </table>
-        </div>
-    </div>
 </div>
 
 <script>
-    // URLS
     const SCORERS_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTcdzjZ4zYlGgFe5acS8xOb1vHR9b8i98UudIOe-iC9Z1d6x6AY5zATgX217cNjcNtAGDLJ56y8Jr8N/pub?output=csv';
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxMGGpIn3yVqf0M3WiogaAbxRlKS2FvM2NU40sV4pLg0ScPqRoey_ePqQnImtNbFR_v1A/exec'; 
-
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzcq5ZDLeNISMzUStMewlSJvBS3Y_3zJW-SM8xlVbgmkxh3_tpbcQIgul-qhKcd_Vmd/exec'; 
+    
     let allPlayers = [], squad = [], budget = 100.0, intelIndex = 0;
 
-    // LEADERBOARD FETCH FUNCTION
-    async function fetchLeaderboard() {
-        const lbBody = document.getElementById('leaderboard-body');
-        const lbStatus = document.getElementById('leaderboard-status');
-        
-        try {
-            // We use the same Script URL but the script must be set to return JSON
-            const response = await fetch(SCRIPT_URL);
-            const data = await response.json();
-            
-            lbBody.innerHTML = data.map((entry, index) => `
-                <tr class="${index < 3 ? 'top-three' : ''}">
-                    <td class="rank-col">#${index + 1}</td>
-                    <td><b>${entry.name}</b></td>
-                    <td class="score-col">${entry.score} pts</td>
-                </tr>
-            `).join('');
-            
-            lbStatus.innerText = "Last updated: " + new Date().toLocaleTimeString();
-        } catch (e) {
-            lbStatus.innerText = "Error loading standings. Ensure your Apps Script is deployed as a Web App.";
-            console.error(e);
-        }
-    }
-
-    // YOUR EXISTING SQUAD LOGIC
     const pitchPositions = [
         { role: 'GK', limit: 1, label: 'GK' },
         { role: 'DEF', limit: 3, label: 'FB' },
@@ -175,6 +160,7 @@
             for(let i=1; i<rows.length; i++) {
                 if(!rows[i][0]) continue;
                 counties.add(rows[i][0].trim());
+                
                 let totalScore = parseInt(rows[i][8]) || 0;
                 let basePriceK = parseFloat(rows[i][10]) || 5.0;
                 let currentPrice = (basePriceK * 0.90) + (Math.floor(totalScore / 3) * 0.25);
@@ -185,28 +171,172 @@
                     county: rows[i][0].trim(), 
                     name: (rows[i][1]+" "+rows[i][2]).trim(),
                     prefPos: pos, 
-                    totalScore: totalScore, 
+                    goals: rows[i][4] || 0,        // Col E
+                    points: rows[i][5] || 0,       // Col F
+                    redCards: rows[i][7] || 0,     // Col H
+                    totalScore: totalScore,        // Col I
+                    p1: rows[i][11] || 0,          // Col L
+                    p2: rows[i][12] || 0,          // Col M
+                    wins: rows[i][15] || 0,        // Col P
+                    losses: rows[i][16] || 0,      // Col Q
+                    cleanSheets: pos === 'GK' ? (rows[i][6] || 0) : null, // Col G
+                    goalsConceded: pos === 'GK' ? (rows[i][17] || 0) : null, // Col R
                     price: currentPrice,
                     badge: rows[i][14] ? rows[i][14].trim() : 'https://ui-avatars.com/api/?name=GAA'
                 });
             }
             const coSelect = document.getElementById('filter-county');
             [...counties].sort().forEach(c => { let o = document.createElement('option'); o.value=o.text=c; coSelect.add(o); });
+            
             updateUI(); filterPlayers(); updateIntel();
             setInterval(() => { intelIndex = (intelIndex + 1) % 5; updateIntel(); }, 6000);
         } catch (e) { console.error("Init failed", e); }
     }
 
-    // NAVIGATION LOGIC
+    function filterPlayers() {
+        const nameQ = document.getElementById('search-name').value.toLowerCase();
+        const coQ = document.getElementById('filter-county').value;
+        const posQ = document.getElementById('filter-pos').value;
+        
+        let filtered = allPlayers.filter(p => p.name.toLowerCase().includes(nameQ) && (!coQ || p.county === coQ) && (!posQ || p.prefPos === posQ));
+        
+        document.getElementById('market-body').innerHTML = filtered.map(p => {
+            const isSelected = squad.some(s => s.id === p.id);
+            const buttons = ['GK', 'DEF', 'MID', 'FWD', 'SUB'].map(role => 
+                `<button class="btn-assign ${p.prefPos === role ? 'is-pref' : ''}" 
+                onclick="addPlayer(${p.id}, '${role}')" ${isSelected ? 'disabled' : ''}>${role}</button>`
+            ).join('');
+
+            // GK Specific Stats
+            const gkStats = p.prefPos === 'GK' ? `
+                <div class="stat-label">Clean Sheets:</div><div class="stat-val">${p.cleanSheets}</div>
+                <div class="stat-label">Goals Conceded:</div><div class="stat-val">${p.goalsConceded}</div>
+            ` : '';
+            
+            return `<tr>
+                <td>
+                    <div class="player-info-cell">
+                        <img src="${p.badge}" class="county-mini-badge">
+                        <div><b>${p.name}</b><br><small>${p.county}</small></div>
+                        <div class="tooltip-content">
+                            <strong style="color:var(--orange); font-size:13px;">${p.name}</strong><br>
+                            <small>${p.county} (${p.prefPos})</small>
+                            <hr>
+                            <div class="stat-grid">
+                                <div class="stat-label">Goals:</div><div class="stat-val">${p.goals}</div>
+                                <div class="stat-label">Points:</div><div class="stat-val">${p.points}</div>
+                                <div class="stat-label">1 Pointers:</div><div class="stat-val">${p.p1}</div>
+                                <div class="stat-label">2 Pointers:</div><div class="stat-val">${p.p2}</div>
+                                <div class="stat-label">Red Cards:</div><div class="stat-val">${p.redCards}</div>
+                                <div class="stat-label">Record (W/L):</div><div class="stat-val">${p.wins}/${p.losses}</div>
+                                ${gkStats}
+                            </div>
+                            <hr>
+                            <div class="stat-grid">
+                                <div class="stat-label">Season Total:</div><div class="stat-val" style="font-size:14px;">${p.totalScore}</div>
+                            </div>
+                        </div>
+                    </div>
+                </td>
+                <td><b>${p.price.toFixed(2)}m</b></td>
+                <td><div style="display:flex; gap:2px;">${buttons}</div></td>
+            </tr>`;
+        }).join('');
+    }
+
+    function addPlayer(id, role) {
+        if (squad.some(s => s.id === id)) return;
+        const p = allPlayers.find(x => x.id === id);
+        if (squad.length >= 18) return alert("Squad Full!");
+        if (budget < p.price) return alert("Over Budget!");
+        if (squad.filter(s => s.county === p.county).length >= 3) return alert("Max 3 per county!");
+        
+        squad.push({...p, assignedRole: role});
+        budget -= p.price;
+        updateUI(); filterPlayers();
+    }
+
+    function removePlayer(idx) {
+        budget += squad[idx].price;
+        squad.splice(idx, 1);
+        updateUI(); filterPlayers();
+    }
+
+    function updateUI() {
+        document.getElementById('budget-val').innerText = `Budget: ${budget.toFixed(2)}m`;
+        let tempSquad = [...squad], pitchHtml = "";
+        pitchPositions.forEach(pos => {
+            pitchHtml += `<div class="pitch-row">`;
+            for(let i=0; i<pos.limit; i++) {
+                const sIdx = tempSquad.findIndex(ps => ps.assignedRole === pos.role);
+                if(sIdx > -1) {
+                    const player = tempSquad.splice(sIdx, 1)[0];
+                    pitchHtml += `<div class="player-disc" onclick="removePlayer(${squad.indexOf(player)})"><img src="${player.badge}"><div class="player-name-label">${player.name.split(' ').pop()}</div></div>`;
+                } else pitchHtml += `<div class="player-disc empty">${pos.label}</div>`;
+            }
+            pitchHtml += `</div>`;
+        });
+        document.getElementById('pitch-board').innerHTML = pitchHtml;
+        document.getElementById('bench-list').innerHTML = tempSquad.map(p => `<div class="player-disc" onclick="removePlayer(${squad.indexOf(p)})"><img src="${p.badge}"><div class="player-name-label">${p.name.split(' ').pop()}</div></div>`).join('');
+    }
+
+    async function saveTeamToSheet() {
+        const name = document.getElementById('sub-mgr-name').value.trim();
+        const pin = document.getElementById('sub-mgr-pin').value.trim();
+        const status = document.getElementById('status-msg');
+        
+        if(!name || pin.length < 4) return alert("Enter Name and 4+ digit PIN.");
+        if(squad.length < 18) return alert("Pick 18 players first.");
+
+        document.getElementById('btn-submit').disabled = true;
+        status.innerText = "Connecting to Google...";
+
+        const roles = ['GK', 'DEF', 'MID', 'FWD', 'SUB'];
+        const sortedNames = [];
+        roles.forEach(r => {
+            const players = squad.filter(p => p.assignedRole === r);
+            sortedNames.push(...players.map(p => p.name));
+        });
+
+        try {
+            await fetch(SCRIPT_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ manager: name, pin: pin, squad: sortedNames })
+            });
+            status.style.color = "green";
+            status.innerText = "TEAM SUBMITTED! Check your sheet.";
+            alert("Submission sent! Check your Google Sheet now.");
+            document.getElementById('btn-submit').disabled = false;
+        } catch (e) {
+            status.style.color = "red";
+            status.innerText = "Error: " + e.message;
+            alert("Failed: " + e.message);
+            document.getElementById('btn-submit').disabled = false;
+        }
+    }
+
+    function updateIntel() {
+        const content = document.getElementById('intel-content'), title = document.getElementById('intel-title');
+        let sorted, label;
+        switch(intelIndex) {
+            case 0: label="Overall Top 10"; sorted=[...allPlayers].sort((a,b)=>b.totalScore-a.totalScore); break;
+            case 1: label="League Strugglers"; sorted=[...allPlayers].sort((a,b)=>a.totalScore-b.totalScore); break;
+            case 2: label="Most Expensive"; sorted=[...allPlayers].sort((a,b)=>b.price-a.price); break;
+            case 3: label="Top Scorers"; sorted=[...allPlayers].sort((a,b)=>b.points-a.points); break;
+            case 4: label="Best Value GK"; sorted=allPlayers.filter(p=>p.prefPos==='GK').sort((a,b)=>b.totalScore-a.totalScore); break;
+        }
+        title.innerText = label;
+        content.innerHTML = sorted.slice(0, 10).map((p, idx) => `<div class="intel-item"><img src="${p.badge}" style="width:18px; margin-right:8px;"><span style="color:#888; width:20px;">${idx+1}.</span><span>${p.name}</span><span class="p-stat">${p.price.toFixed(2)}m</span></div>`).join('');
+    }
+
     function showPage(id) {
         document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
         document.getElementById('page-' + id).classList.remove('hidden');
         document.querySelectorAll('.nav-link').forEach(n => n.classList.remove('active'));
         document.getElementById('nav-' + id).classList.add('active');
     }
-
-    // Rest of your functions (filterPlayers, addPlayer, removePlayer, updateUI, updateIntel, saveTeamToSheet) 
-    // ... [Omitted for brevity but kept in your actual file] ...
 
     init();
 </script>
