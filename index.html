@@ -20,6 +20,17 @@
 
         .panel { background: var(--white); border-radius: 8px; padding: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); height: fit-content; }
 
+        /* Tooltip Styles */
+        .player-info-cell { position: relative; cursor: help; display: flex; align-items: center; gap: 8px; }
+        .county-mini-badge { width: 24px; height: 24px; object-fit: contain; }
+        
+        .tooltip-content {
+            display: none; position: absolute; left: 110%; top: 0; 
+            background: var(--dark); color: white; padding: 10px; border-radius: 5px;
+            z-index: 1000; min-width: 180px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); border-left: 3px solid var(--orange);
+        }
+        .player-info-cell:hover .tooltip-content { display: block; }
+
         .pitch { 
             background: var(--green); width: 100%; aspect-ratio: 2/3.2; border-radius: 8px; 
             position: relative; border: 3px solid white; overflow: hidden; 
@@ -121,7 +132,6 @@
 
 <script>
     const SCORERS_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTcdzjZ4zYlGgFe5acS8xOb1vHR9b8i98UudIOe-iC9Z1d6x6AY5zATgX217cNjcNtAGDLJ56y8Jr8N/pub?output=csv';
-    // UPDATED WITH YOUR NEW URL
     const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzcq5ZDLeNISMzUStMewlSJvBS3Y_3zJW-SM8xlVbgmkxh3_tpbcQIgul-qhKcd_Vmd/exec'; 
     
     let allPlayers = [], squad = [], budget = 100.0, intelIndex = 0;
@@ -183,7 +193,19 @@
             ).join('');
             
             return `<tr>
-                <td><b>${p.name}</b><br><small>${p.county}</small></td>
+                <td>
+                    <div class="player-info-cell">
+                        <img src="${p.badge}" class="county-mini-badge">
+                        <div><b>${p.name}</b><br><small>${p.county}</small></div>
+                        <div class="tooltip-content">
+                            <strong>${p.name}</strong><br>
+                            County: ${p.county}<br>
+                            Pos: ${p.prefPos}<br>
+                            Season Score: ${p.totalScore}<br>
+                            Price: ${p.price.toFixed(2)}m
+                        </div>
+                    </div>
+                </td>
                 <td><b>${p.price.toFixed(2)}m</b></td>
                 <td><div style="display:flex; gap:2px;">${buttons}</div></td>
             </tr>`;
@@ -245,15 +267,12 @@
         });
 
         try {
-            // Using a basic fetch to handle Google's redirection
             await fetch(SCRIPT_URL, {
                 method: 'POST',
                 mode: 'no-cors',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ manager: name, pin: pin, squad: sortedNames })
             });
-            
-            // Because of 'no-cors', we can't read the response, so we assume success if it doesn't catch
             status.style.color = "green";
             status.innerText = "TEAM SUBMITTED! Check your sheet.";
             alert("Submission sent! Check your Google Sheet now.");
