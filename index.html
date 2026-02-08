@@ -1,67 +1,67 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GAA FANTASY FOOTBALL PRO</title>
-    <style>
-        :root { --orange: #f37021; --dark: #1a1a1a; --cream: #f4f1de; --white: #ffffff; --green: #2e7d32; --pitch-lines: rgba(255,255,255,0.8); }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--cream); margin: 0; padding: 0; color: var(--dark); }
-        
-        .header { background: var(--orange); padding: 10px; text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
-        .header img { max-height: 100px; border-radius: 5px; }
-        nav { display: flex; justify-content: center; background: var(--dark); position: sticky; top: 0; z-index: 100; }
-        .nav-link { color: white; padding: 12px 20px; text-decoration: none; font-weight: bold; cursor: pointer; border: none; background: none; font-size: 13px; text-transform: uppercase; }
-        .nav-link.active { background: var(--orange); }
-        
-        .timer-bar { background: #333; color: #fff; text-align: center; padding: 8px; font-size: 14px; font-weight: bold; border-bottom: 3px solid var(--orange); }
-        #countdown { color: var(--orange); margin-left: 5px; letter-spacing: 1px; }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GAA FANTASY FOOTBALL PRO</title>
+    <style>
+        :root { --orange: #f37021; --dark: #1a1a1a; --cream: #f4f1de; --white: #ffffff; --green: #2e7d32; --pitch-lines: rgba(255,255,255,0.8); }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--cream); margin: 0; padding: 0; color: var(--dark); }
+        
+        .header { background: var(--orange); padding: 10px; text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
+        .header img { max-height: 100px; border-radius: 5px; }
+        nav { display: flex; justify-content: center; background: var(--dark); position: sticky; top: 0; z-index: 100; }
+        .nav-link { color: white; padding: 12px 20px; text-decoration: none; font-weight: bold; cursor: pointer; border: none; background: none; font-size: 13px; text-transform: uppercase; }
+        .nav-link.active { background: var(--orange); }
+        
+        .timer-bar { background: #333; color: #fff; text-align: center; padding: 8px; font-size: 14px; font-weight: bold; border-bottom: 3px solid var(--orange); }
+        #countdown { color: var(--orange); margin-left: 5px; letter-spacing: 1px; }
 
-        .container { padding: 15px; max-width: 1400px; margin: auto; }
-        .main-layout { display: grid; grid-template-columns: 1fr; gap: 15px; }
-        @media (min-width: 1100px) { .main-layout { grid-template-columns: 1fr 450px 320px; } }
+        .container { padding: 15px; max-width: 1400px; margin: auto; }
+        .main-layout { display: grid; grid-template-columns: 1fr; gap: 15px; }
+        @media (min-width: 1100px) { .main-layout { grid-template-columns: 1fr 450px 320px; } }
 
-        .panel { background: var(--white); border-radius: 8px; padding: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); height: fit-content; }
-        .player-info-cell { position: relative; cursor: help; display: flex; align-items: center; gap: 8px; }
-        .county-mini-badge { width: 24px; height: 24px; object-fit: contain; }
-        
-        .pitch { 
-            background: var(--green); width: 100%; aspect-ratio: 2/3.2; border-radius: 8px; 
-            position: relative; border: 3px solid white; overflow: hidden; 
-            background-image: linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px); 
-            background-size: 100% 10%; 
-        }
-        .mid-line { position: absolute; top: 50%; width: 100%; border-top: 2px solid var(--pitch-lines); }
-        .pitch-grid { display: flex; flex-direction: column; height: 100%; justify-content: space-around; padding: 5px 0; position: relative; z-index: 2; }
-        .pitch-row { display: flex; justify-content: space-around; width: 95%; margin: 0 auto; }
-        
-        .player-disc { width: 60px; height: 60px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 9px; cursor: pointer; position: relative; }
-        .player-disc img { width: 45px; height: 45px; object-fit: contain; filter: drop-shadow(0 2px 3px rgba(0,0,0,0.4)); }
-        .player-disc.empty { background: rgba(0,0,0,0.2); border: 1px dashed #ccc; border-radius: 50%; color: #eee; width: 50px; height: 50px; }
-        .player-name-label { position: absolute; bottom: -8px; background: #000; color: #fff; padding: 1px 4px; border-radius: 3px; font-size: 8px; white-space: nowrap; border: 0.5px solid #555; }
+        .panel { background: var(--white); border-radius: 8px; padding: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); height: fit-content; }
+        .player-info-cell { position: relative; cursor: help; display: flex; align-items: center; gap: 8px; }
+        .county-mini-badge { width: 24px; height: 24px; object-fit: contain; }
+        
+        .pitch { 
+            background: var(--green); width: 100%; aspect-ratio: 2/3.2; border-radius: 8px; 
+            position: relative; border: 3px solid white; overflow: hidden; 
+            background-image: linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px); 
+            background-size: 100% 10%; 
+        }
+        .mid-line { position: absolute; top: 50%; width: 100%; border-top: 2px solid var(--pitch-lines); }
+        .pitch-grid { display: flex; flex-direction: column; height: 100%; justify-content: space-around; padding: 5px 0; position: relative; z-index: 2; }
+        .pitch-row { display: flex; justify-content: space-around; width: 95%; margin: 0 auto; }
+        
+        .player-disc { width: 55px; height: 55px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 9px; cursor: pointer; position: relative; }
+        .player-disc img { width: 42px; height: 42px; object-fit: contain; filter: drop-shadow(0 2px 3px rgba(0,0,0,0.4)); }
+        .player-disc.empty { background: rgba(0,0,0,0.2); border: 1px dashed #ccc; border-radius: 50%; color: #eee; width: 45px; height: 45px; }
+        .player-name-label { position: absolute; bottom: -8px; background: #000; color: #fff; padding: 1px 4px; border-radius: 3px; font-size: 8px; white-space: nowrap; border: 0.5px solid #555; }
 
-        .filter-row { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; }
-        .filter-row input, .filter-row select { padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 12px; flex: 1; min-width: 80px; }
-        .scroll-box { max-height: 550px; overflow-y: auto; }
-        table { width: 100%; border-collapse: collapse; font-size: 11px; }
-        th { background: #f8f8f8; padding: 8px; text-align: left; position: sticky; top: 0; z-index: 5; border-bottom: 2px solid #ddd; }
-        td { padding: 8px 6px; border-bottom: 1px solid #eee; }
+        .filter-row { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; }
+        .filter-row input, .filter-row select { padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 12px; flex: 1; min-width: 80px; }
+        .scroll-box { max-height: 550px; overflow-y: auto; }
+        table { width: 100%; border-collapse: collapse; font-size: 11px; }
+        th { background: #f8f8f8; padding: 8px; text-align: left; position: sticky; top: 0; z-index: 5; border-bottom: 2px solid #ddd; }
+        td { padding: 8px 6px; border-bottom: 1px solid #eee; }
 
-        .btn-assign { padding: 4px 2px; font-size: 9px; cursor: pointer; border: 1px solid #ddd; background: #fff; flex: 1; font-weight: bold; }
-        .is-pref { border: 2px solid var(--orange) !important; color: var(--orange); background: #fff5ee !important; }
-        .btn-assign:disabled { opacity: 0.3; cursor: not-allowed; }
+        .btn-assign { padding: 4px 2px; font-size: 9px; cursor: pointer; border: 1px solid #ddd; background: #fff; flex: 1; font-weight: bold; }
+        .is-pref { border: 2px solid var(--orange) !important; color: var(--orange); background: #fff5ee !important; }
+        .btn-assign:disabled { opacity: 0.3; cursor: not-allowed; }
 
-        .intel-box { background: var(--dark); color: white; border-radius: 8px; padding: 15px; margin-top: 15px; border-top: 4px solid var(--orange); min-height: 440px; }
-        .intel-box h3 { margin: 0 0 10px 0; font-size: 12px; color: var(--orange); text-transform: uppercase; border-bottom: 1px solid #333; padding-bottom: 5px; }
-        .intel-item { display: flex; align-items: center; padding: 6px 0; border-bottom: 1px solid #222; font-size: 11px; }
-        .p-stat { font-weight: bold; color: var(--orange); margin-left: auto; }
+        .intel-box { background: var(--dark); color: white; border-radius: 8px; padding: 15px; margin-top: 15px; border-top: 4px solid var(--orange); min-height: 440px; }
+        .intel-box h3 { margin: 0 0 10px 0; font-size: 12px; color: var(--orange); text-transform: uppercase; border-bottom: 1px solid #333; padding-bottom: 5px; }
+        .intel-item { display: flex; align-items: center; padding: 6px 0; border-bottom: 1px solid #222; font-size: 11px; }
+        .p-stat { font-weight: bold; color: var(--orange); margin-left: auto; }
 
-        .submit-section { margin-top: 15px; padding-top: 15px; border-top: 2px solid #eee; }
-        .submit-section input { width: 100%; padding: 10px; margin-bottom: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
-        
-        .hidden { display: none; }
-        .watermark { position: fixed; bottom: 5px; right: 10px; font-size: 10px; opacity: 0.3; pointer-events: none; }
-    </style>
+        .submit-section { margin-top: 15px; padding-top: 15px; border-top: 2px solid #eee; }
+        .submit-section input { width: 100%; padding: 10px; margin-bottom: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        
+        .hidden { display: none; }
+        .watermark { position: fixed; bottom: 5px; right: 10px; font-size: 10px; opacity: 0.3; pointer-events: none; }
+    </style>
 </head>
 <body>
 
@@ -71,320 +71,264 @@
 <div class="timer-bar">TRANSFER WINDOW CLOSES IN: <span id="countdown">00d 00h 00m 00s</span></div>
 
 <nav>
-    <button class="nav-link active" id="nav-market" onclick="showPage('market')">Squad & Pitch</button>
-    <button class="nav-link" id="nav-rules" onclick="showPage('rules')">Rules</button>
+    <button class="nav-link active" id="nav-market" onclick="showPage('market')">Squad & Pitch</button>
+    <button class="nav-link" id="nav-rules" onclick="showPage('rules')">Rules</button>
 </nav>
 
 <div class="container">
-    <div id="page-market" class="page">
-        <div class="main-layout">
-            <div class="panel">
-                <div class="filter-row">
-                    <input type="text" id="search-name" placeholder="Search Player Name..." oninput="filterPlayers()">
-                    <select id="filter-county" onchange="filterPlayers()"><option value="">All Counties</option></select>
-                    <select id="filter-pos" onchange="filterPlayers()">
-                        <option value="">All Positions</option>
-                        <option value="GK">Goalkeeper</option>
-                        <option value="DEF">Defender</option>
-                        <option value="MID">Midfielder</option>
-                        <option value="FWD">Forward</option>
-                    </select>
-                </div>
-                <div class="scroll-box">
-                    <table>
-                        <thead><tr><th>Player</th><th>Mkt Value</th><th>Assign</th></tr></thead>
-                        <tbody id="market-body"></tbody>
-                    </table>
-                </div>
-            </div>
+    <div id="page-market" class="page">
+        <div class="main-layout">
+            <div class="panel">
+                <div class="filter-row">
+                    <input type="text" id="search-name" placeholder="Search Player Name..." oninput="filterPlayers()">
+                    <select id="filter-county" onchange="filterPlayers()"><option value="">All Counties</option></select>
+                    <select id="filter-pos" onchange="filterPlayers()">
+                        <option value="">All Positions</option>
+                        <option value="GK">Goalkeeper</option>
+                        <option value="DEF">Defender</option>
+                        <option value="MID">Midfielder</option>
+                        <option value="FWD">Forward</option>
+                    </select>
+                </div>
+                <div class="scroll-box">
+                    <table>
+                        <thead><tr><th>Player</th><th>Mkt Value</th><th>Assign</th></tr></thead>
+                        <tbody id="market-body"></tbody>
+                    </table>
+                </div>
+            </div>
 
-            <div id="pitch-container">
-                <div class="pitch">
-                    <div class="mid-line"></div>
-                    <div id="pitch-board" class="pitch-grid"></div>
-                </div>
-            </div>
+            <div id="pitch-container">
+                <div class="pitch">
+                    <div class="mid-line"></div>
+                    <div id="pitch-board" class="pitch-grid"></div>
+                </div>
+            </div>
 
-            <div class="panel">
-                <div id="budget-val" style="font-size:20px; font-weight:bold; color:var(--green); text-align:center;">Budget: 85.00m</div>
-                <div id="transfer-count" style="font-size:12px; text-align:center; color:#666; margin-bottom:10px;">Select your starting 15</div>
-                
-                <div class="submit-section">
-                    <input type="text" id="sub-mgr-name" placeholder="Manager Name">
-                    <input type="password" id="sub-mgr-pin" placeholder="PIN (4+ digits)" maxlength="10">
-                    
-                    <div style="display: flex; gap: 8px;">
-                        <button id="btn-submit" onclick="saveTeamToSheet()" style="flex: 1; padding:12px; background:var(--green); color:white; border:none; border-radius:5px; font-weight:bold; cursor:pointer;">SUBMIT</button>
-                        <button id="btn-login" onclick="loginUser()" style="flex: 1; padding:12px; background:var(--dark); color:white; border:none; border-radius:5px; font-weight:bold; cursor:pointer;">LOAD TEAM</button>
-                    </div>
-                    
-                    <div id="status-msg" style="margin-top:10px; font-size:12px; text-align:center; font-weight:bold; min-height: 15px;"></div>
-                </div>
-                
-                <div class="intel-box">
-                    <h3 id="intel-title">Market Intel</h3>
-                    <div id="intel-content"></div>
-                </div>
-            </div>
-        </div>
-    </div>
+            <div class="panel">
+                <div id="budget-val" style="font-size:20px; font-weight:bold; color:var(--green); text-align:center;">Budget: 85.00m</div>
+                <div id="transfer-count" style="font-size:12px; text-align:center; color:#666; margin-bottom:10px;">Formation: 1-6-2-6</div>
+                
+                <div class="submit-section">
+                    <input type="text" id="sub-mgr-name" placeholder="Manager Name">
+                    <input type="password" id="sub-mgr-pin" placeholder="PIN (4+ digits)" maxlength="10">
+                    
+                    <div style="display: flex; gap: 8px;">
+                        <button id="btn-submit" onclick="saveTeamToSheet()" style="flex: 1; padding:12px; background:var(--green); color:white; border:none; border-radius:5px; font-weight:bold; cursor:pointer;">SUBMIT</button>
+                        <button id="btn-login" onclick="loginUser()" style="flex: 1; padding:12px; background:var(--dark); color:white; border:none; border-radius:5px; font-weight:bold; cursor:pointer;">LOAD TEAM</button>
+                    </div>
+                    
+                    <div id="status-msg" style="margin-top:10px; font-size:12px; text-align:center; font-weight:bold; min-height: 15px;"></div>
+                </div>
+                
+                <div class="intel-box">
+                    <h3 id="intel-title">Market Intel</h3>
+                    <div id="intel-content"></div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-    <div id="page-rules" class="page hidden">
-        <div class="panel">
-            <h2>GAA Fantasy Rules</h2>
-            <ul>
-                <li>Select exactly **15** starting players.</li>
-                <li>Starting Budget: **85.00m**.</li>
-                <li>Maximum **3 players** from any one county.</li>
-                <li>Maximum **3 transfers** allowed per week.</li>
-                <li>The window closes every Friday at 19:00 before the weekend fixtures.</li>
-            </ul>
-        </div>
-    </div>
+    <div id="page-rules" class="page hidden">
+        <div class="panel">
+            <h2>GAA Fantasy Rules</h2>
+            <ul>
+                <li>Select exactly **15** starting players.</li>
+                <li>Formation: **1 GK, 6 Defenders, 2 Midfielders, 6 Forwards**.</li>
+                <li>Starting Budget: **85.00m**.</li>
+                <li>Maximum **3 players** from any one county.</li>
+                <li>Maximum **3 transfers** allowed per week.</li>
+                <li>The window closes every Friday at 19:00 before the weekend fixtures.</li>
+            </ul>
+        </div>
+    </div>
 </div>
 
 <script>
-    const SCORERS_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTcdzjZ4zYlGgFe5acS8xOb1vHR9b8i98UudIOe-iC9Z1d6x6AY5zATgX217cNjcNtAGDLJ56y8Jr8N/pub?output=csv';
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbySHLYe-RqRTvfcX1MQFFepw2rRxFF0KYuV3g6WS0PtrXBB7CrQnLDMx_T8cep9Kbkx/exec'; 
-    
-    let allPlayers = [], squad = [], budget = 85.0, intelIndex = 0;
-    let originalSquadNames = []; 
+    const SCORERS_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTcdzjZ4zYlGgFe5acS8xOb1vHR9b8i98UudIOe-iC9Z1d6x6AY5zATgX217cNjcNtAGDLJ56y8Jr8N/pub?output=csv';
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbySHLYe-RqRTvfcX1MQFFepw2rRxFF0KYuV3g6WS0PtrXBB7CrQnLDMx_T8cep9Kbkx/exec'; 
+    
+    let allPlayers = [], squad = [], budget = 85.0, intelIndex = 0;
+    let originalSquadNames = []; 
 
-    const pitchPositions = [
-        { role: 'GK', limit: 1, label: 'GK' },
-        { role: 'DEF', limit: 3, label: 'FB' },
-        { role: 'DEF', limit: 3, label: 'HB' },
-        { role: 'MID', limit: 2, label: 'MF' },
-        { role: 'FWD', limit: 3, label: 'HF' },
-        { role: 'FWD', limit: 3, label: 'FF' }
-    ];
+    // Updated Pitch Positions for 1-6-2-6 (Standard GAA Layout)
+    const pitchPositions = [
+        { role: 'GK', limit: 1, label: 'GK' },
+        { role: 'DEF', limit: 3, label: 'FB' }, // Full Backs
+        { role: 'DEF', limit: 3, label: 'HB' }, // Half Backs
+        { role: 'MID', limit: 2, label: 'MF' }, // Midfield
+        { role: 'FWD', limit: 3, label: 'HF' }, // Half Forwards
+        { role: 'FWD', limit: 3, label: 'FF' }  // Full Forwards
+    ];
 
-    // --- COUNTDOWN TIMER LOGIC ---
-    function updateCountdown() {
-        const now = new Date();
-        const nextFriday = new Date();
-        nextFriday.setDate(now.getDate() + (5 - now.getDay() + 7) % 7);
-        nextFriday.setHours(19, 0, 0, 0);
-        
-        if (now > nextFriday) nextFriday.setDate(nextFriday.getDate() + 7);
-        
-        const diff = nextFriday - now;
-        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-        const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
-        const mins = Math.floor((diff / 1000 / 60) % 60);
-        const secs = Math.floor((diff / 1000) % 60);
-        
-        document.getElementById('countdown').innerText = 
-            `${days}d ${hours.toString().padStart(2, '0')}h ${mins.toString().padStart(2, '0')}m ${secs.toString().padStart(2, '0')}s`;
-    }
-    setInterval(updateCountdown, 1000);
+    const roleLimits = { 'GK': 1, 'DEF': 6, 'MID': 2, 'FWD': 6 };
 
-    // --- INITIALIZATION ---
-    async function init() {
-        try {
-            const res = await fetch(SCORERS_URL + '&t=' + new Date().getTime());
-            const text = await res.text();
-            const rows = text.split('\n').map(r => r.split(','));
-            const counties = new Set();
-            
-            for(let i=1; i<rows.length; i++) {
-                if(!rows[i][0]) continue;
-                counties.add(rows[i][0].trim());
-                let totalScore = parseInt(rows[i][8]) || 0;
-                let pts = parseInt(rows[i][5]) || 0;
-                let goals = parseInt(rows[i][4]) || 0;
-                let basePriceK = parseFloat(rows[i][10]) || 5.0;
-                let currentPrice = (basePriceK * 0.90) + (Math.floor(totalScore / 3) * 0.25);
-                
-                allPlayers.push({
-                    id: i, 
-                    county: rows[i][0].trim(), 
-                    name: (rows[i][1]+" "+rows[i][2]).trim(),
-                    prefPos: rows[i][3].trim().toUpperCase(), 
-                    price: currentPrice,
-                    points: pts,
-                    goals: goals,
-                    totalScore: totalScore,
-                    badge: rows[i][14] ? rows[i][14].trim() : 'https://ui-avatars.com/api/?name=GAA'
-                });
-            }
-            const coSelect = document.getElementById('filter-county');
-            [...counties].sort().forEach(c => { let o = document.createElement('option'); o.value=o.text=c; coSelect.add(o); });
-            updateUI(); filterPlayers(); updateIntel();
-            setInterval(() => { intelIndex = (intelIndex + 1) % 6; updateIntel(); }, 6000);
-        } catch (e) { console.error("Init failed", e); }
-    }
+    function updateCountdown() {
+        const now = new Date();
+        const nextFriday = new Date();
+        nextFriday.setDate(now.getDate() + (5 - now.getDay() + 7) % 7);
+        nextFriday.setHours(19, 0, 0, 0);
+        if (now > nextFriday) nextFriday.setDate(nextFriday.getDate() + 7);
+        const diff = nextFriday - now;
+        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+        const mins = Math.floor((diff / 1000 / 60) % 60);
+        const secs = Math.floor((diff / 1000) % 60);
+        document.getElementById('countdown').innerText = `${days}d ${hours.toString().padStart(2, '0')}h ${mins.toString().padStart(2, '0')}m ${secs.toString().padStart(2, '0')}s`;
+    }
+    setInterval(updateCountdown, 1000);
 
-    // --- MARKET INTEL LOGIC ---
-    function updateIntel() {
-        const content = document.getElementById('intel-content'), title = document.getElementById('intel-title');
-        let sorted, label, suffix = "m";
-        
-        switch(intelIndex) {
-            case 0: 
-                label="Top Priced Players"; 
-                sorted=[...allPlayers].sort((a,b)=>b.price-a.price); 
-                suffix = "m";
-                break;
-            case 1: 
-                label="Top Point Scorers"; 
-                sorted=[...allPlayers].sort((a,b)=>b.points-a.points); 
-                suffix = " pts";
-                break;
-            case 2: 
-                label="Highest Total Scores"; 
-                sorted=[...allPlayers].sort((a,b)=>b.totalScore-a.totalScore); 
-                suffix = "";
-                break;
-            case 3: 
-                label="Top Goal Scorers"; 
-                sorted=[...allPlayers].sort((a,b)=>b.goals-a.goals); 
-                suffix = " goals";
-                break;
-            case 4: 
-                label="Budget Bargains (Low Price)"; 
-                sorted=[...allPlayers].sort((a,b)=>a.price-b.price); 
-                suffix = "m";
-                break;
-            case 5: 
-                label="Underperformers (Low Score)"; 
-                sorted=[...allPlayers].sort((a,b)=>a.totalScore-b.totalScore); 
-                suffix = "";
-                break;
-        }
-        
-        title.innerText = label;
-        content.innerHTML = sorted.slice(0, 10).map((p, idx) => {
-            let val = suffix === "m" ? p.price.toFixed(2) : (suffix === " pts" ? p.points : (suffix === " goals" ? p.goals : p.totalScore));
-            return `<div class="intel-item">
-                <span style="color:#888; width:20px;">${idx+1}.</span>
-                <span>${p.name} (${p.county})</span>
-                <span class="p-stat">${val}${suffix}</span>
-            </div>`;
-        }).join('');
-    }
+    async function init() {
+        try {
+            const res = await fetch(SCORERS_URL + '&t=' + new Date().getTime());
+            const text = await res.text();
+            const rows = text.split('\n').map(r => r.split(','));
+            const counties = new Set();
+            for(let i=1; i<rows.length; i++) {
+                if(!rows[i][0]) continue;
+                counties.add(rows[i][0].trim());
+                let totalScore = parseInt(rows[i][8]) || 0;
+                let pts = parseInt(rows[i][5]) || 0;
+                let goals = parseInt(rows[i][4]) || 0;
+                let basePriceK = parseFloat(rows[i][10]) || 5.0;
+                let currentPrice = (basePriceK * 0.90) + (Math.floor(totalScore / 3) * 0.25);
+                allPlayers.push({
+                    id: i, county: rows[i][0].trim(), name: (rows[i][1]+" "+rows[i][2]).trim(),
+                    prefPos: rows[i][3].trim().toUpperCase(), price: currentPrice,
+                    points: pts, goals: goals, totalScore: totalScore,
+                    badge: rows[i][14] ? rows[i][14].trim() : 'https://ui-avatars.com/api/?name=GAA'
+                });
+            }
+            const coSelect = document.getElementById('filter-county');
+            [...counties].sort().forEach(c => { let o = document.createElement('option'); o.value=o.text=c; coSelect.add(o); });
+            updateUI(); filterPlayers(); updateIntel();
+            setInterval(() => { intelIndex = (intelIndex + 1) % 6; updateIntel(); }, 6000);
+        } catch (e) { console.error("Init failed", e); }
+    }
 
-    // --- CORE SQUAD LOGIC ---
-    async function loginUser() {
-        const name = document.getElementById('sub-mgr-name').value.trim();
-        const pin = document.getElementById('sub-mgr-pin').value.trim();
-        const status = document.getElementById('status-msg');
-        if(!name || !pin) return alert("Enter Name and PIN.");
-        status.innerText = "🔍 Loading...";
-        try {
-            const res = await fetch(`${SCRIPT_URL}?name=${encodeURIComponent(name)}&pin=${encodeURIComponent(pin)}`);
-            const result = await res.json();
-            if(result.success) {
-                squad = []; budget = 85.0;
-                originalSquadNames = result.squad.filter(n => n && n.trim() !== "").map(n => n.trim());
-                originalSquadNames.forEach((pName, index) => {
-                    const player = allPlayers.find(p => p.name.trim() === pName);
-                    if(player) {
-                        let role = "FWD"; 
-                        if(index === 0) role = "GK";
-                        else if(index >= 1 && index <= 6) role = "DEF";
-                        else if(index >= 7 && index <= 8) role = "MID";
-                        squad.push({...player, assignedRole: role});
-                        budget -= player.price;
-                    }
-                });
-                updateUI(); filterPlayers();
-                status.innerText = "✅ Loaded!";
-            } else { status.innerText = "❌ " + result.message; }
-        } catch (e) { status.innerText = "⚠️ Error connecting."; }
-    }
+    function addPlayer(id, role) {
+        const p = allPlayers.find(x => x.id === id);
+        const currentRoleCount = squad.filter(s => s.assignedRole === role).length;
 
-    function addPlayer(id, role) {
-        const p = allPlayers.find(x => x.id === id);
-        const roleCount = squad.filter(s => s.assignedRole === role).length;
-        const roleLimit = pitchPositions.find(pos => pos.role === role).limit;
+        if (currentRoleCount >= roleLimits[role]) return alert(`Position Full! Max ${roleLimits[role]} for ${role}.`);
+        if (originalSquadNames.length > 0 && !originalSquadNames.includes(p.name.trim()) && getChangesCount() >= 3) return alert("Max 3 transfers!");
+        if (squad.some(s => s.id === id)) return;
+        if (squad.length >= 15) return alert("Squad Full (15 players)!");
+        if (budget < p.price) return alert("Insufficient Budget!");
+        if (squad.filter(s => s.county === p.county).length >= 3) return alert("Max 3 per county!");
+        
+        squad.push({...p, assignedRole: role});
+        budget -= p.price;
+        updateUI(); filterPlayers();
+    }
 
-        if (roleCount >= roleLimit) return alert(`Position Full! Max ${roleLimit} for ${role}.`);
-        if (originalSquadNames.length > 0 && !originalSquadNames.includes(p.name.trim()) && getChangesCount() >= 3) return alert("Max 3 transfers!");
-        if (squad.some(s => s.id === id)) return;
-        if (squad.length >= 15) return alert("Squad Full (15 players)!");
-        if (budget < p.price) return alert("Insufficient Budget!");
-        if (squad.filter(s => s.county === p.county).length >= 3) return alert("Max 3 per county!");
-        
-        squad.push({...p, assignedRole: role});
-        budget -= p.price;
-        updateUI(); filterPlayers();
-    }
+    function removePlayer(idx) {
+        budget += squad[idx].price;
+        squad.splice(idx, 1);
+        updateUI(); filterPlayers();
+    }
 
-    function removePlayer(idx) {
-        budget += squad[idx].price;
-        squad.splice(idx, 1);
-        updateUI(); filterPlayers();
-    }
+    function updateUI() {
+        document.getElementById('budget-val').innerText = `Budget: ${budget.toFixed(2)}m`;
+        let tempSquad = [...squad], pitchHtml = "";
+        pitchPositions.forEach(pos => {
+            pitchHtml += `<div class="pitch-row">`;
+            for(let i=0; i<pos.limit; i++) {
+                const sIdx = tempSquad.findIndex(ps => ps.assignedRole === pos.role);
+                if(sIdx > -1) {
+                    const player = tempSquad.splice(sIdx, 1)[0];
+                    pitchHtml += `<div class="player-disc" onclick="removePlayer(${squad.indexOf(player)})"><img src="${player.badge}"><div class="player-name-label">${player.name.split(' ').pop()}</div></div>`;
+                } else pitchHtml += `<div class="player-disc empty">${pos.label}</div>`;
+            }
+            pitchHtml += `</div>`;
+        });
+        document.getElementById('pitch-board').innerHTML = pitchHtml;
+    }
 
-    function getChangesCount() {
-        return squad.map(p => p.name.trim()).filter(name => !originalSquadNames.includes(name)).length;
-    }
+    function filterPlayers() {
+        const nameQ = document.getElementById('search-name').value.toLowerCase();
+        const coQ = document.getElementById('filter-county').value;
+        const posQ = document.getElementById('filter-pos').value;
+        let filtered = allPlayers.filter(p => p.name.toLowerCase().includes(nameQ) && (!coQ || p.county === coQ) && (!posQ || p.prefPos === posQ));
+        document.getElementById('market-body').innerHTML = filtered.map(p => {
+            const isSelected = squad.some(s => s.id === p.id);
+            const buttons = ['GK', 'DEF', 'MID', 'FWD'].map(role => 
+                `<button class="btn-assign ${p.prefPos === role ? 'is-pref' : ''}" onclick="addPlayer(${p.id}, '${role}')" ${isSelected ? 'disabled' : ''}>${role}</button>`
+            ).join('');
+            return `<tr><td><div class="player-info-cell"><img src="${p.badge}" class="county-mini-badge"><div><b>${p.name}</b><br><small>${p.county}</small></div></div></td><td><b>${p.price.toFixed(2)}m</b></td><td><div style="display:flex; gap:2px;">${buttons}</div></td></tr>`;
+        }).join('');
+    }
 
-    function updateUI() {
-        document.getElementById('budget-val').innerText = `Budget: ${budget.toFixed(2)}m`;
-        let tempSquad = [...squad], pitchHtml = "";
-        pitchPositions.forEach(pos => {
-            pitchHtml += `<div class="pitch-row">`;
-            for(let i=0; i<pos.limit; i++) {
-                const sIdx = tempSquad.findIndex(ps => ps.assignedRole === pos.role);
-                if(sIdx > -1) {
-                    const player = tempSquad.splice(sIdx, 1)[0];
-                    pitchHtml += `<div class="player-disc" onclick="removePlayer(${squad.indexOf(player)})"><img src="${player.badge}"><div class="player-name-label">${player.name.split(' ').pop()}</div></div>`;
-                } else pitchHtml += `<div class="player-disc empty">${pos.label}</div>`;
-            }
-            pitchHtml += `</div>`;
-        });
-        document.getElementById('pitch-board').innerHTML = pitchHtml;
-    }
+    function updateIntel() {
+        const content = document.getElementById('intel-content'), title = document.getElementById('intel-title');
+        let sorted, label, suffix = "m";
+        switch(intelIndex) {
+            case 0: label="Top Priced Players"; sorted=[...allPlayers].sort((a,b)=>b.price-a.price); break;
+            case 1: label="Top Point Scorers"; sorted=[...allPlayers].sort((a,b)=>b.points-a.points); suffix=" pts"; break;
+            case 2: label="Highest Total Scores"; sorted=[...allPlayers].sort((a,b)=>b.totalScore-a.totalScore); suffix=""; break;
+            case 3: label="Top Goal Scorers"; sorted=[...allPlayers].sort((a,b)=>b.goals-a.goals); suffix=" goals"; break;
+            case 4: label="Budget Bargains"; sorted=[...allPlayers].sort((a,b)=>a.price-b.price); break;
+            case 5: label="Underperformers"; sorted=[...allPlayers].sort((a,b)=>a.totalScore-b.totalScore); suffix=""; break;
+        }
+        title.innerText = label;
+        content.innerHTML = sorted.slice(0, 10).map((p, idx) => {
+            let val = suffix === "m" ? p.price.toFixed(2) : (suffix === " pts" ? p.points : (suffix === " goals" ? p.goals : p.totalScore));
+            return `<div class="intel-item"><span style="color:#888; width:20px;">${idx+1}.</span><span>${p.name} (${p.county})</span><span class="p-stat">${val}${suffix}</span></div>`;
+        }).join('');
+    }
 
-    function filterPlayers() {
-        const nameQ = document.getElementById('search-name').value.toLowerCase();
-        const coQ = document.getElementById('filter-county').value;
-        const posQ = document.getElementById('filter-pos').value;
-        let filtered = allPlayers.filter(p => p.name.toLowerCase().includes(nameQ) && (!coQ || p.county === coQ) && (!posQ || p.prefPos === posQ));
-        document.getElementById('market-body').innerHTML = filtered.map(p => {
-            const isSelected = squad.some(s => s.id === p.id);
-            const buttons = ['GK', 'DEF', 'MID', 'FWD'].map(role => 
-                `<button class="btn-assign ${p.prefPos === role ? 'is-pref' : ''}" 
-                onclick="addPlayer(${p.id}, '${role}')" ${isSelected ? 'disabled' : ''}>${role}</button>`
-            ).join('');
-            return `<tr><td><div class="player-info-cell"><img src="${p.badge}" class="county-mini-badge"><div><b>${p.name}</b><br><small>${p.county}</small></div></div></td><td><b>${p.price.toFixed(2)}m</b></td><td><div style="display:flex; gap:2px;">${buttons}</div></td></tr>`;
-        }).join('');
-    }
+    async function loginUser() {
+        const name = document.getElementById('sub-mgr-name').value.trim();
+        const pin = document.getElementById('sub-mgr-pin').value.trim();
+        const status = document.getElementById('status-msg');
+        if(!name || !pin) return alert("Enter Name and PIN.");
+        status.innerText = "🔍 Loading...";
+        try {
+            const res = await fetch(`${SCRIPT_URL}?name=${encodeURIComponent(name)}&pin=${encodeURIComponent(pin)}`);
+            const result = await res.json();
+            if(result.success) {
+                squad = []; budget = 85.0;
+                originalSquadNames = result.squad.filter(n => n && n.trim() !== "").map(n => n.trim());
+                originalSquadNames.forEach((pName, index) => {
+                    const player = allPlayers.find(p => p.name.trim() === pName);
+                    if(player) {
+                        let role = "FWD"; 
+                        if(index === 0) role = "GK";
+                        else if(index >= 1 && index <= 6) role = "DEF";
+                        else if(index >= 7 && index <= 8) role = "MID";
+                        squad.push({...player, assignedRole: role}); budget -= player.price;
+                    }
+                });
+                updateUI(); filterPlayers(); status.innerText = "✅ Loaded!";
+            } else { status.innerText = "❌ " + result.message; }
+        } catch (e) { status.innerText = "⚠️ Error connecting."; }
+    }
 
-    async function saveTeamToSheet() {
-        const name = document.getElementById('sub-mgr-name').value.trim();
-        const pin = document.getElementById('sub-mgr-pin').value.trim();
-        const status = document.getElementById('status-msg');
-        if(!name || pin.length < 4) return alert("Enter Name and 4+ digit PIN.");
-        if(squad.length < 15) return alert("Pick your full 15 first.");
-        
-        status.innerText = "Saving...";
-        const rolesOrder = ['GK', 'DEF', 'MID', 'FWD'];
-        const finalNames = [];
-        rolesOrder.forEach(r => { finalNames.push(...squad.filter(p => p.assignedRole === r).map(p => p.name.trim())); });
-        
-        fetch(SCRIPT_URL, {
-            method: 'POST',
-            mode: 'no-cors', 
-            headers: { 'Content-Type': 'text/plain' },
-            body: JSON.stringify([name, pin, ...finalNames])
-        }).then(() => {
-            status.innerText = "✅ SUCCESS!";
-            originalSquadNames = [...finalNames];
-            alert("Team Submitted!");
-        }).catch(() => { status.innerText = "❌ Failed."; });
-    }
+    async function saveTeamToSheet() {
+        const name = document.getElementById('sub-mgr-name').value.trim();
+        const pin = document.getElementById('sub-mgr-pin').value.trim();
+        const status = document.getElementById('status-msg');
+        if(!name || pin.length < 4) return alert("Enter Name and 4+ digit PIN.");
+        if(squad.length < 15) return alert("Pick your full 15 first.");
+        status.innerText = "Saving...";
+        const rolesOrder = ['GK', 'DEF', 'MID', 'FWD'];
+        const finalNames = [];
+        rolesOrder.forEach(r => { finalNames.push(...squad.filter(p => p.assignedRole === r).map(p => p.name.trim())); });
+        fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify([name, pin, ...finalNames]) })
+        .then(() => { status.innerText = "✅ SUCCESS!"; originalSquadNames = [...finalNames]; alert("Team Submitted!"); })
+        .catch(() => { status.innerText = "❌ Failed."; });
+    }
 
-    function showPage(id) {
-        document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
-        document.getElementById('page-' + id).classList.remove('hidden');
-        document.querySelectorAll('.nav-link').forEach(n => n.classList.remove('active'));
-        document.getElementById('nav-' + id).classList.add('active');
-    }
+    function showPage(id) {
+        document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
+        document.getElementById('page-' + id).classList.remove('hidden');
+        document.querySelectorAll('.nav-link').forEach(n => n.classList.remove('active'));
+        document.getElementById('nav-' + id).classList.add('active');
+    }
 
-    init();
+    function getChangesCount() { return squad.map(p => p.name.trim()).filter(name => !originalSquadNames.includes(name)).length; }
+
+    init();
 </script>
 </body>
 </html>
