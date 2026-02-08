@@ -139,12 +139,23 @@
             </div>
         </div>
     </div>
+
+    <div id="page-rules" class="page hidden">
+        <div class="panel">
+            <h2>GAA Fantasy Rules</h2>
+            <p>1. Select 18 players total.</p>
+            <p>2. Max 3 players from any single county.</p>
+            <p>3. Budget: 100.00m.</p>
+            <p>4. Max 3 transfers allowed per week after initial submission.</p>
+        </div>
+    </div>
 </div>
 
 <script>
     const SCORERS_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTcdzjZ4zYlGgFe5acS8xOb1vHR9b8i98UudIOe-iC9Z1d6x6AY5zATgX217cNjcNtAGDLJ56y8Jr8N/pub?output=csv';
-    // UPDATED SCRIPT URL
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx3PVg_Mws8e0Cmzf53ngr7PRB68vYTyB-5X0RfP2mqlu_XTMNDP_SJq7O3DqbWGecX/exec'; 
+    
+    // UPDATED SCRIPT URL PROVIDED
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbySHLYe-RqRTvfcX1MQFFepw2rRxFF0KYuV3g6WS0PtrXBB7CrQnLDMx_T8cep9Kbkx/exec'; 
     
     let allPlayers = [], squad = [], budget = 100.0, intelIndex = 0;
     let originalSquadNames = []; 
@@ -205,9 +216,8 @@
         status.innerText = "🔍 Checking Database...";
         
         try {
+            // Updated fetch to handle the GAS redirect better
             const response = await fetch(`${SCRIPT_URL}?name=${encodeURIComponent(name)}&pin=${encodeURIComponent(pin)}`);
-            if (!response.ok) throw new Error("Network response was not ok");
-            
             const result = await response.json();
 
             if(result.success) {
@@ -216,6 +226,7 @@
                 originalSquadNames = result.squad.map(n => n.trim());
 
                 result.squad.forEach((pName, index) => {
+                    if(!pName) return;
                     const player = allPlayers.find(p => p.name.trim() === pName.trim());
                     if(player) {
                         let role = "SUB";
@@ -239,7 +250,7 @@
         } catch (e) {
             console.error("Login Error:", e);
             status.style.color = "red";
-            status.innerText = "⚠️ Connection error. Ensure Script is deployed as 'Web App' for 'Anyone'.";
+            status.innerText = "⚠️ Connection error. Check deployment settings.";
         }
     }
 
@@ -321,15 +332,19 @@
         const status = document.getElementById('status-msg');
         if(!name || pin.length < 4) return alert("Enter Name and 4+ digit PIN.");
         if(squad.length < 18) return alert("Pick 18 players first.");
+        
         document.getElementById('btn-submit').disabled = true;
         status.innerText = "Saving Team...";
+        
         const rolesOrder = ['GK', 'DEF', 'MID', 'FWD', 'SUB'];
         const finalSquadNames = [];
         rolesOrder.forEach(r => {
             const players = squad.filter(p => p.assignedRole === r);
             finalSquadNames.push(...players.map(p => p.name.trim()));
         });
+        
         const finalData = [name, pin, ...finalSquadNames];
+        
         fetch(SCRIPT_URL, {
             method: 'POST',
             mode: 'no-cors', 
