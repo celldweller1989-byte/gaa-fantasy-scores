@@ -102,8 +102,8 @@
             </div>
 
             <div class="panel">
-                <div id="budget-val" style="font-size:20px; font-weight:bold; color:var(--green); text-align:center;">Budget: 100.00m</div>
-                <div id="transfer-count" style="font-size:12px; text-align:center; color:#666; margin-bottom:10px;">Pick your starting 15</div>
+                <div id="budget-val" style="font-size:20px; font-weight:bold; color:var(--green); text-align:center;">Budget: 85.00m</div>
+                <div id="transfer-count" style="font-size:12px; text-align:center; color:#666; margin-bottom:10px;">Select your starting 15</div>
                 
                 <div class="submit-section">
                     <input type="text" id="sub-mgr-name" placeholder="Manager Name">
@@ -129,10 +129,10 @@
         <div class="panel">
             <h2>GAA Fantasy Rules</h2>
             <ul>
-                <li>Select a starting **15** (no substitutes).</li>
-                <li>Budget: 100.00m.</li>
-                <li>Max 3 players per county.</li>
-                <li>Max 3 transfers allowed per week.</li>
+                <li>Select exactly **15** starting players.</li>
+                <li>Starting Budget: **85.00m**.</li>
+                <li>Maximum **3 players** from any one county.</li>
+                <li>Maximum **3 transfers** allowed per week.</li>
             </ul>
         </div>
     </div>
@@ -142,7 +142,8 @@
     const SCORERS_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTcdzjZ4zYlGgFe5acS8xOb1vHR9b8i98UudIOe-iC9Z1d6x6AY5zATgX217cNjcNtAGDLJ56y8Jr8N/pub?output=csv';
     const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbySHLYe-RqRTvfcX1MQFFepw2rRxFF0KYuV3g6WS0PtrXBB7CrQnLDMx_T8cep9Kbkx/exec'; 
     
-    let allPlayers = [], squad = [], budget = 100.0, intelIndex = 0;
+    // STARTING BUDGET SET TO 85.0
+    let allPlayers = [], squad = [], budget = 85.0, intelIndex = 0;
     let originalSquadNames = []; 
 
     const pitchPositions = [
@@ -193,7 +194,7 @@
             const res = await fetch(`${SCRIPT_URL}?name=${encodeURIComponent(name)}&pin=${encodeURIComponent(pin)}`);
             const result = await res.json();
             if(result.success) {
-                squad = []; budget = 100.0;
+                squad = []; budget = 85.0; // Reset budget to 85.0 upon login
                 originalSquadNames = result.squad.filter(n => n && n.trim() !== "").map(n => n.trim());
                 originalSquadNames.forEach((pName, index) => {
                     const player = allPlayers.find(p => p.name.trim() === pName);
