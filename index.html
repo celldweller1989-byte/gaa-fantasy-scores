@@ -136,9 +136,7 @@
 
 <script>
     const SCORERS_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTcdzjZ4zYlGgFe5acS8xOb1vHR9b8i98UudIOe-iC9Z1d6x6AY5zATgX217cNjcNtAGDLJ56y8Jr8N/pub?output=csv';
-    
-    // UPDATED SCRIPT URL PROVIDED BY USER
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwSHT-vSLZfTLPR1JUMDwNHThLIZ60WesCRt1dyRfwPjTqGSMM_o9w1IMACWQV1WuTD/exec'; 
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzcq5ZDLeNISMzUStMewlSJvBS3Y_3zJW-SM8xlVbgmkxh3_tpbcQIgul-qhKcd_Vmd/exec'; 
     
     let allPlayers = [], squad = [], budget = 100.0, intelIndex = 0;
 
@@ -187,9 +185,7 @@
                 });
             }
             const coSelect = document.getElementById('filter-county');
-            if(coSelect) {
-                [...counties].sort().forEach(c => { let o = document.createElement('option'); o.value=o.text=c; coSelect.add(o); });
-            }
+            [...counties].sort().forEach(c => { let o = document.createElement('option'); o.value=o.text=c; coSelect.add(o); });
             
             updateUI(); filterPlayers(); updateIntel();
             setInterval(() => { intelIndex = (intelIndex + 1) % 5; updateIntel(); }, 6000);
@@ -291,33 +287,38 @@
         if(squad.length < 18) return alert("Pick 18 players first.");
 
         document.getElementById('btn-submit').disabled = true;
-        status.innerText = "Submitting to Leaderboard...";
+        status.innerText = "Transmitting to Leaderboard...";
 
-        // Collect names for Column C-T
-        const finalSquadNames = squad.map(p => p.name.trim());
+        // Sorting players to match Spreadsheet format
+        const rolesOrder = ['GK', 'DEF', 'MID', 'FWD', 'SUB'];
+        const finalSquadNames = [];
+        rolesOrder.forEach(r => {
+            const players = squad.filter(p => p.assignedRole === r);
+            finalSquadNames.push(...players.map(p => p.name.trim()));
+        });
 
-        // Construct payload: [Manager, PIN, P1, P2... P18]
+        // Data MUST be an array for your Script's JSON.parse logic
         const finalData = [name, pin, ...finalSquadNames];
 
-        try {
-            await fetch(SCRIPT_URL, {
-                method: 'POST',
-                mode: 'no-cors', // Essential for Google Apps Script Web Apps
-                cache: 'no-cache',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(finalData)
-            });
-            
+        fetch(SCRIPT_URL, {
+            method: 'POST',
+            mode: 'no-cors', 
+            headers: { 'Content-Type': 'text/plain' },
+            body: JSON.stringify(finalData)
+        })
+        .then(() => {
             status.style.color = "green";
-            status.innerText = "SUCCESS! Your team has been registered.";
+            status.innerText = "SUCCESS! Check your spreadsheet.";
             alert("Team successfully submitted!");
-        } catch (e) {
-            console.error("Submission error:", e);
-            status.style.color = "red"; 
-            status.innerText = "Error submitting team. Check connection.";
-        } finally {
+        })
+        .catch((err) => {
+            status.style.color = "red";
+            status.innerText = "Submission Failed.";
+            console.error(err);
+        })
+        .finally(() => {
             document.getElementById('btn-submit').disabled = false;
-        }
+        });
     }
 
     function updateIntel() {
