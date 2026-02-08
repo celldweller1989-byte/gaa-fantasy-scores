@@ -151,7 +151,6 @@
     let allPlayers = [], squad = [], budget = 85.0, intelIndex = 0;
     let originalSquadNames = []; 
 
-    // Updated 1-6-2-6 Formation Criteria
     const pitchPositions = [
         { role: 'GK', limit: 1, label: 'GK' },
         { role: 'DEF', limit: 3, label: 'FB' },
@@ -204,9 +203,40 @@
         } catch (e) { console.error("Init failed", e); }
     }
 
+    async function loginUser() {
+        const name = document.getElementById('sub-mgr-name').value.trim();
+        const pin = document.getElementById('sub-mgr-pin').value.trim();
+        const status = document.getElementById('status-msg');
+        if(!name || !pin) return alert("Enter Name and PIN.");
+        status.innerText = "🔍 Loading...";
+        try {
+            const res = await fetch(`${SCRIPT_URL}?name=${encodeURIComponent(name)}&pin=${encodeURIComponent(pin)}`);
+            const result = await res.json();
+            if(result.success) {
+                squad = []; budget = 85.0;
+                originalSquadNames = result.squad.filter(n => n && n.trim() !== "").map(n => n.trim());
+                originalSquadNames.forEach((pName, index) => {
+                    const player = allPlayers.find(p => p.name.trim() === pName);
+                    if(player) {
+                        let role = ""; 
+                        if(index === 0) role = "GK";
+                        else if(index >= 1 && index <= 6) role = "DEF";
+                        else if(index >= 7 && index <= 8) role = "MID";
+                        else if(index >= 9 && index <= 14) role = "FWD";
+                        
+                        if(role !== "") {
+                            squad.push({...player, assignedRole: role});
+                            budget -= player.price;
+                        }
+                    }
+                });
+                updateUI(); filterPlayers(); status.innerText = "✅ Loaded!";
+            } else { status.innerText = "❌ " + result.message; }
+        } catch (e) { status.innerText = "⚠️ Error connecting."; }
+    }
+
     function addPlayer(id, role) {
         const p = allPlayers.find(x => x.id === id);
-        // Correct logic for 1-6-2-6
         const roleLimit = role === 'GK' ? 1 : (role === 'MID' ? 2 : 6);
         const roleCount = squad.filter(s => s.assignedRole === role).length;
 
@@ -277,45 +307,32 @@
         }).join('');
     }
 
-    async function loginUser() {
-        const name = document.getElementById('sub-mgr-name').value.trim();
-        const pin = document.getElementById('sub-mgr-pin').value.trim();
-        const status = document.getElementById('status-msg');
-        if(!name || !pin) return alert("Enter Name and PIN.");
-        status.innerText = "🔍 Loading...";
-        try {
-            const res = await fetch(`${SCRIPT_URL}?name=${encodeURIComponent(name)}&pin=${encodeURIComponent(pin)}`);
-            const result = await res.json();
-            if(result.success) {
-                squad = []; budget = 85.0;
-                originalSquadNames = result.squad.filter(n => n && n.trim() !== "").map(n => n.trim());
-                originalSquadNames.forEach((pName, index) => {
-                    const player = allPlayers.find(p => p.name.trim() === pName);
-                    if(player) {
-                        let role = "FWD"; 
-                        if(index === 0) role = "GK";
-                        else if(index >= 1 && index <= 6) role = "DEF";
-                        else if(index >= 7 && index <= 8) role = "MID";
-                        squad.push({...player, assignedRole: role}); budget -= player.price;
-                    }
-                });
-                updateUI(); filterPlayers(); status.innerText = "✅ Loaded!";
-            } else { status.innerText = "❌ " + result.message; }
-        } catch (e) { status.innerText = "⚠️ Error connecting."; }
-    }
-
     async function saveTeamToSheet() {
         const name = document.getElementById('sub-mgr-name').value.trim();
         const pin = document.getElementById('sub-mgr-pin').value.trim();
         const status = document.getElementById('status-msg');
         if(!name || pin.length < 4) return alert("Enter Name and 4+ digit PIN.");
         if(squad.length < 15) return alert("Pick your full 15 first.");
+        
         status.innerText = "Saving...";
+        // Order is vital for the login function to work next time
         const rolesOrder = ['GK', 'DEF', 'MID', 'FWD'];
         const finalNames = [];
-        rolesOrder.forEach(r => { finalNames.push(...squad.filter(p => p.assignedRole === r).map(p => p.name.trim())); });
-        fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify([name, pin, ...finalNames]) })
-        .then(() => { status.innerText = "✅ SUCCESS!"; originalSquadNames = [...finalNames]; alert("Team Submitted!"); })
+        rolesOrder.forEach(r => { 
+            finalNames.push(...squad.filter(p => p.assignedRole === r).map(p => p.name.trim())); 
+        });
+        
+        fetch(SCRIPT_URL, { 
+            method: 'POST', 
+            mode: 'no-cors', 
+            headers: { 'Content-Type': 'text/plain' }, 
+            body: JSON.stringify([name, pin, ...finalNames]) 
+        })
+        .then(() => { 
+            status.innerText = "✅ SUCCESS!"; 
+            originalSquadNames = [...finalNames]; 
+            alert("Team Submitted!"); 
+        })
         .catch(() => { status.innerText = "❌ Failed."; });
     }
 
