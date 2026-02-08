@@ -146,12 +146,13 @@
 
 <script>
     const SCORERS_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTcdzjZ4zYlGgFe5acS8xOb1vHR9b8i98UudIOe-iC9Z1d6x6AY5zATgX217cNjcNtAGDLJ56y8Jr8N/pub?output=csv';
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbySHLYe-RqRTvfcX1MQFFepw2rRxFF0KYuV3g6WS0PtrXBB7CrQnLDMx_T8cep9Kbkx/exec'; 
+    
+    // INTEGRATED YOUR NEW SCRIPT URL HERE
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxyFUCbzRXnATiUvbJ9oSovfieJ_75H1Zdkkasv1_YevioTJN7bnBAsrjH8a2VHdgns/exec'; 
     
     let allPlayers = [], squad = [], budget = 85.0, intelIndex = 0;
     let originalSquadNames = []; 
 
-    // Updated pitch labels to be strictly GK, DEF, MID, FWD
     const pitchPositions = [
         { role: 'GK', limit: 1, label: 'GK' },
         { role: 'DEF', limit: 3, label: 'DEF' },
@@ -211,7 +212,8 @@
         if(!name || !pin) return alert("Enter Name and PIN.");
         status.innerText = "🔍 Loading...";
         try {
-            const res = await fetch(`${SCRIPT_URL}?name=${encodeURIComponent(name)}&pin=${encodeURIComponent(pin)}`);
+            // Added cache-buster &cb= to the fetch
+            const res = await fetch(`${SCRIPT_URL}?name=${encodeURIComponent(name)}&pin=${encodeURIComponent(pin)}&cb=${Date.now()}`);
             const result = await res.json();
             if(result.success) {
                 squad = []; budget = 85.0;
@@ -233,7 +235,10 @@
                 });
                 updateUI(); filterPlayers(); status.innerText = "✅ Loaded!";
             } else { status.innerText = "❌ " + result.message; }
-        } catch (e) { status.innerText = "⚠️ Error connecting."; }
+        } catch (e) { 
+            console.error(e);
+            status.innerText = "⚠️ Error connecting."; 
+        }
     }
 
     function addPlayer(id, role) {
