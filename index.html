@@ -20,7 +20,6 @@
 
         .panel { background: var(--white); border-radius: 8px; padding: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); height: fit-content; }
 
-        /* Tooltip Styles */
         .player-info-cell { position: relative; cursor: help; display: flex; align-items: center; gap: 8px; }
         .county-mini-badge { width: 24px; height: 24px; object-fit: contain; }
         
@@ -137,7 +136,8 @@
 
 <script>
     const SCORERS_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTcdzjZ4zYlGgFe5acS8xOb1vHR9b8i98UudIOe-iC9Z1d6x6AY5zATgX217cNjcNtAGDLJ56y8Jr8N/pub?output=csv';
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzcq5ZDLeNISMzUStMewlSJvBS3Y_3zJW-SM8xlVbgmkxh3_tpbcQIgul-qhKcd_Vmd/exec'; 
+    // UPDATED URL BELOW
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzT2Yp3yHyfPOKMENF7KAf-GCyH7E9vUGTmJ7kg8dwqy0ZssUUz6Tooy9iM0MNZe1Jj/exec'; 
     
     let allPlayers = [], squad = [], budget = 100.0, intelIndex = 0;
 
@@ -171,16 +171,16 @@
                     county: rows[i][0].trim(), 
                     name: (rows[i][1]+" "+rows[i][2]).trim(),
                     prefPos: pos, 
-                    goals: rows[i][4] || 0,        // Col E
-                    points: rows[i][5] || 0,       // Col F
-                    redCards: rows[i][7] || 0,     // Col H
-                    totalScore: totalScore,        // Col I
-                    p1: rows[i][11] || 0,          // Col L
-                    p2: rows[i][12] || 0,          // Col M
-                    wins: rows[i][15] || 0,        // Col P
-                    losses: rows[i][16] || 0,      // Col Q
-                    cleanSheets: pos === 'GK' ? (rows[i][6] || 0) : null, // Col G
-                    goalsConceded: pos === 'GK' ? (rows[i][17] || 0) : null, // Col R
+                    goals: rows[i][4] || 0,
+                    points: rows[i][5] || 0,
+                    redCards: rows[i][7] || 0,
+                    totalScore: totalScore,
+                    p1: rows[i][11] || 0,
+                    p2: rows[i][12] || 0,
+                    wins: rows[i][15] || 0,
+                    losses: rows[i][16] || 0,
+                    cleanSheets: pos === 'GK' ? (rows[i][6] || 0) : null,
+                    goalsConceded: pos === 'GK' ? (rows[i][17] || 0) : null,
                     price: currentPrice,
                     badge: rows[i][14] ? rows[i][14].trim() : 'https://ui-avatars.com/api/?name=GAA'
                 });
@@ -207,7 +207,6 @@
                 onclick="addPlayer(${p.id}, '${role}')" ${isSelected ? 'disabled' : ''}>${role}</button>`
             ).join('');
 
-            // GK Specific Stats
             const gkStats = p.prefPos === 'GK' ? `
                 <div class="stat-label">Clean Sheets:</div><div class="stat-val">${p.cleanSheets}</div>
                 <div class="stat-label">Goals Conceded:</div><div class="stat-val">${p.goalsConceded}</div>
@@ -280,6 +279,7 @@
         document.getElementById('bench-list').innerHTML = tempSquad.map(p => `<div class="player-disc" onclick="removePlayer(${squad.indexOf(p)})"><img src="${p.badge}"><div class="player-name-label">${p.name.split(' ').pop()}</div></div>`).join('');
     }
 
+    // UPDATED FOR ONE-ROW SUBMISSION
     async function saveTeamToSheet() {
         const name = document.getElementById('sub-mgr-name').value.trim();
         const pin = document.getElementById('sub-mgr-pin').value.trim();
@@ -289,30 +289,32 @@
         if(squad.length < 18) return alert("Pick 18 players first.");
 
         document.getElementById('btn-submit').disabled = true;
-        status.innerText = "Connecting to Google...";
+        status.innerText = "Submitting to Spreadsheet...";
 
-        const roles = ['GK', 'DEF', 'MID', 'FWD', 'SUB'];
-        const sortedNames = [];
-        roles.forEach(r => {
+        // Sorting players to ensure consistency in Column C-T
+        const rolesOrder = ['GK', 'DEF', 'MID', 'FWD', 'SUB'];
+        const finalSquadNames = [];
+        rolesOrder.forEach(r => {
             const players = squad.filter(p => p.assignedRole === r);
-            sortedNames.push(...players.map(p => p.name));
+            finalSquadNames.push(...players.map(p => p.name));
         });
+
+        // Building the single row: [Name, PIN, Player1, Player2... Player18]
+        const finalData = [name, pin, ...finalSquadNames];
 
         try {
             await fetch(SCRIPT_URL, {
                 method: 'POST',
                 mode: 'no-cors',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ manager: name, pin: pin, squad: sortedNames })
+                body: JSON.stringify(finalData)
             });
             status.style.color = "green";
-            status.innerText = "TEAM SUBMITTED! Check your sheet.";
-            alert("Submission sent! Check your Google Sheet now.");
-            document.getElementById('btn-submit').disabled = false;
+            status.innerText = "SUCCESS! Team Submitted.";
+            alert("Team successfully sent to the leaderboard!");
         } catch (e) {
             status.style.color = "red";
             status.innerText = "Error: " + e.message;
-            alert("Failed: " + e.message);
+        } finally {
             document.getElementById('btn-submit').disabled = false;
         }
     }
