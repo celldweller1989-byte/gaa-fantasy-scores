@@ -117,12 +117,19 @@
             </div>
 
             <div class="panel">
-                <div id="budget-val" style="font-size:22px; font-weight:bold; color:var(--green); text-align:center;">Budget: 100.00m</div>
+                <div id="budget-val" style="font-size:20px; font-weight:bold; color:var(--green); text-align:center;">Budget: 100.00m</div>
+                <div id="transfer-count" style="font-size:12px; text-align:center; color:#666; margin-bottom:10px;">Login to manage transfers</div>
+                
                 <div class="submit-section">
                     <input type="text" id="sub-mgr-name" placeholder="Manager Name">
-                    <input type="password" id="sub-mgr-pin" placeholder="PIN / Password" maxlength="10">
-                    <button id="btn-submit" onclick="saveTeamToSheet()" style="width:100%; padding:12px; background:var(--green); color:white; border:none; border-radius:5px; font-weight:bold; cursor:pointer;">SUBMIT TEAM</button>
-                    <div id="status-msg" style="margin-top:10px; font-size:12px; text-align:center; font-weight:bold;"></div>
+                    <input type="password" id="sub-mgr-pin" placeholder="PIN / Password (4+ digits)" maxlength="10">
+                    
+                    <div style="display: flex; gap: 8px;">
+                        <button id="btn-submit" onclick="saveTeamToSheet()" style="flex: 1; padding:12px; background:var(--green); color:white; border:none; border-radius:5px; font-weight:bold; cursor:pointer;">SUBMIT</button>
+                        <button id="btn-login" onclick="loginUser()" style="flex: 1; padding:12px; background:var(--dark); color:white; border:none; border-radius:5px; font-weight:bold; cursor:pointer;">LOAD TEAM</button>
+                    </div>
+                    
+                    <div id="status-msg" style="margin-top:10px; font-size:12px; text-align:center; font-weight:bold; min-height: 15px;"></div>
                 </div>
                 
                 <div class="intel-box">
@@ -139,6 +146,7 @@
     const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzcq5ZDLeNISMzUStMewlSJvBS3Y_3zJW-SM8xlVbgmkxh3_tpbcQIgul-qhKcd_Vmd/exec'; 
     
     let allPlayers = [], squad = [], budget = 100.0, intelIndex = 0;
+    let originalSquadNames = []; // Tracker for 3-transfer limit
 
     const pitchPositions = [
         { role: 'GK', limit: 1, label: 'GK' },
@@ -172,14 +180,7 @@
                     prefPos: pos, 
                     goals: rows[i][4] || 0,
                     points: rows[i][5] || 0,
-                    redCards: rows[i][7] || 0,
                     totalScore: totalScore,
-                    p1: rows[i][11] || 0,
-                    p2: rows[i][12] || 0,
-                    wins: rows[i][15] || 0,
-                    losses: rows[i][16] || 0,
-                    cleanSheets: pos === 'GK' ? (rows[i][6] || 0) : null,
-                    goalsConceded: pos === 'GK' ? (rows[i][17] || 0) : null,
                     price: currentPrice,
                     badge: rows[i][14] ? rows[i][14].trim() : 'https://ui-avatars.com/api/?name=GAA'
                 });
@@ -192,76 +193,97 @@
         } catch (e) { console.error("Init failed", e); }
     }
 
-    function filterPlayers() {
-        const nameQ = document.getElementById('search-name').value.toLowerCase();
-        const coQ = document.getElementById('filter-county').value;
-        const posQ = document.getElementById('filter-pos').value;
-        
-        let filtered = allPlayers.filter(p => p.name.toLowerCase().includes(nameQ) && (!coQ || p.county === coQ) && (!posQ || p.prefPos === posQ));
-        
-        document.getElementById('market-body').innerHTML = filtered.map(p => {
-            const isSelected = squad.some(s => s.id === p.id);
-            const buttons = ['GK', 'DEF', 'MID', 'FWD', 'SUB'].map(role => 
-                `<button class="btn-assign ${p.prefPos === role ? 'is-pref' : ''}" 
-                onclick="addPlayer(${p.id}, '${role}')" ${isSelected ? 'disabled' : ''}>${role}</button>`
-            ).join('');
+    async function loginUser() {
+        const name = document.getElementById('sub-mgr-name').value.trim();
+        const pin = document.getElementById('sub-mgr-pin').value.trim();
+        const status = document.getElementById('status-msg');
 
-            const gkStats = p.prefPos === 'GK' ? `
-                <div class="stat-label">Clean Sheets:</div><div class="stat-val">${p.cleanSheets}</div>
-                <div class="stat-label">Goals Conceded:</div><div class="stat-val">${p.goalsConceded}</div>
-            ` : '';
-            
-            return `<tr>
-                <td>
-                    <div class="player-info-cell">
-                        <img src="${p.badge}" class="county-mini-badge">
-                        <div><b>${p.name}</b><br><small>${p.county}</small></div>
-                        <div class="tooltip-content">
-                            <strong style="color:var(--orange); font-size:13px;">${p.name}</strong><br>
-                            <small>${p.county} (${p.prefPos})</small>
-                            <hr>
-                            <div class="stat-grid">
-                                <div class="stat-label">Goals:</div><div class="stat-val">${p.goals}</div>
-                                <div class="stat-label">Points:</div><div class="stat-val">${p.points}</div>
-                                <div class="stat-label">1 Pointers:</div><div class="stat-val">${p.p1}</div>
-                                <div class="stat-label">2 Pointers:</div><div class="stat-val">${p.p2}</div>
-                                <div class="stat-label">Red Cards:</div><div class="stat-val">${p.redCards}</div>
-                                <div class="stat-label">Record (W/L):</div><div class="stat-val">${p.wins}/${p.losses}</div>
-                                ${gkStats}
-                            </div>
-                            <hr>
-                            <div class="stat-grid">
-                                <div class="stat-label">Season Total:</div><div class="stat-val" style="font-size:14px;">${p.totalScore}</div>
-                            </div>
-                        </div>
-                    </div>
-                </td>
-                <td><b>${p.price.toFixed(2)}m</b></td>
-                <td><div style="display:flex; gap:2px;">${buttons}</div></td>
-            </tr>`;
-        }).join('');
+        if(!name || !pin) return alert("Enter Name and PIN to load team.");
+        
+        status.style.color = "var(--dark)";
+        status.innerText = "🔍 Checking Database...";
+        
+        try {
+            const response = await fetch(`${SCRIPT_URL}?name=${encodeURIComponent(name)}&pin=${encodeURIComponent(pin)}`);
+            const result = await response.json();
+
+            if(result.success) {
+                squad = [];
+                budget = 100.0;
+                originalSquadNames = result.squad.map(n => n.trim()); // Lock the original team names
+
+                result.squad.forEach((pName, index) => {
+                    const player = allPlayers.find(p => p.name.trim() === pName.trim());
+                    if(player) {
+                        let role = "SUB";
+                        if(index === 0) role = "GK";
+                        else if(index >= 1 && index <= 6) role = "DEF";
+                        else if(index >= 7 && index <= 8) role = "MID";
+                        else if(index >= 9 && index <= 14) role = "FWD";
+                        squad.push({...player, assignedRole: role});
+                        budget -= player.price;
+                    }
+                });
+
+                updateUI();
+                filterPlayers();
+                status.style.color = "green";
+                status.innerText = "✅ Team Loaded!";
+            } else {
+                status.style.color = "red";
+                status.innerText = "❌ " + result.message;
+            }
+        } catch (e) {
+            status.innerText = "⚠️ Connection error.";
+        }
+    }
+
+    function getChangesCount() {
+        if (originalSquadNames.length === 0) return 0;
+        const currentNames = squad.map(p => p.name.trim());
+        return currentNames.filter(name => !originalSquadNames.includes(name)).length;
     }
 
     function addPlayer(id, role) {
-        if (squad.some(s => s.id === id)) return;
         const p = allPlayers.find(x => x.id === id);
+        
+        // Check Transfer Limit
+        if (originalSquadNames.length > 0) {
+            const isNew = !originalSquadNames.includes(p.name.trim());
+            if (isNew && getChangesCount() >= 3) {
+                return alert("Limit Reached: Only 3 changes allowed per week!");
+            }
+        }
+
+        if (squad.some(s => s.id === id)) return;
         if (squad.length >= 18) return alert("Squad Full!");
-        if (budget < p.price) return alert("Over Budget!");
+        if (budget < p.price) return alert("Insufficient Budget!");
         if (squad.filter(s => s.county === p.county).length >= 3) return alert("Max 3 per county!");
         
         squad.push({...p, assignedRole: role});
         budget -= p.price;
-        updateUI(); filterPlayers();
+        updateUI(); 
+        filterPlayers();
     }
 
     function removePlayer(idx) {
         budget += squad[idx].price;
         squad.splice(idx, 1);
-        updateUI(); filterPlayers();
+        updateUI(); 
+        filterPlayers();
     }
 
     function updateUI() {
         document.getElementById('budget-val').innerText = `Budget: ${budget.toFixed(2)}m`;
+        
+        const transfers = getChangesCount();
+        const transEl = document.getElementById('transfer-count');
+        if(originalSquadNames.length > 0) {
+            transEl.innerText = `Weekly Changes: ${transfers} / 3`;
+            transEl.style.color = transfers >= 3 ? "red" : "#666";
+            transEl.style.fontWeight = transfers >= 3 ? "bold" : "normal";
+        }
+
         let tempSquad = [...squad], pitchHtml = "";
         pitchPositions.forEach(pos => {
             pitchHtml += `<div class="pitch-row">`;
@@ -278,6 +300,33 @@
         document.getElementById('bench-list').innerHTML = tempSquad.map(p => `<div class="player-disc" onclick="removePlayer(${squad.indexOf(p)})"><img src="${p.badge}"><div class="player-name-label">${p.name.split(' ').pop()}</div></div>`).join('');
     }
 
+    function filterPlayers() {
+        const nameQ = document.getElementById('search-name').value.toLowerCase();
+        const coQ = document.getElementById('filter-county').value;
+        const posQ = document.getElementById('filter-pos').value;
+        
+        let filtered = allPlayers.filter(p => p.name.toLowerCase().includes(nameQ) && (!coQ || p.county === coQ) && (!posQ || p.prefPos === posQ));
+        
+        document.getElementById('market-body').innerHTML = filtered.map(p => {
+            const isSelected = squad.some(s => s.id === p.id);
+            const buttons = ['GK', 'DEF', 'MID', 'FWD', 'SUB'].map(role => 
+                `<button class="btn-assign ${p.prefPos === role ? 'is-pref' : ''}" 
+                onclick="addPlayer(${p.id}, '${role}')" ${isSelected ? 'disabled' : ''}>${role}</button>`
+            ).join('');
+
+            return `<tr>
+                <td>
+                    <div class="player-info-cell">
+                        <img src="${p.badge}" class="county-mini-badge">
+                        <div><b>${p.name}</b><br><small>${p.county}</small></div>
+                    </div>
+                </td>
+                <td><b>${p.price.toFixed(2)}m</b></td>
+                <td><div style="display:flex; gap:2px;">${buttons}</div></td>
+            </tr>`;
+        }).join('');
+    }
+
     async function saveTeamToSheet() {
         const name = document.getElementById('sub-mgr-name').value.trim();
         const pin = document.getElementById('sub-mgr-pin').value.trim();
@@ -287,9 +336,8 @@
         if(squad.length < 18) return alert("Pick 18 players first.");
 
         document.getElementById('btn-submit').disabled = true;
-        status.innerText = "Transmitting to Leaderboard...";
+        status.innerText = "Saving Team...";
 
-        // Sorting players to match Spreadsheet format
         const rolesOrder = ['GK', 'DEF', 'MID', 'FWD', 'SUB'];
         const finalSquadNames = [];
         rolesOrder.forEach(r => {
@@ -297,7 +345,6 @@
             finalSquadNames.push(...players.map(p => p.name.trim()));
         });
 
-        // Data MUST be an array for your Script's JSON.parse logic
         const finalData = [name, pin, ...finalSquadNames];
 
         fetch(SCRIPT_URL, {
@@ -308,17 +355,13 @@
         })
         .then(() => {
             status.style.color = "green";
-            status.innerText = "SUCCESS! Check your spreadsheet.";
+            status.innerText = "SUCCESS! Team Updated.";
+            originalSquadNames = [...finalSquadNames]; // Update reference after successful save
+            updateUI();
             alert("Team successfully submitted!");
         })
-        .catch((err) => {
-            status.style.color = "red";
-            status.innerText = "Submission Failed.";
-            console.error(err);
-        })
-        .finally(() => {
-            document.getElementById('btn-submit').disabled = false;
-        });
+        .catch(() => { status.innerText = "Submission Failed."; })
+        .finally(() => { document.getElementById('btn-submit').disabled = false; });
     }
 
     function updateIntel() {
