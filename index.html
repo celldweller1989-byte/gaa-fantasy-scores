@@ -143,10 +143,11 @@
 
 <script>
     const SCORERS_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTcdzjZ4zYlGgFe5acS8xOb1vHR9b8i98UudIOe-iC9Z1d6x6AY5zATgX217cNjcNtAGDLJ56y8Jr8N/pub?output=csv';
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzcq5ZDLeNISMzUStMewlSJvBS3Y_3zJW-SM8xlVbgmkxh3_tpbcQIgul-qhKcd_Vmd/exec'; 
+    // UPDATED SCRIPT URL
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx3PVg_Mws8e0Cmzf53ngr7PRB68vYTyB-5X0RfP2mqlu_XTMNDP_SJq7O3DqbWGecX/exec'; 
     
     let allPlayers = [], squad = [], budget = 100.0, intelIndex = 0;
-    let originalSquadNames = []; // Tracker for 3-transfer limit
+    let originalSquadNames = []; 
 
     const pitchPositions = [
         { role: 'GK', limit: 1, label: 'GK' },
@@ -205,12 +206,14 @@
         
         try {
             const response = await fetch(`${SCRIPT_URL}?name=${encodeURIComponent(name)}&pin=${encodeURIComponent(pin)}`);
+            if (!response.ok) throw new Error("Network response was not ok");
+            
             const result = await response.json();
 
             if(result.success) {
                 squad = [];
                 budget = 100.0;
-                originalSquadNames = result.squad.map(n => n.trim()); // Lock the original team names
+                originalSquadNames = result.squad.map(n => n.trim());
 
                 result.squad.forEach((pName, index) => {
                     const player = allPlayers.find(p => p.name.trim() === pName.trim());
@@ -234,7 +237,9 @@
                 status.innerText = "❌ " + result.message;
             }
         } catch (e) {
-            status.innerText = "⚠️ Connection error.";
+            console.error("Login Error:", e);
+            status.style.color = "red";
+            status.innerText = "⚠️ Connection error. Ensure Script is deployed as 'Web App' for 'Anyone'.";
         }
     }
 
@@ -246,15 +251,12 @@
 
     function addPlayer(id, role) {
         const p = allPlayers.find(x => x.id === id);
-        
-        // Check Transfer Limit
         if (originalSquadNames.length > 0) {
             const isNew = !originalSquadNames.includes(p.name.trim());
             if (isNew && getChangesCount() >= 3) {
                 return alert("Limit Reached: Only 3 changes allowed per week!");
             }
         }
-
         if (squad.some(s => s.id === id)) return;
         if (squad.length >= 18) return alert("Squad Full!");
         if (budget < p.price) return alert("Insufficient Budget!");
@@ -275,7 +277,6 @@
 
     function updateUI() {
         document.getElementById('budget-val').innerText = `Budget: ${budget.toFixed(2)}m`;
-        
         const transfers = getChangesCount();
         const transEl = document.getElementById('transfer-count');
         if(originalSquadNames.length > 0) {
@@ -283,7 +284,6 @@
             transEl.style.color = transfers >= 3 ? "red" : "#666";
             transEl.style.fontWeight = transfers >= 3 ? "bold" : "normal";
         }
-
         let tempSquad = [...squad], pitchHtml = "";
         pitchPositions.forEach(pos => {
             pitchHtml += `<div class="pitch-row">`;
@@ -304,26 +304,14 @@
         const nameQ = document.getElementById('search-name').value.toLowerCase();
         const coQ = document.getElementById('filter-county').value;
         const posQ = document.getElementById('filter-pos').value;
-        
         let filtered = allPlayers.filter(p => p.name.toLowerCase().includes(nameQ) && (!coQ || p.county === coQ) && (!posQ || p.prefPos === posQ));
-        
         document.getElementById('market-body').innerHTML = filtered.map(p => {
             const isSelected = squad.some(s => s.id === p.id);
             const buttons = ['GK', 'DEF', 'MID', 'FWD', 'SUB'].map(role => 
                 `<button class="btn-assign ${p.prefPos === role ? 'is-pref' : ''}" 
                 onclick="addPlayer(${p.id}, '${role}')" ${isSelected ? 'disabled' : ''}>${role}</button>`
             ).join('');
-
-            return `<tr>
-                <td>
-                    <div class="player-info-cell">
-                        <img src="${p.badge}" class="county-mini-badge">
-                        <div><b>${p.name}</b><br><small>${p.county}</small></div>
-                    </div>
-                </td>
-                <td><b>${p.price.toFixed(2)}m</b></td>
-                <td><div style="display:flex; gap:2px;">${buttons}</div></td>
-            </tr>`;
+            return `<tr><td><div class="player-info-cell"><img src="${p.badge}" class="county-mini-badge"><div><b>${p.name}</b><br><small>${p.county}</small></div></div></td><td><b>${p.price.toFixed(2)}m</b></td><td><div style="display:flex; gap:2px;">${buttons}</div></td></tr>`;
         }).join('');
     }
 
@@ -331,22 +319,17 @@
         const name = document.getElementById('sub-mgr-name').value.trim();
         const pin = document.getElementById('sub-mgr-pin').value.trim();
         const status = document.getElementById('status-msg');
-        
         if(!name || pin.length < 4) return alert("Enter Name and 4+ digit PIN.");
         if(squad.length < 18) return alert("Pick 18 players first.");
-
         document.getElementById('btn-submit').disabled = true;
         status.innerText = "Saving Team...";
-
         const rolesOrder = ['GK', 'DEF', 'MID', 'FWD', 'SUB'];
         const finalSquadNames = [];
         rolesOrder.forEach(r => {
             const players = squad.filter(p => p.assignedRole === r);
             finalSquadNames.push(...players.map(p => p.name.trim()));
         });
-
         const finalData = [name, pin, ...finalSquadNames];
-
         fetch(SCRIPT_URL, {
             method: 'POST',
             mode: 'no-cors', 
@@ -356,7 +339,7 @@
         .then(() => {
             status.style.color = "green";
             status.innerText = "SUCCESS! Team Updated.";
-            originalSquadNames = [...finalSquadNames]; // Update reference after successful save
+            originalSquadNames = [...finalSquadNames];
             updateUI();
             alert("Team successfully submitted!");
         })
