@@ -136,8 +136,9 @@
 
 <script>
     const SCORERS_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTcdzjZ4zYlGgFe5acS8xOb1vHR9b8i98UudIOe-iC9Z1d6x6AY5zATgX217cNjcNtAGDLJ56y8Jr8N/pub?output=csv';
-    // YOUR UPDATED SCRIPT URL
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw6OvQsJEAKBSQCmA1MEl6ybt3AoowW4soOeqbfT0c4UYdSHomZe5lGajjeV5PjSyV7/exec'; 
+    
+    // UPDATED SCRIPT URL PROVIDED BY USER
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwSHT-vSLZfTLPR1JUMDwNHThLIZ60WesCRt1dyRfwPjTqGSMM_o9w1IMACWQV1WuTD/exec'; 
     
     let allPlayers = [], squad = [], budget = 100.0, intelIndex = 0;
 
@@ -186,7 +187,9 @@
                 });
             }
             const coSelect = document.getElementById('filter-county');
-            [...counties].sort().forEach(c => { let o = document.createElement('option'); o.value=o.text=c; coSelect.add(o); });
+            if(coSelect) {
+                [...counties].sort().forEach(c => { let o = document.createElement('option'); o.value=o.text=c; coSelect.add(o); });
+            }
             
             updateUI(); filterPlayers(); updateIntel();
             setInterval(() => { intelIndex = (intelIndex + 1) % 5; updateIntel(); }, 6000);
@@ -288,35 +291,30 @@
         if(squad.length < 18) return alert("Pick 18 players first.");
 
         document.getElementById('btn-submit').disabled = true;
-        status.innerText = "Connecting to League Database...";
+        status.innerText = "Submitting to Leaderboard...";
 
-        // Sorting players to ensure consistency in Column C-T
-        const rolesOrder = ['GK', 'DEF', 'MID', 'FWD', 'SUB'];
-        const finalSquadNames = [];
-        rolesOrder.forEach(r => {
-            const players = squad.filter(p => p.assignedRole === r);
-            finalSquadNames.push(...players.map(p => p.name.trim()));
-        });
+        // Collect names for Column C-T
+        const finalSquadNames = squad.map(p => p.name.trim());
 
-        // Building the single row: [Name, PIN, Player1, Player2... Player18]
+        // Construct payload: [Manager, PIN, P1, P2... P18]
         const finalData = [name, pin, ...finalSquadNames];
 
         try {
-            // Using a simple POST fetch. mode: 'no-cors' allows submission without extra setup.
             await fetch(SCRIPT_URL, {
                 method: 'POST',
+                mode: 'no-cors', // Essential for Google Apps Script Web Apps
+                cache: 'no-cache',
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(finalData)
             });
             
             status.style.color = "green";
-            status.innerText = "SUCCESS! Team Submitted.";
-            alert("Team successfully sent to the leaderboard!");
+            status.innerText = "SUCCESS! Your team has been registered.";
+            alert("Team successfully submitted!");
         } catch (e) {
-            // Because of 'no-cors', if it fails it might hit here, but usually it succeeds silently.
-            console.log("Submission log:", e);
-            status.style.color = "green"; 
-            status.innerText = "SUCCESS! Team Sent.";
-            alert("Submission complete!");
+            console.error("Submission error:", e);
+            status.style.color = "red"; 
+            status.innerText = "Error submitting team. Check connection.";
         } finally {
             document.getElementById('btn-submit').disabled = false;
         }
