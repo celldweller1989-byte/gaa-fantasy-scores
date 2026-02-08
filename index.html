@@ -37,7 +37,7 @@
         
         .player-disc { width: 55px; height: 55px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 9px; cursor: pointer; position: relative; }
         .player-disc img { width: 42px; height: 42px; object-fit: contain; filter: drop-shadow(0 2px 3px rgba(0,0,0,0.4)); }
-        .player-disc.empty { background: rgba(0,0,0,0.2); border: 1px dashed #ccc; border-radius: 50%; color: #eee; width: 45px; height: 45px; }
+        .player-disc.empty { background: rgba(0,0,0,0.2); border: 1px dashed #ccc; border-radius: 50%; color: #eee; width: 45px; height: 45px; font-weight: bold; }
         .player-name-label { position: absolute; bottom: -8px; background: #000; color: #fff; padding: 1px 4px; border-radius: 3px; font-size: 8px; white-space: nowrap; border: 0.5px solid #555; }
 
         .filter-row { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; }
@@ -151,13 +151,14 @@
     let allPlayers = [], squad = [], budget = 85.0, intelIndex = 0;
     let originalSquadNames = []; 
 
+    // Updated pitch labels to be strictly GK, DEF, MID, FWD
     const pitchPositions = [
         { role: 'GK', limit: 1, label: 'GK' },
-        { role: 'DEF', limit: 3, label: 'FB' },
-        { role: 'DEF', limit: 3, label: 'HB' },
-        { role: 'MID', limit: 2, label: 'MF' },
-        { role: 'FWD', limit: 3, label: 'HF' },
-        { role: 'FWD', limit: 3, label: 'FF' }
+        { role: 'DEF', limit: 3, label: 'DEF' },
+        { role: 'DEF', limit: 3, label: 'DEF' },
+        { role: 'MID', limit: 2, label: 'MID' },
+        { role: 'FWD', limit: 3, label: 'FWD' },
+        { role: 'FWD', limit: 3, label: 'FWD' }
     ];
 
     function updateCountdown() {
@@ -215,18 +216,18 @@
             if(result.success) {
                 squad = []; budget = 85.0;
                 originalSquadNames = result.squad.filter(n => n && n.trim() !== "").map(n => n.trim());
-                originalSquadNames.forEach((pName, index) => {
+                
+                originalSquadNames.forEach(pName => {
                     const player = allPlayers.find(p => p.name.trim() === pName);
                     if(player) {
-                        let role = ""; 
-                        if(index === 0) role = "GK";
-                        else if(index >= 1 && index <= 6) role = "DEF";
-                        else if(index >= 7 && index <= 8) role = "MID";
-                        else if(index >= 9 && index <= 14) role = "FWD";
-                        
-                        if(role !== "") {
-                            squad.push({...player, assignedRole: role});
-                            budget -= player.price;
+                        const roles = ['GK', 'DEF', 'MID', 'FWD'];
+                        for(let r of roles) {
+                            let rLimit = r === 'GK' ? 1 : (r === 'MID' ? 2 : 6);
+                            if(squad.filter(s => s.assignedRole === r).length < rLimit) {
+                                squad.push({...player, assignedRole: r});
+                                budget -= player.price;
+                                break;
+                            }
                         }
                     }
                 });
@@ -315,7 +316,6 @@
         if(squad.length < 15) return alert("Pick your full 15 first.");
         
         status.innerText = "Saving...";
-        // Order is vital for the login function to work next time
         const rolesOrder = ['GK', 'DEF', 'MID', 'FWD'];
         const finalNames = [];
         rolesOrder.forEach(r => { 
