@@ -14,12 +14,14 @@
         .nav-link { color: white; padding: 12px 20px; text-decoration: none; font-weight: bold; cursor: pointer; border: none; background: none; font-size: 13px; text-transform: uppercase; }
         .nav-link.active { background: var(--orange); }
         
+        .timer-bar { background: #333; color: #fff; text-align: center; padding: 8px; font-size: 14px; font-weight: bold; border-bottom: 3px solid var(--orange); }
+        #countdown { color: var(--orange); margin-left: 5px; letter-spacing: 1px; }
+
         .container { padding: 15px; max-width: 1400px; margin: auto; }
         .main-layout { display: grid; grid-template-columns: 1fr; gap: 15px; }
         @media (min-width: 1100px) { .main-layout { grid-template-columns: 1fr 450px 320px; } }
 
         .panel { background: var(--white); border-radius: 8px; padding: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); height: fit-content; }
-
         .player-info-cell { position: relative; cursor: help; display: flex; align-items: center; gap: 8px; }
         .county-mini-badge { width: 24px; height: 24px; object-fit: contain; }
         
@@ -49,9 +51,9 @@
         .is-pref { border: 2px solid var(--orange) !important; color: var(--orange); background: #fff5ee !important; }
         .btn-assign:disabled { opacity: 0.3; cursor: not-allowed; }
 
-        .intel-box { background: var(--dark); color: white; border-radius: 8px; padding: 15px; margin-top: 15px; border-top: 4px solid var(--orange); min-height: 420px; }
+        .intel-box { background: var(--dark); color: white; border-radius: 8px; padding: 15px; margin-top: 15px; border-top: 4px solid var(--orange); min-height: 440px; }
         .intel-box h3 { margin: 0 0 10px 0; font-size: 12px; color: var(--orange); text-transform: uppercase; border-bottom: 1px solid #333; padding-bottom: 5px; }
-        .intel-item { display: flex; align-items: center; padding: 5px 0; border-bottom: 1px solid #222; font-size: 10px; }
+        .intel-item { display: flex; align-items: center; padding: 6px 0; border-bottom: 1px solid #222; font-size: 11px; }
         .p-stat { font-weight: bold; color: var(--orange); margin-left: auto; }
 
         .submit-section { margin-top: 15px; padding-top: 15px; border-top: 2px solid #eee; }
@@ -65,6 +67,8 @@
 
 <div class="watermark">Celldweller_V1</div>
 <div class="header"><img src="https://i.postimg.cc/28yKYj7D/Chat-GPT-Image-Feb-6-2026-02-34-21-PM.png"></div>
+
+<div class="timer-bar">TRANSFER WINDOW CLOSES IN: <span id="countdown">00d 00h 00m 00s</span></div>
 
 <nav>
     <button class="nav-link active" id="nav-market" onclick="showPage('market')">Squad & Pitch</button>
@@ -133,6 +137,7 @@
                 <li>Starting Budget: **85.00m**.</li>
                 <li>Maximum **3 players** from any one county.</li>
                 <li>Maximum **3 transfers** allowed per week.</li>
+                <li>The window closes every Friday at 19:00 before the weekend fixtures.</li>
             </ul>
         </div>
     </div>
@@ -142,7 +147,6 @@
     const SCORERS_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTcdzjZ4zYlGgFe5acS8xOb1vHR9b8i98UudIOe-iC9Z1d6x6AY5zATgX217cNjcNtAGDLJ56y8Jr8N/pub?output=csv';
     const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbySHLYe-RqRTvfcX1MQFFepw2rRxFF0KYuV3g6WS0PtrXBB7CrQnLDMx_T8cep9Kbkx/exec'; 
     
-    // STARTING BUDGET SET TO 85.0
     let allPlayers = [], squad = [], budget = 85.0, intelIndex = 0;
     let originalSquadNames = []; 
 
@@ -155,6 +159,27 @@
         { role: 'FWD', limit: 3, label: 'FF' }
     ];
 
+    // --- COUNTDOWN TIMER LOGIC ---
+    function updateCountdown() {
+        const now = new Date();
+        const nextFriday = new Date();
+        nextFriday.setDate(now.getDate() + (5 - now.getDay() + 7) % 7);
+        nextFriday.setHours(19, 0, 0, 0);
+        
+        if (now > nextFriday) nextFriday.setDate(nextFriday.getDate() + 7);
+        
+        const diff = nextFriday - now;
+        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+        const mins = Math.floor((diff / 1000 / 60) % 60);
+        const secs = Math.floor((diff / 1000) % 60);
+        
+        document.getElementById('countdown').innerText = 
+            `${days}d ${hours.toString().padStart(2, '0')}h ${mins.toString().padStart(2, '0')}m ${secs.toString().padStart(2, '0')}s`;
+    }
+    setInterval(updateCountdown, 1000);
+
+    // --- INITIALIZATION ---
     async function init() {
         try {
             const res = await fetch(SCORERS_URL + '&t=' + new Date().getTime());
@@ -166,24 +191,80 @@
                 if(!rows[i][0]) continue;
                 counties.add(rows[i][0].trim());
                 let totalScore = parseInt(rows[i][8]) || 0;
+                let pts = parseInt(rows[i][5]) || 0;
+                let goals = parseInt(rows[i][4]) || 0;
                 let basePriceK = parseFloat(rows[i][10]) || 5.0;
                 let currentPrice = (basePriceK * 0.90) + (Math.floor(totalScore / 3) * 0.25);
+                
                 allPlayers.push({
                     id: i, 
                     county: rows[i][0].trim(), 
                     name: (rows[i][1]+" "+rows[i][2]).trim(),
                     prefPos: rows[i][3].trim().toUpperCase(), 
                     price: currentPrice,
+                    points: pts,
+                    goals: goals,
+                    totalScore: totalScore,
                     badge: rows[i][14] ? rows[i][14].trim() : 'https://ui-avatars.com/api/?name=GAA'
                 });
             }
             const coSelect = document.getElementById('filter-county');
             [...counties].sort().forEach(c => { let o = document.createElement('option'); o.value=o.text=c; coSelect.add(o); });
             updateUI(); filterPlayers(); updateIntel();
-            setInterval(() => { intelIndex = (intelIndex + 1) % 5; updateIntel(); }, 6000);
+            setInterval(() => { intelIndex = (intelIndex + 1) % 6; updateIntel(); }, 6000);
         } catch (e) { console.error("Init failed", e); }
     }
 
+    // --- MARKET INTEL LOGIC ---
+    function updateIntel() {
+        const content = document.getElementById('intel-content'), title = document.getElementById('intel-title');
+        let sorted, label, suffix = "m";
+        
+        switch(intelIndex) {
+            case 0: 
+                label="Top Priced Players"; 
+                sorted=[...allPlayers].sort((a,b)=>b.price-a.price); 
+                suffix = "m";
+                break;
+            case 1: 
+                label="Top Point Scorers"; 
+                sorted=[...allPlayers].sort((a,b)=>b.points-a.points); 
+                suffix = " pts";
+                break;
+            case 2: 
+                label="Highest Total Scores"; 
+                sorted=[...allPlayers].sort((a,b)=>b.totalScore-a.totalScore); 
+                suffix = "";
+                break;
+            case 3: 
+                label="Top Goal Scorers"; 
+                sorted=[...allPlayers].sort((a,b)=>b.goals-a.goals); 
+                suffix = " goals";
+                break;
+            case 4: 
+                label="Budget Bargains (Low Price)"; 
+                sorted=[...allPlayers].sort((a,b)=>a.price-b.price); 
+                suffix = "m";
+                break;
+            case 5: 
+                label="Underperformers (Low Score)"; 
+                sorted=[...allPlayers].sort((a,b)=>a.totalScore-b.totalScore); 
+                suffix = "";
+                break;
+        }
+        
+        title.innerText = label;
+        content.innerHTML = sorted.slice(0, 10).map((p, idx) => {
+            let val = suffix === "m" ? p.price.toFixed(2) : (suffix === " pts" ? p.points : (suffix === " goals" ? p.goals : p.totalScore));
+            return `<div class="intel-item">
+                <span style="color:#888; width:20px;">${idx+1}.</span>
+                <span>${p.name} (${p.county})</span>
+                <span class="p-stat">${val}${suffix}</span>
+            </div>`;
+        }).join('');
+    }
+
+    // --- CORE SQUAD LOGIC ---
     async function loginUser() {
         const name = document.getElementById('sub-mgr-name').value.trim();
         const pin = document.getElementById('sub-mgr-pin').value.trim();
@@ -194,7 +275,7 @@
             const res = await fetch(`${SCRIPT_URL}?name=${encodeURIComponent(name)}&pin=${encodeURIComponent(pin)}`);
             const result = await res.json();
             if(result.success) {
-                squad = []; budget = 85.0; // Reset budget to 85.0 upon login
+                squad = []; budget = 85.0;
                 originalSquadNames = result.squad.filter(n => n && n.trim() !== "").map(n => n.trim());
                 originalSquadNames.forEach((pName, index) => {
                     const player = allPlayers.find(p => p.name.trim() === pName);
@@ -301,18 +382,6 @@
         document.getElementById('page-' + id).classList.remove('hidden');
         document.querySelectorAll('.nav-link').forEach(n => n.classList.remove('active'));
         document.getElementById('nav-' + id).classList.add('active');
-    }
-
-    function updateIntel() {
-        const content = document.getElementById('intel-content'), title = document.getElementById('intel-title');
-        let sorted, label;
-        switch(intelIndex) {
-            case 0: label="Overall Top 10"; sorted=[...allPlayers].sort((a,b)=>b.price-a.price); break;
-            case 1: label="GK Options"; sorted=allPlayers.filter(p=>p.prefPos==='GK'); break;
-            default: label="Market Intel"; sorted=allPlayers;
-        }
-        title.innerText = label;
-        content.innerHTML = sorted.slice(0, 10).map((p, idx) => `<div class="intel-item"><span>${idx+1}. ${p.name}</span><span class="p-stat">${p.price.toFixed(2)}m</span></div>`).join('');
     }
 
     init();
