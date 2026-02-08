@@ -23,18 +23,6 @@
         .player-info-cell { position: relative; cursor: help; display: flex; align-items: center; gap: 8px; }
         .county-mini-badge { width: 24px; height: 24px; object-fit: contain; }
         
-        .tooltip-content {
-            display: none; position: absolute; left: 110%; top: 0; 
-            background: var(--dark); color: white; padding: 12px; border-radius: 8px;
-            z-index: 1000; min-width: 200px; box-shadow: 0 8px 25px rgba(0,0,0,0.5); 
-            border-left: 4px solid var(--orange); font-size: 11px; line-height: 1.4;
-        }
-        .tooltip-content hr { border: 0; border-top: 1px solid #444; margin: 8px 0; }
-        .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
-        .stat-label { color: #aaa; }
-        .stat-val { color: var(--orange); font-weight: bold; text-align: right; }
-        .player-info-cell:hover .tooltip-content { display: block; }
-
         .pitch { 
             background: var(--green); width: 100%; aspect-ratio: 2/3.2; border-radius: 8px; 
             position: relative; border: 3px solid white; overflow: hidden; 
@@ -49,8 +37,6 @@
         .player-disc img { width: 45px; height: 45px; object-fit: contain; filter: drop-shadow(0 2px 3px rgba(0,0,0,0.4)); }
         .player-disc.empty { background: rgba(0,0,0,0.2); border: 1px dashed #ccc; border-radius: 50%; color: #eee; width: 50px; height: 50px; }
         .player-name-label { position: absolute; bottom: -8px; background: #000; color: #fff; padding: 1px 4px; border-radius: 3px; font-size: 8px; white-space: nowrap; border: 0.5px solid #555; }
-
-        .bench-area { background: #222; padding: 12px; border-radius: 0 0 8px 8px; display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; margin-top: -5px; }
 
         .filter-row { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; }
         .filter-row input, .filter-row select { padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 12px; flex: 1; min-width: 80px; }
@@ -82,7 +68,7 @@
 
 <nav>
     <button class="nav-link active" id="nav-market" onclick="showPage('market')">Squad & Pitch</button>
-    <button class="nav-link" id="nav-rules" onclick="showPage('rules')">Full Scoring Rules</button>
+    <button class="nav-link" id="nav-rules" onclick="showPage('rules')">Rules</button>
 </nav>
 
 <div class="container">
@@ -113,16 +99,15 @@
                     <div class="mid-line"></div>
                     <div id="pitch-board" class="pitch-grid"></div>
                 </div>
-                <div id="bench-list" class="bench-area"></div>
             </div>
 
             <div class="panel">
                 <div id="budget-val" style="font-size:20px; font-weight:bold; color:var(--green); text-align:center;">Budget: 100.00m</div>
-                <div id="transfer-count" style="font-size:12px; text-align:center; color:#666; margin-bottom:10px;">Login to manage transfers</div>
+                <div id="transfer-count" style="font-size:12px; text-align:center; color:#666; margin-bottom:10px;">Pick your starting 15</div>
                 
                 <div class="submit-section">
                     <input type="text" id="sub-mgr-name" placeholder="Manager Name">
-                    <input type="password" id="sub-mgr-pin" placeholder="PIN / Password (4+ digits)" maxlength="10">
+                    <input type="password" id="sub-mgr-pin" placeholder="PIN (4+ digits)" maxlength="10">
                     
                     <div style="display: flex; gap: 8px;">
                         <button id="btn-submit" onclick="saveTeamToSheet()" style="flex: 1; padding:12px; background:var(--green); color:white; border:none; border-radius:5px; font-weight:bold; cursor:pointer;">SUBMIT</button>
@@ -143,18 +128,18 @@
     <div id="page-rules" class="page hidden">
         <div class="panel">
             <h2>GAA Fantasy Rules</h2>
-            <p>1. Select 18 players total.</p>
-            <p>2. Max 3 players from any single county.</p>
-            <p>3. Budget: 100.00m.</p>
-            <p>4. Max 3 transfers allowed per week after initial submission.</p>
+            <ul>
+                <li>Select a starting **15** (no substitutes).</li>
+                <li>Budget: 100.00m.</li>
+                <li>Max 3 players per county.</li>
+                <li>Max 3 transfers allowed per week.</li>
+            </ul>
         </div>
     </div>
 </div>
 
 <script>
     const SCORERS_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTcdzjZ4zYlGgFe5acS8xOb1vHR9b8i98UudIOe-iC9Z1d6x6AY5zATgX217cNjcNtAGDLJ56y8Jr8N/pub?output=csv';
-    
-    // UPDATED SCRIPT URL PROVIDED
     const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbySHLYe-RqRTvfcX1MQFFepw2rRxFF0KYuV3g6WS0PtrXBB7CrQnLDMx_T8cep9Kbkx/exec'; 
     
     let allPlayers = [], squad = [], budget = 100.0, intelIndex = 0;
@@ -179,27 +164,20 @@
             for(let i=1; i<rows.length; i++) {
                 if(!rows[i][0]) continue;
                 counties.add(rows[i][0].trim());
-                
                 let totalScore = parseInt(rows[i][8]) || 0;
                 let basePriceK = parseFloat(rows[i][10]) || 5.0;
                 let currentPrice = (basePriceK * 0.90) + (Math.floor(totalScore / 3) * 0.25);
-                let pos = rows[i][3].trim().toUpperCase();
-
                 allPlayers.push({
                     id: i, 
                     county: rows[i][0].trim(), 
                     name: (rows[i][1]+" "+rows[i][2]).trim(),
-                    prefPos: pos, 
-                    goals: rows[i][4] || 0,
-                    points: rows[i][5] || 0,
-                    totalScore: totalScore,
+                    prefPos: rows[i][3].trim().toUpperCase(), 
                     price: currentPrice,
                     badge: rows[i][14] ? rows[i][14].trim() : 'https://ui-avatars.com/api/?name=GAA'
                 });
             }
             const coSelect = document.getElementById('filter-county');
             [...counties].sort().forEach(c => { let o = document.createElement('option'); o.value=o.text=c; coSelect.add(o); });
-            
             updateUI(); filterPlayers(); updateIntel();
             setInterval(() => { intelIndex = (intelIndex + 1) % 5; updateIntel(); }, 6000);
         } catch (e) { console.error("Init failed", e); }
@@ -209,92 +187,60 @@
         const name = document.getElementById('sub-mgr-name').value.trim();
         const pin = document.getElementById('sub-mgr-pin').value.trim();
         const status = document.getElementById('status-msg');
-
-        if(!name || !pin) return alert("Enter Name and PIN to load team.");
-        
-        status.style.color = "var(--dark)";
-        status.innerText = "🔍 Checking Database...";
-        
+        if(!name || !pin) return alert("Enter Name and PIN.");
+        status.innerText = "🔍 Loading...";
         try {
-            // Updated fetch to handle the GAS redirect better
-            const response = await fetch(`${SCRIPT_URL}?name=${encodeURIComponent(name)}&pin=${encodeURIComponent(pin)}`);
-            const result = await response.json();
-
+            const res = await fetch(`${SCRIPT_URL}?name=${encodeURIComponent(name)}&pin=${encodeURIComponent(pin)}`);
+            const result = await res.json();
             if(result.success) {
-                squad = [];
-                budget = 100.0;
-                originalSquadNames = result.squad.map(n => n.trim());
-
-                result.squad.forEach((pName, index) => {
-                    if(!pName) return;
-                    const player = allPlayers.find(p => p.name.trim() === pName.trim());
+                squad = []; budget = 100.0;
+                originalSquadNames = result.squad.filter(n => n && n.trim() !== "").map(n => n.trim());
+                originalSquadNames.forEach((pName, index) => {
+                    const player = allPlayers.find(p => p.name.trim() === pName);
                     if(player) {
-                        let role = "SUB";
+                        let role = "FWD"; 
                         if(index === 0) role = "GK";
                         else if(index >= 1 && index <= 6) role = "DEF";
                         else if(index >= 7 && index <= 8) role = "MID";
-                        else if(index >= 9 && index <= 14) role = "FWD";
                         squad.push({...player, assignedRole: role});
                         budget -= player.price;
                     }
                 });
-
-                updateUI();
-                filterPlayers();
-                status.style.color = "green";
-                status.innerText = "✅ Team Loaded!";
-            } else {
-                status.style.color = "red";
-                status.innerText = "❌ " + result.message;
-            }
-        } catch (e) {
-            console.error("Login Error:", e);
-            status.style.color = "red";
-            status.innerText = "⚠️ Connection error. Check deployment settings.";
-        }
-    }
-
-    function getChangesCount() {
-        if (originalSquadNames.length === 0) return 0;
-        const currentNames = squad.map(p => p.name.trim());
-        return currentNames.filter(name => !originalSquadNames.includes(name)).length;
+                updateUI(); filterPlayers();
+                status.innerText = "✅ Loaded!";
+            } else { status.innerText = "❌ " + result.message; }
+        } catch (e) { status.innerText = "⚠️ Error connecting."; }
     }
 
     function addPlayer(id, role) {
         const p = allPlayers.find(x => x.id === id);
-        if (originalSquadNames.length > 0) {
-            const isNew = !originalSquadNames.includes(p.name.trim());
-            if (isNew && getChangesCount() >= 3) {
-                return alert("Limit Reached: Only 3 changes allowed per week!");
-            }
-        }
+        const roleCount = squad.filter(s => s.assignedRole === role).length;
+        const roleLimit = pitchPositions.find(pos => pos.role === role).limit;
+
+        if (roleCount >= roleLimit) return alert(`Position Full! Max ${roleLimit} for ${role}.`);
+        if (originalSquadNames.length > 0 && !originalSquadNames.includes(p.name.trim()) && getChangesCount() >= 3) return alert("Max 3 transfers!");
         if (squad.some(s => s.id === id)) return;
-        if (squad.length >= 18) return alert("Squad Full!");
+        if (squad.length >= 15) return alert("Squad Full (15 players)!");
         if (budget < p.price) return alert("Insufficient Budget!");
         if (squad.filter(s => s.county === p.county).length >= 3) return alert("Max 3 per county!");
         
         squad.push({...p, assignedRole: role});
         budget -= p.price;
-        updateUI(); 
-        filterPlayers();
+        updateUI(); filterPlayers();
     }
 
     function removePlayer(idx) {
         budget += squad[idx].price;
         squad.splice(idx, 1);
-        updateUI(); 
-        filterPlayers();
+        updateUI(); filterPlayers();
+    }
+
+    function getChangesCount() {
+        return squad.map(p => p.name.trim()).filter(name => !originalSquadNames.includes(name)).length;
     }
 
     function updateUI() {
         document.getElementById('budget-val').innerText = `Budget: ${budget.toFixed(2)}m`;
-        const transfers = getChangesCount();
-        const transEl = document.getElementById('transfer-count');
-        if(originalSquadNames.length > 0) {
-            transEl.innerText = `Weekly Changes: ${transfers} / 3`;
-            transEl.style.color = transfers >= 3 ? "red" : "#666";
-            transEl.style.fontWeight = transfers >= 3 ? "bold" : "normal";
-        }
         let tempSquad = [...squad], pitchHtml = "";
         pitchPositions.forEach(pos => {
             pitchHtml += `<div class="pitch-row">`;
@@ -308,7 +254,6 @@
             pitchHtml += `</div>`;
         });
         document.getElementById('pitch-board').innerHTML = pitchHtml;
-        document.getElementById('bench-list').innerHTML = tempSquad.map(p => `<div class="player-disc" onclick="removePlayer(${squad.indexOf(p)})"><img src="${p.badge}"><div class="player-name-label">${p.name.split(' ').pop()}</div></div>`).join('');
     }
 
     function filterPlayers() {
@@ -318,7 +263,7 @@
         let filtered = allPlayers.filter(p => p.name.toLowerCase().includes(nameQ) && (!coQ || p.county === coQ) && (!posQ || p.prefPos === posQ));
         document.getElementById('market-body').innerHTML = filtered.map(p => {
             const isSelected = squad.some(s => s.id === p.id);
-            const buttons = ['GK', 'DEF', 'MID', 'FWD', 'SUB'].map(role => 
+            const buttons = ['GK', 'DEF', 'MID', 'FWD'].map(role => 
                 `<button class="btn-assign ${p.prefPos === role ? 'is-pref' : ''}" 
                 onclick="addPlayer(${p.id}, '${role}')" ${isSelected ? 'disabled' : ''}>${role}</button>`
             ).join('');
@@ -331,49 +276,23 @@
         const pin = document.getElementById('sub-mgr-pin').value.trim();
         const status = document.getElementById('status-msg');
         if(!name || pin.length < 4) return alert("Enter Name and 4+ digit PIN.");
-        if(squad.length < 18) return alert("Pick 18 players first.");
+        if(squad.length < 15) return alert("Pick your full 15 first.");
         
-        document.getElementById('btn-submit').disabled = true;
-        status.innerText = "Saving Team...";
-        
-        const rolesOrder = ['GK', 'DEF', 'MID', 'FWD', 'SUB'];
-        const finalSquadNames = [];
-        rolesOrder.forEach(r => {
-            const players = squad.filter(p => p.assignedRole === r);
-            finalSquadNames.push(...players.map(p => p.name.trim()));
-        });
-        
-        const finalData = [name, pin, ...finalSquadNames];
+        status.innerText = "Saving...";
+        const rolesOrder = ['GK', 'DEF', 'MID', 'FWD'];
+        const finalNames = [];
+        rolesOrder.forEach(r => { finalNames.push(...squad.filter(p => p.assignedRole === r).map(p => p.name.trim())); });
         
         fetch(SCRIPT_URL, {
             method: 'POST',
             mode: 'no-cors', 
             headers: { 'Content-Type': 'text/plain' },
-            body: JSON.stringify(finalData)
-        })
-        .then(() => {
-            status.style.color = "green";
-            status.innerText = "SUCCESS! Team Updated.";
-            originalSquadNames = [...finalSquadNames];
-            updateUI();
-            alert("Team successfully submitted!");
-        })
-        .catch(() => { status.innerText = "Submission Failed."; })
-        .finally(() => { document.getElementById('btn-submit').disabled = false; });
-    }
-
-    function updateIntel() {
-        const content = document.getElementById('intel-content'), title = document.getElementById('intel-title');
-        let sorted, label;
-        switch(intelIndex) {
-            case 0: label="Overall Top 10"; sorted=[...allPlayers].sort((a,b)=>b.totalScore-a.totalScore); break;
-            case 1: label="League Strugglers"; sorted=[...allPlayers].sort((a,b)=>a.totalScore-b.totalScore); break;
-            case 2: label="Most Expensive"; sorted=[...allPlayers].sort((a,b)=>b.price-a.price); break;
-            case 3: label="Top Scorers"; sorted=[...allPlayers].sort((a,b)=>b.points-a.points); break;
-            case 4: label="Best Value GK"; sorted=allPlayers.filter(p=>p.prefPos==='GK').sort((a,b)=>b.totalScore-a.totalScore); break;
-        }
-        title.innerText = label;
-        content.innerHTML = sorted.slice(0, 10).map((p, idx) => `<div class="intel-item"><img src="${p.badge}" style="width:18px; margin-right:8px;"><span style="color:#888; width:20px;">${idx+1}.</span><span>${p.name}</span><span class="p-stat">${p.price.toFixed(2)}m</span></div>`).join('');
+            body: JSON.stringify([name, pin, ...finalNames])
+        }).then(() => {
+            status.innerText = "✅ SUCCESS!";
+            originalSquadNames = [...finalNames];
+            alert("Team Submitted!");
+        }).catch(() => { status.innerText = "❌ Failed."; });
     }
 
     function showPage(id) {
@@ -381,6 +300,18 @@
         document.getElementById('page-' + id).classList.remove('hidden');
         document.querySelectorAll('.nav-link').forEach(n => n.classList.remove('active'));
         document.getElementById('nav-' + id).classList.add('active');
+    }
+
+    function updateIntel() {
+        const content = document.getElementById('intel-content'), title = document.getElementById('intel-title');
+        let sorted, label;
+        switch(intelIndex) {
+            case 0: label="Overall Top 10"; sorted=[...allPlayers].sort((a,b)=>b.price-a.price); break;
+            case 1: label="GK Options"; sorted=allPlayers.filter(p=>p.prefPos==='GK'); break;
+            default: label="Market Intel"; sorted=allPlayers;
+        }
+        title.innerText = label;
+        content.innerHTML = sorted.slice(0, 10).map((p, idx) => `<div class="intel-item"><span>${idx+1}. ${p.name}</span><span class="p-stat">${p.price.toFixed(2)}m</span></div>`).join('');
     }
 
     init();
